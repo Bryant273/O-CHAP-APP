@@ -1,0 +1,187 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+@import "tailwindcss";
+
+@theme {
+  /* O'CHAP Refined Palette - Balanced & Professional */
+  --color-primary: #D4AF37; /* Balanced Gold */
+  --color-primary-light: #E5C35D;
+  --color-primary-dim: rgba(212, 175, 55, 0.1);
+  --color-dark: #1A1A1A;
+  --color-navy: #0F172A; /* Deep Navy for better contrast */
+  --color-navy-light: #1E293B;
+  --color-dash-bg: #F1F5F9;
+  --color-surface: #FFFFFF;
+  --color-surface-2: #F8FAFC;
+  --color-surface-3: #E2E8F0;
+  --color-white-soft: #FFFFFF;
+  --color-ink: #0F172A;
+  --color-muted: #64748B;
+  --color-border: #E2E8F0;
+
+  /* Typography - Inter & Calibri for maximum readability */
+  --font-display: "Inter", "Calibri", sans-serif;
+  --font-sans: "Inter", "Calibri", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --radius-std: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 24px;
+  
+  --shadow-oc: 0 1px 3px rgba(0,0,0,0.1);
+  --shadow-oc-lg: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+@layer base {
+  body {
+    @apply font-sans bg-surface text-ink antialiased m-0 p-0 text-[14px] leading-normal overflow-x-hidden transition-colors duration-300;
+  }
+  
+  button, 
+  a, 
+  input[type="button"], 
+  input[type="submit"], 
+  input[type="reset"],
+  [role="button"],
+  .cursor-pointer {
+    cursor: pointer;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-bold tracking-tight;
+  }
+  
+  /* Scrollbar Customization */
+  ::-webkit-scrollbar {
+    @apply w-1.5 h-1.5;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-surface-2 rounded-full hover:bg-muted/30 transition-colors;
+  }
+  
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+@layer components {
+  /* Site Specific Layouts */
+  .header {
+    @apply h-16 bg-white-soft border-b border-surface-2 flex items-center gap-4 px-5 fixed top-0 inset-x-0 z-[1000] shadow-sm;
+  }
+
+  .sidebar {
+    @apply fixed top-16 left-0 w-64 h-[calc(100vh-64px)] bg-white-soft border-r border-surface-2 overflow-y-auto z-[900] transition-all duration-300 flex flex-col;
+  }
+
+  .sidebar-collapsed {
+    @apply !w-0 -translate-x-full;
+  }
+
+  .oc-brand {
+    @apply flex items-center gap-1 font-display font-black tracking-tighter uppercase italic text-dark;
+  }
+  .oc-brand span {
+    @apply text-primary;
+  }
+
+  .main-content {
+    @apply pt-16 transition-all duration-300;
+    margin-left: 16rem;
+  }
+
+  .main-content-collapsed {
+    @apply !ml-0;
+  }
+
+  /* Interaction Components */
+  .btn-primary {
+    @apply bg-primary text-white px-6 py-2 rounded-lg font-sans font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-300 hover:brightness-110 active:scale-95 disabled:opacity-50;
+  }
+
+  .btn-ghost {
+    @apply bg-surface-3 text-ink px-6 py-2 rounded-lg font-sans font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-300 hover:bg-dark hover:text-white active:scale-95;
+  }
+
+  .btn-login {
+    @apply bg-dark text-white-soft px-5 py-2 rounded-lg font-sans font-bold text-xs uppercase tracking-wider hover:bg-primary transition-all active:scale-95;
+  }
+
+  .icon-btn {
+    @apply w-10 h-10 rounded-full flex items-center justify-center text-ink hover:bg-surface-2 hover:text-primary transition-all relative;
+  }
+
+  .oc-badge {
+    @apply absolute top-1.5 right-1.5 bg-primary text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white-soft;
+  }
+
+  /* Universal Sections */
+  .hero {
+    @apply bg-dark text-white-soft px-10 py-14 relative overflow-hidden;
+    background: linear-gradient(135deg, var(--color-dark) 0%, #1E1C18 60%, #2A2521 100%);
+  }
+
+  .product-card {
+    @apply bg-white rounded-lg border border-border overflow-hidden transition-all duration-300 hover:shadow-oc-lg relative cursor-pointer;
+  }
+
+  .sidebar-item, .oc-nav-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-ink font-sans font-semibold text-[13px] transition-all duration-300 hover:bg-surface-3 cursor-pointer;
+  }
+
+  .sidebar-item-active {
+    @apply bg-primary text-white shadow-sm;
+  }
+
+  .cat-chip {
+    @apply flex items-center gap-2 px-4 py-2 bg-white border border-border rounded-lg text-[12px] font-sans font-bold uppercase tracking-tight text-ink transition-all duration-300 hover:border-primary hover:text-primary;
+  }
+
+  .cat-chip-active {
+    @apply border-primary bg-primary text-white shadow-sm;
+  }
+
+  /* Animations library */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-fade-up {
+    animation: fadeUp 0.4s ease both;
+  }
+
+  .sidebar-group-header {
+    @apply flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer text-ink font-sans font-bold text-[12px] uppercase tracking-tight transition-all duration-300 hover:bg-surface-3;
+  }
+
+  .sidebar-sub-item {
+    @apply flex items-center gap-3 pl-10 pr-3 py-2 rounded-lg text-muted font-sans font-medium text-[13px] transition-all duration-300 hover:text-primary hover:bg-surface-3;
+  }
+
+  .sidebar-sub-item-active {
+    @apply text-primary font-medium;
+  }
+
+  /* Side Panels & Overlays */
+  .oc-panel {
+    @apply fixed right-0 top-0 h-screen w-full sm:w-[450px] bg-white-soft z-[2000] transform transition-transform duration-500 ease-out flex flex-col shadow-oc-lg border-l border-surface-2;
+  }
+  .oc-panel-hidden {
+    @apply translate-x-full;
+  }
+  
+  .oc-overlay {
+    @apply fixed inset-0 bg-dark/40 backdrop-blur-sm z-[1500] transition-opacity duration-300 cursor-pointer;
+  }
+  .oc-overlay-hidden {
+    @apply opacity-0 pointer-events-none;
+  }
+}
