@@ -1,12 +1,13 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
+import { RouterLink } from '@angular/router';
 import { DataService } from '../../services/data.service';
 
 @Component({
   selector: 'app-admin-products',
   standalone: true,
-  imports: [CommonModule, MatIconModule],
+  imports: [CommonModule, MatIconModule, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="space-y-8 animate-fade-in">
@@ -15,12 +16,17 @@ import { DataService } from '../../services/data.service';
           <h2 class="text-2xl font-black text-[#0D1B2A] tracking-tight">Gestion du Catalogue</h2>
           <p class="text-xs text-[#5a5e72] mt-1 font-medium italic">Administration des articles et catégories au niveau global</p>
         </div>
-        <button class="bg-primary text-white h-11 px-6 rounded-xl text-xs font-bold shadow-lg shadow-primary/20 flex items-center gap-2">
-          <mat-icon class="scale-75">add_box</mat-icon> Nouveau Produit
-        </button>
+        <div class="flex items-center gap-3">
+          <a routerLink="/" class="h-11 px-6 rounded-xl border border-[#e4e6ea] text-[#0D1B2A] text-xs font-bold hover:bg-[#f0f2f5] transition-all flex items-center gap-2">
+            <mat-icon class="scale-75">visibility</mat-icon> Marketplace
+          </a>
+          <button class="bg-primary text-white h-11 px-6 rounded-xl text-xs font-bold shadow-lg shadow-primary/20 flex items-center gap-2">
+            <mat-icon class="scale-75">add_box</mat-icon> Nouveau Produit
+          </button>
+        </div>
       </div>
 
-      <div class="bg-white rounded-[2.5rem] border border-[#e4e6ea] shadow-sm overflow-hidden text-center">
+      <div class="bg-white rounded-[2.5rem] border border-[#e4e6ea] shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
           <table class="w-full">
             <thead class="bg-[#fafbfc] border-b border-[#e4e6ea]">
@@ -54,8 +60,8 @@ import { DataService } from '../../services/data.service';
                    </td>
                    <td class="px-8 py-5">
                       <div class="flex flex-col">
-                        <span class="text-xs font-black text-[#0D1B2A]">{{formatAmount(product.wholesalePrice)}} F</span>
-                        <span class="text-[9px] text-[#9699a8] font-bold">{{formatAmount(product.retailPrice)}} F</span>
+                        <span class="text-xs font-black text-[#0D1B2A] font-price">{{formatAmount(product.wholesalePrice)}} F</span>
+                        <span class="text-[9px] text-[#9699a8] font-bold font-price">{{formatAmount(product.retailPrice)}} F</span>
                       </div>
                    </td>
                     <td class="px-8 py-5">
@@ -70,10 +76,15 @@ import { DataService } from '../../services/data.service';
                       <span class="px-2 py-0.5 rounded-md bg-[#f0f2f5] text-[#5a5e72] text-[8px] font-black uppercase tracking-widest">{{product.category || 'Général'}}</span>
                    </td>
                    <td class="px-8 py-5 text-[10px] text-[#9699a8] font-bold italic">{{product.supplierName || 'ID:' + product.supplierId?.slice(-4)}}</td>
-                   <td class="px-8 py-5 text-right">
-                      <button class="w-8 h-8 rounded-lg flex items-center justify-center text-[#9699a8] hover:bg-white hover:text-primary transition-all ml-auto">
-                        <mat-icon class="scale-75">edit</mat-icon>
-                      </button>
+                   <td class="px-8 py-5">
+                      <div class="flex items-center justify-end gap-2">
+                        <a [routerLink]="['/products', product.id]" class="w-8 h-8 rounded-lg flex items-center justify-center text-[#9699a8] hover:bg-[#0D1B2A] hover:text-white transition-all shadow-sm">
+                           <mat-icon class="scale-75">visibility</mat-icon>
+                        </a>
+                        <button class="w-8 h-8 rounded-lg flex items-center justify-center text-[#9699a8] hover:bg-white hover:text-primary transition-all">
+                          <mat-icon class="scale-75">edit</mat-icon>
+                        </button>
+                      </div>
                    </td>
                  </tr>
                }

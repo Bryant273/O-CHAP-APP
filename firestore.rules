@@ -54,46 +54,45 @@ service cloud.firestore {
     // -------------------------------------------------------------------------
 
     function isValidUser(data) {
-      return data.keys().hasAll(['uid', 'email', 'role']) &&
-             data.uid == authUid() &&
-             data.email is string && data.email.size() <= 200 &&
-             data.role in ['client', 'supplier', 'admin', 'fournisseur'] &&
+      return (request.method == 'create' ? data.keys().hasAll(['uid', 'email', 'role']) : true) &&
+             (!data.keys().hasAny(['uid']) || data.uid == authUid()) &&
+             (!data.keys().hasAny(['email']) || (data.email is string && data.email.size() <= 200)) &&
+             (!data.keys().hasAny(['role']) || data.role in ['client', 'supplier', 'admin', 'fournisseur']) &&
              (!data.keys().hasAny(['createdAt']) || data.createdAt is string || data.createdAt == request.time) &&
              (!data.keys().hasAny(['updatedAt']) || data.updatedAt == request.time);
     }
 
     function isValidSupplier(data) {
-      return data.keys().hasAll(['id', 'ownerUid', 'name', 'status']) &&
-             isValidId(data.id) &&
-             data.ownerUid == authUid() &&
-             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
-             data.status in ['active', 'suspended', 'pending'] &&
+      return (request.method == 'create' ? data.keys().hasAll(['id', 'ownerUid', 'name', 'status']) : true) &&
+             (!data.keys().hasAny(['id']) || isValidId(data.id)) &&
+             (!data.keys().hasAny(['ownerUid']) || data.ownerUid == authUid()) &&
+             (!data.keys().hasAny(['name']) || (data.name is string && data.name.size() > 0 && data.name.size() <= 100)) &&
+             (!data.keys().hasAny(['status']) || data.status in ['active', 'suspended', 'pending']) &&
              (!data.keys().hasAny(['createdAt']) || data.createdAt is string || data.createdAt == request.time);
     }
 
     function isValidProduct(data) {
-      return data.keys().hasAll(['id', 'supplierId', 'name', 'price']) &&
-             isValidId(data.id) &&
-             isValidId(data.supplierId) &&
-             data.name is string && data.name.size() > 0 && data.name.size() <= 200 &&
-             data.price is number && data.price >= 0 &&
+      return (request.method == 'create' ? data.keys().hasAll(['id', 'supplierId', 'name', 'price']) : true) &&
+             (!data.keys().hasAny(['id']) || isValidId(data.id)) &&
+             (!data.keys().hasAny(['supplierId']) || isValidId(data.supplierId)) &&
+             (!data.keys().hasAny(['name']) || (data.name is string && data.name.size() > 0 && data.name.size() <= 200)) &&
+             (!data.keys().hasAny(['price']) || (data.price is number && data.price >= 0)) &&
              (!data.keys().hasAny(['stock']) || data.stock is number) &&
              (!data.keys().hasAny(['createdAt']) || data.createdAt is string || data.createdAt == request.time);
     }
 
     function isValidOrder(data) {
-      // Allow both legacy and new structures
-      return data.keys().hasAll(['id', 'items', 'status']) &&
-             isValidId(data.id) &&
-             data.items is list && 
-             data.status in ['pending', 'confirmed', 'preparing', 'shipped', 'delivered', 'cancelled'] &&
+      return (request.method == 'create' ? data.keys().hasAll(['id', 'items', 'status']) : true) &&
+             (!data.keys().hasAny(['id']) || isValidId(data.id)) &&
+             (!data.keys().hasAny(['items']) || data.items is list) && 
+             (!data.keys().hasAny(['status']) || data.status in ['pending', 'confirmed', 'preparing', 'shipped', 'delivered', 'cancelled']) &&
              (!data.keys().hasAny(['customerUid']) || data.customerUid is string);
     }
 
     function isValidNotification(data) {
-      return data.keys().hasAll(['type', 'title', 'message', 'recipientId', 'read']) &&
-             data.recipientId is string && data.recipientId.size() > 0 &&
-             data.read is bool &&
+      return (request.method == 'create' ? data.keys().hasAll(['type', 'title', 'message', 'recipientId', 'read']) : true) &&
+             (!data.keys().hasAny(['recipientId']) || (data.recipientId is string && data.recipientId.size() > 0)) &&
+             (!data.keys().hasAny(['read']) || data.read is bool) &&
              (!data.keys().hasAny(['createdAt']) || data.createdAt is string || data.createdAt == request.time);
     }
 
@@ -103,32 +102,34 @@ service cloud.firestore {
 
     // USERS COLLECTION
     match /users/{userId} {
-      allow get: if isSignedIn() && (authUid() == userId || isPrincipalAdmin() || isAdmin());
+      allow get: if isValidId(userId) && isSignedIn() && (authUid() == userId || isPrincipalAdmin() || isAdmin());
       allow list: if isPrincipalAdmin() || isAdmin();
-      allow create: if isSignedIn() && authUid() == userId && isValidUser(incoming());
-      allow update: if isSignedIn() && authUid() == userId && 
+      allow create: if isValidId(userId) && isSignedIn() && authUid() == userId && isValidUser(incoming());
+      allow update: if isValidId(userId) && isSignedIn() && authUid() == userId && 
                      isValidUser(incoming()) && 
                      incoming().get('role', 'client') == existing().get('role', 'client') &&
                      incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'updatedAt', 'address', 'phoneNumber', 'city']);
-      allow delete: if isPrincipalAdmin() || isAdmin();
+      allow delete: if isValidId(userId) && (isPrincipalAdmin() || isAdmin());
     }
 
     // SUPPLIERS COLLECTION
     match /suppliers/{supplierId} {
-      allow read: if isSignedIn();
-      allow create: if (isSupplier() || isPrincipalAdmin()) && isValidSupplier(incoming());
-      allow update: if (isPrincipalAdmin() || isAdmin() || (isSupplier() && existing().ownerUid == authUid())) &&
+      allow get: if isValidId(supplierId) && isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isValidId(supplierId) && (isSupplier() || isPrincipalAdmin()) && isValidSupplier(incoming());
+      allow update: if isValidId(supplierId) && (isPrincipalAdmin() || isAdmin() || (isSupplier() && existing().ownerUid == authUid())) &&
                      isValidSupplier(incoming()) &&
                      incoming().ownerUid == existing().ownerUid &&
                      incoming().diff(existing()).affectedKeys().hasOnly(['name', 'description', 'logoUrl', 'phone', 'category', 'status']);
-      allow delete: if isPrincipalAdmin() || isAdmin();
+      allow delete: if isValidId(supplierId) && (isPrincipalAdmin() || isAdmin());
     }
 
     // PRODUCTS COLLECTION
     match /products/{productId} {
-      allow read: if true; // Public catalog
-      allow create: if (isPrincipalAdmin() || isAdmin() || isSupplier()) && isValidProduct(incoming());
-      allow update: if (
+      allow get: if isValidId(productId);
+      allow list: if true; // Public catalog
+      allow create: if isValidId(productId) && (isPrincipalAdmin() || isAdmin() || isSupplier()) && isValidProduct(incoming()) && (incoming().get('id', productId) == productId);
+      allow update: if isValidId(productId) && (
         isPrincipalAdmin() || 
         isAdmin() || 
         (isSupplier() && (
@@ -139,20 +140,19 @@ service cloud.firestore {
       isValidProduct(incoming()) &&
       incoming().get('supplierId', '') == existing().get('supplierId', '') &&
       incoming().diff(existing()).affectedKeys().hasOnly(['name', 'description', 'price', 'stockLevel', 'stock', 'threshold', 'category', 'imageUrl', 'isActive', 'updatedAt', 'rating', 'reviewCount']);
-      allow delete: if isPrincipalAdmin() || isAdmin() || (isSupplier() && existing().get('supplierId', '') == authUid());
+      allow delete: if isValidId(productId) && (isPrincipalAdmin() || isAdmin() || (isSupplier() && existing().get('supplierId', '') == authUid()));
     }
 
     // ORDERS COLLECTION
     match /orders/{orderId} {
-      allow get: if isSignedIn() && (existing().customerUid == authUid() || existing().get('supplierId', '') == authUid() || isPrincipalAdmin() || isAdmin());
+      allow get: if isValidId(orderId) && isSignedIn() && (existing().customerUid == authUid() || existing().get('supplierId', '') == authUid() || isPrincipalAdmin() || isAdmin());
       allow list: if isSignedIn() && (
         resource.data.customerUid == authUid() || 
         resource.data.get('supplierId', '') == authUid() || 
         isPrincipalAdmin()
-        // Note: Generic isAdmin() is omitted here to avoid hitting get() limits during large list queries
       );
-      allow create: if isSignedIn() && isValidOrder(incoming());
-      allow update: if isSignedIn() && 
+      allow create: if isValidId(orderId) && isSignedIn() && isValidOrder(incoming()) && (incoming().get('id', orderId) == orderId);
+      allow update: if isValidId(orderId) && isSignedIn() && 
                      isValidOrder(incoming()) &&
                      (
                        isPrincipalAdmin() || 
@@ -164,33 +164,35 @@ service cloud.firestore {
                         incoming().status == 'cancelled' && 
                         incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']))
                      );
-      allow delete: if isPrincipalAdmin() || isAdmin();
+      allow delete: if isValidId(orderId) && (isPrincipalAdmin() || isAdmin());
     }
 
     // REVIEWS COLLECTION
     match /reviews/{reviewId} {
-      allow read: if true;
-      allow create: if isSignedIn() && incoming().customerId == authUid();
-      allow delete: if isPrincipalAdmin() || isAdmin() || (isSignedIn() && existing().customerId == authUid());
+      allow get: if isValidId(reviewId);
+      allow list: if true;
+      allow create: if isValidId(reviewId) && isSignedIn() && incoming().customerId == authUid();
+      allow delete: if isValidId(reviewId) && (isPrincipalAdmin() || isAdmin() || (isSignedIn() && existing().customerId == authUid()));
     }
 
     // ZONES COLLECTION
     match /zones/{zoneId} {
-      allow read: if true; // Public for delivery price info
-      allow write: if isPrincipalAdmin() || isAdmin();
+      allow get: if isValidId(zoneId);
+      allow list: if true;
+      allow write: if isValidId(zoneId) && (isPrincipalAdmin() || isAdmin());
     }
 
     // NOTIFICATIONS COLLECTION
     match /notifications/{notificationId} {
-      allow get: if isSignedIn() && (resource.data.recipientId == request.auth.uid || isPrincipalAdmin() || isAdmin());
+      allow get: if isValidId(notificationId) && isSignedIn() && (resource.data.recipientId == request.auth.uid || isPrincipalAdmin() || isAdmin());
       allow list: if isSignedIn() && (resource.data.recipientId == request.auth.uid || isPrincipalAdmin());
-      allow create: if isSignedIn() && isValidNotification(incoming());
-      allow update: if isSignedIn() && 
+      allow create: if isValidId(notificationId) && isSignedIn() && isValidNotification(incoming());
+      allow update: if isValidId(notificationId) && isSignedIn() && 
                     isValidNotification(incoming()) &&
                     existing().recipientId == request.auth.uid &&
                     incoming().recipientId == existing().recipientId &&
                     incoming().diff(existing()).affectedKeys().hasOnly(['read']);
-      allow delete: if isPrincipalAdmin() || isAdmin() || (isSignedIn() && existing().recipientId == request.auth.uid);
+      allow delete: if isValidId(notificationId) && (isPrincipalAdmin() || isAdmin() || (isSignedIn() && existing().recipientId == request.auth.uid));
     }
 
     // SYSTEM COLLECTION

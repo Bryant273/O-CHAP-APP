@@ -100,6 +100,11 @@ export class NotificationsComponent implements OnDestroy {
       if (user) {
         if (this.unsub) this.unsub();
         this.unsub = this.dataService.watchNotifications(user.uid);
+      } else {
+        if (this.unsub) {
+          this.unsub();
+          this.unsub = undefined;
+        }
       }
     });
   }

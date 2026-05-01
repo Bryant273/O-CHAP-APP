@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, computed, OnInit, OnDestroy
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { DataService, OchapProduct } from '../../services/data.service';
 import { AuthService } from '../../services/auth.service';
 import { Unsubscribe } from 'firebase/firestore';
@@ -9,7 +10,7 @@ import { Unsubscribe } from 'firebase/firestore';
 @Component({
   selector: 'app-supplier-inventory',
   standalone: true,
-  imports: [CommonModule, MatIconModule, FormsModule],
+  imports: [CommonModule, MatIconModule, FormsModule, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="space-y-6 animate-fade-in relative z-10">
@@ -36,7 +37,7 @@ import { Unsubscribe } from 'firebase/firestore';
           </div>
           <div>
             <p class="text-[10px] font-black text-[#9699a8] uppercase tracking-widest">Total Articles</p>
-            <p class="text-xl font-black text-[#0D1B2A] italic">{{ products().length }}</p>
+            <p class="text-xl font-black text-[#0D1B2A] italic font-price">{{ products().length }}</p>
           </div>
         </div>
         <div class="bg-white p-6 rounded-[2rem] border border-[#e4e6ea] shadow-sm flex items-center gap-4">
@@ -45,7 +46,7 @@ import { Unsubscribe } from 'firebase/firestore';
           </div>
           <div>
             <p class="text-[10px] font-black text-[#9699a8] uppercase tracking-widest">Articles Critiques</p>
-            <p class="text-xl font-black text-[#0D1B2A] italic">{{ lowStockCount() }}</p>
+            <p class="text-xl font-black text-[#0D1B2A] italic font-price">{{ lowStockCount() }}</p>
           </div>
         </div>
         <div class="bg-white p-6 rounded-[2rem] border border-[#e4e6ea] shadow-sm flex items-center gap-4">
@@ -54,7 +55,7 @@ import { Unsubscribe } from 'firebase/firestore';
           </div>
           <div>
             <p class="text-[10px] font-black text-[#9699a8] uppercase tracking-widest">Valeur Stock</p>
-            <p class="text-xl font-black text-[#0D1B2A] italic">{{ totalValue() }}</p>
+            <p class="text-xl font-black text-[#0D1B2A] italic font-price">{{ totalValue() }} FCFA</p>
           </div>
         </div>
       </div>
@@ -80,7 +81,12 @@ import { Unsubscribe } from 'firebase/firestore';
                     <div class="flex items-center gap-4">
                       <div class="w-12 h-12 rounded-xl bg-[#f0f2f5] overflow-hidden border border-[#e4e6ea] shrink-0 relative group/img">
                         <img [src]="p.imageUrl || 'https://picsum.photos/seed/'+p.id+'/100/100'" [alt]="p.name" class="w-full h-full object-cover" referrerpolicy="no-referrer">
-                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 flex items-center justify-center transition-all cursor-pointer" (click)="triggerImageImport(p)">
+                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 flex items-center justify-center transition-all cursor-pointer" 
+                             (click)="triggerImageImport(p)"
+                             role="button"
+                             aria-label="Changer l'image"
+                             tabindex="0"
+                             (keydown.enter)="triggerImageImport(p)">
                           <mat-icon class="text-white scale-75">add_a_photo</mat-icon>
                         </div>
                       </div>
@@ -111,7 +117,7 @@ import { Unsubscribe } from 'firebase/firestore';
                     </div>
                   </td>
                   <td class="px-8 py-6">
-                    <span class="text-xs font-black text-[#0D1B2A] font-mono italic">{{ p.threshold || 5 }}</span>
+                    <span class="text-xs font-black text-[#0D1B2A] font-price italic">{{ p.threshold || 5 }}</span>
                   </td>
                   <td class="px-8 py-6">
                     <span [class]="getStockStatusClass(p.stock, p.threshold)" class="text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider">
@@ -120,6 +126,9 @@ import { Unsubscribe } from 'firebase/firestore';
                   </td>
                   <td class="px-8 py-6 text-right">
                     <div class="flex justify-end gap-2">
+                       <a [routerLink]="['/products', p.id]" class="w-9 h-9 rounded-xl bg-gray-50 text-gray-600 hover:bg-[#0D1B2A] hover:text-white transition-all flex items-center justify-center" title="Voir les détails">
+                          <mat-icon class="scale-75">visibility</mat-icon>
+                       </a>
                        <button (click)="triggerImageImport(p)" class="w-9 h-9 rounded-xl bg-[#e8f4fd] text-[#0984e3] hover:scale-105 transition-all flex items-center justify-center" title="Importer Image">
                          <mat-icon class="scale-75">image</mat-icon>
                        </button>
@@ -163,7 +172,7 @@ export class SupplierInventory implements OnInit, OnDestroy {
 
   public totalValue = computed(() => {
     const total = this.products().reduce((acc, p) => acc + (Number(p.price || 0) * Number(p.stock || 0)), 0);
-    return Number(total).toLocaleString('fr-FR') + ' FCFA';
+    return Number(total).toLocaleString('fr-FR');
   });
 
   private unsub?: Unsubscribe;
@@ -182,7 +191,7 @@ export class SupplierInventory implements OnInit, OnDestroy {
   asString(val: unknown): string { return String(val || ''); }
   
   formatPrice(val: number | string): string {
-    return Number(val || 0).toLocaleString('fr-FR') + ' FCFA';
+    return Number(val || 0).toLocaleString('fr-FR');
   }
 
   updateStock(productId: string, newStock: number) {
@@ -203,14 +212,14 @@ export class SupplierInventory implements OnInit, OnDestroy {
     }
   }
 
-  getStockStatusLabel(stock: number | string, threshold: number = 5): string {
+  getStockStatusLabel(stock: number | string, threshold = 5): string {
     const val = Number(stock || 0);
     if (val === 0) return 'Rupture';
     if (val <= threshold) return 'Critique';
     return 'En Stock';
   }
 
-  getStockStatusClass(stock: number | string, threshold: number = 5): string {
+  getStockStatusClass(stock: number | string, threshold = 5): string {
     const val = Number(stock || 0);
     if (val === 0) return 'bg-[#fdedec] text-[#e17055]';
     if (val <= threshold) return 'bg-[#fff3ec] text-[#FF6200]';

@@ -92,11 +92,11 @@ type DetailTab = 'description' | 'specs' | 'store' | 'reviews';
               
               <div class="flex flex-col gap-1 mb-8">
                  @if (asRecord(product())['oldPrice']) {
-                    <span class="text-lg text-muted line-through font-bold opacity-40 italic">{{asRecord(product())['oldPrice']}} FCFA</span>
+                    <span class="text-lg text-muted line-through font-bold font-price opacity-40 italic">{{ formatPrice(asRecord(product())['oldPrice']) }} FCFA</span>
                  }
                  <div class="flex items-baseline gap-4">
-                    <span class="text-5xl font-mono font-black text-primary tracking-tighter">{{asRecord(product())['price']}} <span class="text-xs font-sans opacity-40">FCFA</span></span>
-                    <span class="text-xs font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2 py-1 rounded-md">Économisez {{ (asNumber(asRecord(product())['oldPrice']) || 0) > 0 ? asNumber(asRecord(product())['oldPrice']) - asNumber(asRecord(product())['price']) : 0 }} FCFA</span>
+                    <span class="text-5xl font-price font-black text-primary tracking-tighter">{{ formatPrice(asRecord(product())['price']) }} <span class="text-xs font-sans opacity-40">FCFA</span></span>
+                    <span class="text-xs font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2 py-1 rounded-md">Économisez {{ formatPrice((asNumber(asRecord(product())['oldPrice']) || 0) > 0 ? asNumber(asRecord(product())['oldPrice']) - asNumber(asRecord(product())['price']) : 0) }} FCFA</span>
                  </div>
               </div>
 
@@ -114,7 +114,7 @@ type DetailTab = 'description' | 'specs' | 'store' | 'reviews';
                     <div class="h-full bg-primary rounded-full transition-all duration-1000" 
                          [style.width.%]="(asNumber(asRecord(product())['stock']) / 100) * 100 > 100 ? 100 : (asNumber(asRecord(product())['stock']) / 100) * 100"></div>
                   </div>
-                  <p class="mt-3 text-[12px] font-bold text-ink leading-relaxed">Il reste <span class="font-black text-primary">{{asRecord(product())['stock']}} articles</span> dans l'entrepôt principal Côte d'Ivoire.</p>
+                  <p class="mt-3 text-[12px] font-bold text-ink leading-relaxed">Il reste <span class="font-black text-primary">{{ formatPrice(asRecord(product())['stock']) }} articles</span> dans l'entrepôt principal Côte d'Ivoire.</p>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4 pt-6 border-t border-surface-2">
@@ -364,6 +364,11 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   asNumber(val: unknown): number { return Number(val) || 0; }
   asString(val: unknown): string { return (val as string) || ''; }
   asTab(val: string): DetailTab { return val as DetailTab; }
+
+  formatPrice(val: unknown): string {
+    if (val === undefined || val === null) return '0';
+    return new Intl.NumberFormat('fr-FR').format(Number(val));
+  }
 
   getTabLabel(tab: string): string {
     switch(tab) {

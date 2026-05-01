@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal, OnInit, OnDestroy, computed } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
 import { RouterLink, RouterLinkActive, RouterOutlet, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { MatIconModule } from '@angular/material/icon';
@@ -87,10 +88,13 @@ import { DataService } from '../services/data.service';
               @if (!sidebarCollapsed()) { <span class="animate-fade-in">Catalogue Articles</span> }
             </a>
 
-            <a routerLink="/supplier/inventory" routerLinkActive="bg-[#f0f2f5] !text-[#0D1B2A] ring-1 ring-[#e4e6ea]" class="nav-item" [class.justify-center]="sidebarCollapsed()" [title]="sidebarCollapsed() ? 'Gestion des Stocks' : ''">
-              <mat-icon class="scale-90 flex-shrink-0">inventory_2</mat-icon>
+            <a routerLink="/supplier/inventory" routerLinkActive="bg-[#f0f2f5] !text-[#0D1B2A] ring-1 ring-[#e4e6ea]" class="nav-item group" [class.justify-center]="sidebarCollapsed()" [title]="sidebarCollapsed() ? 'Inventaire & Stocks' : ''">
+              <mat-icon class="scale-90 flex-shrink-0 text-primary group-hover:scale-110 transition-transform">warehouse</mat-icon>
               @if (!sidebarCollapsed()) { 
-                <span class="animate-fade-in">Gestion des Stocks</span> 
+                <div class="flex flex-col min-w-0">
+                  <span class="animate-fade-in font-black">Inventaire & Stocks</span>
+                  <span class="text-[8px] font-bold opacity-60 uppercase tracking-tighter">Réapprovisionnement</span>
+                </div>
                 @if (dataService.lowStockCount() > 0) {
                   <span class="ml-auto bg-red-500 text-white text-[9px] font-black w-5 h-5 flex items-center justify-center rounded-full animate-pulse shadow-lg shadow-red-500/20">{{dataService.lowStockCount()}}</span>
                 }
@@ -171,7 +175,12 @@ import { DataService } from '../services/data.service';
                   </div>
                   <div class="max-h-96 overflow-y-auto no-scrollbar">
                     @for (note of dataService.notifications$(); track note.id) {
-                      <div class="p-5 hover:bg-[#fafafa] border-b border-[#f0f2f5] transition-colors cursor-pointer" [class.bg-blue-50/50]="!note.read" (click)="dataService.markNotificationRead(note.id)">
+                      <div class="p-5 hover:bg-[#fafafa] border-b border-[#f0f2f5] transition-colors cursor-pointer" 
+                           [class.bg-blue-50/50]="!note.read" 
+                           (click)="dataService.markNotificationRead(note.id)"
+                           role="button"
+                           tabindex="0"
+                           (keydown.enter)="dataService.markNotificationRead(note.id)">
                         <div class="flex gap-4">
                           <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" 
                                [class]="note.type === 'order' ? 'bg-[#e8f4fd] text-[#0984e3]' : 'bg-[#fef9e6] text-[#f39c12]'">
@@ -251,6 +260,7 @@ export class SupplierLayoutComponent implements OnInit, OnDestroy {
   currentTime = signal('');
 
   private clockInterval?: ReturnType<typeof setInterval>;
+  private unsubscribe?: () => void;
 
   ngOnInit() {
     this.updateTime();
@@ -262,11 +272,17 @@ export class SupplierLayoutComponent implements OnInit, OnDestroy {
     });
     this.updatePageTitle();
 
-    // Start notification watcher
-    const user = this.authService.user$();
-    if (user) {
-      this.dataService.watchNotifications(user.uid);
-    }
+    // Start notification watcher reactively
+    toObservable(this.authService.user$).subscribe(user => {
+      if (this.unsubscribe) {
+        this.unsubscribe();
+        this.unsubscribe = undefined;
+      }
+      
+      if (user) {
+        this.unsubscribe = this.dataService.watchNotifications(user.uid);
+      }
+    });
 
     // Update supplier unread count
     this.dataService.notifications$(); // Trigger compute
@@ -274,6 +290,7 @@ export class SupplierLayoutComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     if (this.clockInterval) clearInterval(this.clockInterval);
+    if (this.unsubscribe) this.unsubscribe();
   }
 
   updateTime() {

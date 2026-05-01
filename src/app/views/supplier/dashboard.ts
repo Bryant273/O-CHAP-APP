@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../services/auth.service';
 import { DataService, OchapOrder, OchapProduct } from '../../services/data.service';
-import { Unsubscribe } from 'firebase/firestore';
 
 @Component({
   selector: 'app-supplier-dashboard',
@@ -60,7 +60,7 @@ import { Unsubscribe } from 'firebase/firestore';
                </div>
             </div>
             <div class="space-y-1 relative z-10">
-               <h3 class="text-3xl font-black text-[#0D1B2A] tracking-tight">{{ stat.value }}</h3>
+               <h3 class="text-3xl font-black text-[#0D1B2A] tracking-tight font-price">{{ stat.value }}</h3>
                <p class="text-[10px] font-black text-[#9699a8] uppercase tracking-[0.15em] ml-1">{{ stat.label }}</p>
             </div>
             
@@ -87,7 +87,7 @@ import { Unsubscribe } from 'firebase/firestore';
            </div>
            
            <div class="flex items-end gap-5 h-64 px-4">
-              @for (val of [45, 62, 58, 85, 75, 92, 80]; track $index) {
+              @for (val of weeklyRevenue(); track $index) {
                 <div class="flex-1 flex flex-col items-center gap-4">
                    <div class="w-full max-w-[50px] relative group">
                       <div [style.height.px]="val * 2" 
@@ -98,11 +98,11 @@ import { Unsubscribe } from 'firebase/firestore';
                          <!-- Active Bar -->
                          <div [style.height.px]="(val * 2) * 0.4"
                               class="absolute bottom-0 left-0 w-full bg-primary rounded-t-2xl opacity-80 group-hover:opacity-100 transition-all shadow-lg shadow-primary/20"
-                              [class.opacity-100]="$last"></div>
+                              [class.opacity-100]="$last && val > 0"></div>
                       </div>
                       <!-- Value Hover -->
                       <div class="absolute -top-12 left-1/2 -translate-x-1/2 bg-[#0D1B2A] text-white px-3 py-1.5 rounded-xl text-[10px] font-black opacity-0 group-hover:opacity-100 transition-all -translate-y-2 group-hover:translate-y-0 shadow-xl z-20 pointer-events-none">
-                         {{val}}K CFA
+                         {{val | number:'1.0-1'}}K CFA
                       </div>
                    </div>
                    <span class="text-[10px] font-black text-[#9699a8] uppercase tracking-widest">{{ getDayLabel($index) }}</span>
@@ -170,7 +170,7 @@ import { Unsubscribe } from 'firebase/firestore';
                   <td class="px-10 py-6">
                     <div class="flex items-center gap-4">
                        <div class="w-12 h-12 rounded-2xl bg-[#f8f9fa] border border-[#e4e6ea] overflow-hidden group-hover:scale-105 transition-transform">
-                          <img [src]="p.imageUrl || 'https://picsum.photos/seed/'+p.id+'/200'" class="w-full h-full object-cover" referrerpolicy="no-referrer">
+                          <img [src]="p.imageUrl || 'https://picsum.photos/seed/'+p.id+'/200'" class="w-full h-full object-cover" referrerpolicy="no-referrer" [alt]="p.name">
                        </div>
                        <div class="flex flex-col">
                           <span class="text-xs font-black text-[#0D1B2A]">{{ p.name }}</span>
@@ -179,11 +179,11 @@ import { Unsubscribe } from 'firebase/firestore';
                     </div>
                   </td>
                   <td class="px-10 py-6">
-                     <span class="text-xs font-black text-[#0D1B2A] font-mono tracking-tight">{{ formatPrice(p.price) }}</span>
+                     <span class="text-xs font-black text-[#0D1B2A] font-price tracking-tight">{{ formatPrice(p.price) }} FCFA</span>
                   </td>
                   <td class="px-10 py-6 text-center">
                      <div class="flex flex-col items-center gap-2">
-                        <span [class]="p.stock > 10 ? 'text-[#00925c]' : 'text-[#FF6200]'" class="text-xs font-black font-mono">{{ p.stock }}</span>
+                        <span [class]="p.stock > 10 ? 'text-[#00925c]' : 'text-[#FF6200]'" class="text-xs font-black font-price">{{ p.stock }}</span>
                         <div class="w-20 h-1 bg-[#f0f2f5] rounded-full overflow-hidden">
                            <div class="h-full rounded-full transition-all duration-500" 
                                 [style.width.%]="(p.stock / 100) * 100 > 100 ? 100 : (p.stock / 100) * 100"
@@ -204,7 +204,12 @@ import { Unsubscribe } from 'firebase/firestore';
       <!-- STOCK MODAL -->
       @if (selectedProduct(); as p) {
          <div class="fixed inset-0 z-[100] flex items-center justify-center p-6 lg:p-12">
-            <div class="absolute inset-0 bg-[#0D1B2A]/80 backdrop-blur-md" (click)="selectedProduct.set(null)"></div>
+            <div class="absolute inset-0 bg-[#0D1B2A]/80 backdrop-blur-md" 
+                 (click)="selectedProduct.set(null)"
+                 role="button"
+                 aria-label="Fermer l'édition"
+                 tabindex="0"
+                 (keydown.enter)="selectedProduct.set(null)"></div>
             <div class="relative w-full max-w-lg bg-white rounded-[3rem] p-10 shadow-2xl animate-fade-in border border-[#e4e6ea]">
                <button (click)="selectedProduct.set(null)" class="absolute top-8 right-8 text-muted hover:text-dark">
                   <mat-icon>close</mat-icon>
@@ -218,28 +223,28 @@ import { Unsubscribe } from 'firebase/firestore';
                <div class="grid grid-cols-2 gap-8 mb-10">
                   <div class="p-6 rounded-3xl bg-[#f8f9fa] border border-[#e4e6ea]">
                      <span class="text-[9px] font-black text-muted uppercase tracking-widest block mb-2">Stock Actuel</span>
-                     <span class="text-3xl font-black text-dark font-mono">{{ p.stock }}</span>
+                     <span class="text-3xl font-black text-dark font-price">{{ p.stock }}</span>
                   </div>
                   <div class="p-6 rounded-3xl bg-[#f8f9fa] border border-[#e4e6ea]">
                      <span class="text-[9px] font-black text-muted uppercase tracking-widest block mb-2">Seuil Alerte</span>
-                     <span class="text-3xl font-black text-dark font-mono">{{ p.threshold || 10 }}</span>
+                     <span class="text-3xl font-black text-dark font-price">{{ p.threshold || 10 }}</span>
                   </div>
                </div>
-               
                <div class="space-y-6">
                   <div>
-                     <label class="text-[10px] font-black text-dark uppercase tracking-widest block mb-4">Nouvelle Quantité</label>
+                     <label for="stock-input" class="text-[10px] font-black text-dark uppercase tracking-widest block mb-4">Nouvelle Quantité</label>
                      <div class="flex items-center gap-4">
                         <button (click)="decrementStock()" class="w-14 h-14 rounded-2xl bg-[#0D1B2A] text-white flex items-center justify-center hover:bg-primary transition-all">
                            <mat-icon>remove</mat-icon>
                         </button>
-                        <input type="number" [(ngModel)]="newStockValue" 
-                               class="flex-1 h-14 bg-[#f8f9fa] border-2 border-[#e4e6ea] rounded-2xl text-center text-xl font-black font-mono focus:border-primary focus:outline-none">
+                        <input id="stock-input" type="number" [(ngModel)]="newStockValue" 
+                               class="flex-1 h-14 bg-[#f8f9fa] border-2 border-[#e4e6ea] rounded-2xl text-center text-xl font-black font-price focus:border-primary focus:outline-none">
                         <button (click)="incrementStock()" class="w-14 h-14 rounded-2xl bg-[#0D1B2A] text-white flex items-center justify-center hover:bg-primary transition-all">
                            <mat-icon>add</mat-icon>
                         </button>
                      </div>
                   </div>
+               </div>
                   
                   <button (click)="saveStock()" [disabled]="isSaving()" class="w-full h-16 bg-[#FF6200] text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-3">
                      @if (isSaving()) {
@@ -251,7 +256,6 @@ import { Unsubscribe } from 'firebase/firestore';
                   </button>
                </div>
             </div>
-         </div>
       }
 
       <!-- RECENT OPERATIONS -->
@@ -288,7 +292,7 @@ import { Unsubscribe } from 'firebase/firestore';
                     </div>
                   </td>
                   <td class="px-10 py-6 text-right">
-                    <span class="text-xs font-black text-primary font-mono">{{ formatPrice(order['total']) }}</span>
+                    <span class="text-xs font-black text-primary font-price">{{ formatPrice(order['total']) }} FCFA</span>
                   </td>
                   <td class="px-10 py-6">
                     <div class="flex justify-center">
@@ -331,13 +335,7 @@ import { Unsubscribe } from 'firebase/firestore';
 export class SupplierDashboard implements OnInit, OnDestroy {
   public authService = inject(AuthService);
   private dataService = inject(DataService);
-  private unsub?: () => void;
-  private productsUnsub?: () => void;
-  
-  ngOnDestroy() {
-    if (this.unsub) this.unsub();
-    if (this.productsUnsub) this.productsUnsub();
-  }
+  private unsubscribeFunctions: (() => void)[] = [];
   
   supplierName = computed(() => {
     const profile = this.authService.profile$() as Record<string, unknown>;
@@ -410,15 +408,15 @@ export class SupplierDashboard implements OnInit, OnDestroy {
         trend: 'Transition', 
         trendClass: 'bg-[#f0f2f5] text-[#5a5e72]' 
       },
-      { 
-        label: "Chiffre d'affaires", 
-        value: this.formatPrice(totalRevenue).replace(' FCFA', ''), 
-        icon: 'payments', 
-        iconBg: 'bg-[#fef9e6]', 
-        iconColor: 'text-[#f39c12]', 
-        trend: 'Revenus', 
-        trendClass: 'bg-[#eafaf1] text-[#00925c]' 
-      }
+        { 
+          label: "Chiffre d'affaires", 
+          value: this.formatPrice(totalRevenue), 
+          icon: 'payments', 
+          iconBg: 'bg-[#fef9e6]', 
+          iconColor: 'text-[#f39c12]', 
+          trend: 'Revenus', 
+          trendClass: 'bg-[#eafaf1] text-[#00925c]' 
+        }
     ];
   });
 
@@ -476,20 +474,38 @@ export class SupplierDashboard implements OnInit, OnDestroy {
     this.currentDate.set(d.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }));
     
     // Subscribe to auth changes to initialize watchers
-    const user = this.authService.user$();
-    if (user) {
-      this.loadSupplierData(user.uid);
-    }
+    toObservable(this.authService.user$).subscribe(user => {
+      // Clear previous watchers
+      this.clearWatchers();
+      
+      if (user) {
+        this.loadSupplierData(user.uid);
+      }
+    });
+  }
+
+  private clearWatchers() {
+    this.unsubscribeFunctions.forEach(unsub => unsub());
+    this.unsubscribeFunctions = [];
   }
 
   loadSupplierData(uid: string) {
-    // Basic watchers
-    this.unsub = this.dataService.watchSupplierOrders(uid);
-    this.productsUnsub = this.dataService.watchSupplierProducts(uid);
+    // Basic watchers - push to array for cleanup
+    this.unsubscribeFunctions.push(this.dataService.watchSupplierOrders(uid));
+    this.unsubscribeFunctions.push(this.dataService.watchSupplierProducts(uid));
     
-    // Monitoring
-    this.dataService.watchNotifications(uid);
+    // Monitoring - NOTE: watchNotifications is already handled by Layout,
+    // but if we want it here too, we must store the unsub.
+    // However, to avoid double subscriptions and permissions noise on logout,
+    // let's just rely on the Layout for global notifications signal.
+    // If we DO need to call it here, we store it:
+    // this.unsubscribeFunctions.push(this.dataService.watchNotifications(uid));
+    
     this.dataService.monitorStockLevels();
+  }
+
+  ngOnDestroy() {
+    this.clearWatchers();
   }
 
   // Effect computed for recent orders
@@ -533,7 +549,7 @@ export class SupplierDashboard implements OnInit, OnDestroy {
   asString(val: unknown): string { return String(val || ''); }
   
   formatPrice(val: number | string): string {
-    return Number(val || 0).toLocaleString('fr-FR') + ' FCFA';
+    return Number(val || 0).toLocaleString('fr-FR');
   }
 
   getStatusLabel(status: string): string {

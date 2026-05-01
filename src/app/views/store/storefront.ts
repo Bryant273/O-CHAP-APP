@@ -324,7 +324,7 @@ type PanelType = 'none' | 'cart' | 'wishlist' | 'orders' | 'profile';
   
                       <div class="flex items-center justify-between">
                          <div class="flex flex-col">
-                            <span class="text-primary text-2xl font-bold">{{ prod['price'] }} <small class="text-[10px] opacity-60 uppercase font-sans">FCFA</small></span>
+                            <span class="text-primary text-2xl font-bold font-price">{{ formatPrice(prod['price']) }} <small class="text-[10px] opacity-60 uppercase font-sans">FCFA</small></span>
                          </div>
                          
                          <button (click)="addToCart($event, prod)" class="bg-primary hover:bg-white hover:text-dark px-6 py-2.5 rounded-lg font-bold text-xs uppercase tracking-widest transition-all shadow-md active:scale-95">
@@ -438,10 +438,10 @@ type PanelType = 'none' | 'cart' | 'wishlist' | 'orders' | 'profile';
                   <div class="mt-4 flex flex-col items-center text-center px-1 pb-4">
                      <p class="text-[9px] font-bold text-muted uppercase tracking-widest mb-1 opacity-60">{{p['category']}}</p>
                      <h3 class="text-sm font-medium text-dark leading-snug mb-2 group-hover:text-primary transition-colors line-clamp-1 truncate w-full">{{p['name']}}</h3>
-                     <p class="text-base font-mono text-primary mb-3">{{p['price']}} <small class="text-[10px] opacity-60">FCFA</small></p>
+                     <p class="text-base font-price text-primary mb-3">{{ formatPrice(p['price']) }} <small class="text-[10px] opacity-60">FCFA</small></p>
                      
                      <div class="flex items-center justify-center pt-2">
-                        <button class="px-5 py-2 rounded-full border border-primary/20 text-primary text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all transform group-hover:translate-y-[-2px] shadow-sm hover:shadow-primary/20">
+                        <button [routerLink]="['/products', p['id']]" class="px-5 py-2 rounded-full border border-primary/20 text-primary text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all transform group-hover:translate-y-[-2px] shadow-sm hover:shadow-primary/20">
                           Voir plus
                         </button>
                      </div>
@@ -617,7 +617,7 @@ type PanelType = 'none' | 'cart' | 'wishlist' | 'orders' | 'profile';
                         <h4 class="text-sm font-medium text-dark leading-tight line-clamp-2">{{item.name}}</h4>
                         <button (click)="removeFromCart(item.id)" class="text-muted hover:text-red-500 transition-colors" title="Retirer"><mat-icon class="scale-75">delete_outline</mat-icon></button>
                      </div>
-                     <p class="text-xs font-mono text-primary mb-3">{{item.price}} FCFA</p>
+                     <p class="text-xs font-price text-primary mb-3">{{ formatPrice(item.price) }} FCFA</p>
                      
                      <div class="mt-auto flex items-center">
                         <div class="flex items-center bg-white border border-surface-2 rounded-lg overflow-hidden h-8">
@@ -640,7 +640,7 @@ type PanelType = 'none' | 'cart' | 'wishlist' | 'orders' | 'profile';
          <div class="p-6 border-t border-surface-2 bg-white flex flex-col gap-4">
             <div class="flex items-center justify-between px-1">
                <span class="text-xs font-bold text-muted uppercase tracking-widest font-sans">Sous-total</span>
-               <span class="text-xl font-mono text-dark">{{cartSubtotal()}} FCFA</span>
+               <span class="text-xl font-price text-dark">{{ formatPrice(cartSubtotal()) }} FCFA</span>
             </div>
             <button (click)="checkout()" [disabled]="!cartItemsCount()" class="btn-primary w-full !py-4 shadow-xl shadow-primary/20 disabled:opacity-50 disabled:grayscale uppercase text-xs font-bold tracking-widest transition-all">
                Finaliser Commande
@@ -664,7 +664,7 @@ type PanelType = 'none' | 'cart' | 'wishlist' | 'orders' | 'profile';
                     </div>
                     <div class="flex-1 min-w-0 flex flex-col">
                        <h4 class="text-sm font-medium text-dark leading-tight line-clamp-2 mb-1">{{item['name']}}</h4>
-                       <p class="text-xs font-mono text-primary mb-4">{{item['price']}} FCFA</p>
+                       <p class="text-xs font-price text-primary mb-4">{{ formatPrice(item['price']) }} FCFA</p>
                        <div class="flex gap-2 mt-auto">
                           <button (click)="addToCart($event, item)" class="flex-1 h-8 bg-dark text-white-soft rounded-lg text-[10px] font-bold uppercase transition-all active:scale-95">Ajouter</button>
                           <button (click)="toggleWishlist($event, item)" class="w-8 h-8 rounded-lg border border-surface-2 text-red-400 hover:bg-red-50 flex items-center justify-center transition-all" aria-label="Supprimer"><mat-icon class="scale-75">delete</mat-icon></button>
@@ -782,8 +782,14 @@ export class StorefrontComponent implements OnInit, OnDestroy {
           this.dataService.monitorStockLevels();
         }
       } else {
-        if (this.unsubNotif) this.unsubNotif();
-        if (this.unsubStock) this.unsubStock();
+        if (this.unsubNotif) {
+          this.unsubNotif();
+          this.unsubNotif = undefined;
+        }
+        if (this.unsubStock) {
+          this.unsubStock();
+          this.unsubStock = undefined;
+        }
       }
     });
   }
@@ -930,6 +936,12 @@ export class StorefrontComponent implements OnInit, OnDestroy {
   }
 
   asString(val: unknown): string { return (val as string) || ''; }
+  asRecord(val: unknown): Record<string, unknown> { return val as Record<string, unknown>; }
+  asNumber(val: unknown): number { return Number(val) || 0; }
+  formatPrice(val: unknown): string {
+    if (val === undefined || val === null) return '0';
+    return new Intl.NumberFormat('fr-FR').format(Number(val));
+  }
 
   checkout() {
     if (!this.authService.isAuthenticated()) {

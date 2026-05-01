@@ -104,7 +104,7 @@ import { CommonModule } from '@angular/common';
                     class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-white/50 hover:bg-white/5 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest border border-transparent"
                     [class.justify-center]="sidebarCollapsed()">
               <div class="flex items-center gap-3">
-                <mat-icon class="scale-75">inventory_2</mat-icon> 
+                <mat-icon class="scale-75 text-primary">category</mat-icon> 
                 @if (!sidebarCollapsed()) { <span class="animate-fade-in">Catalogue</span> }
               </div>
               @if (!sidebarCollapsed()) {
@@ -114,10 +114,24 @@ import { CommonModule } from '@angular/common';
             @if (openSections()['catalog'] && !sidebarCollapsed()) {
               <div class="pl-9 space-y-1 animate-fade-in flex flex-col">
                 <a routerLink="/admin/products" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Produits</a>
-                <a routerLink="/admin/inventory" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Stocks</a>
                 <a routerLink="/admin/promo" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Promotions</a>
               </div>
             }
+          </div>
+
+          <!-- INVENTAIRE (TOP LEVEL) -->
+          <div class="space-y-1">
+            <a routerLink="/admin/inventory" routerLinkActive="bg-white/10 text-white shadow-lg" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/50 hover:bg-white/5 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest border border-transparent group"
+               [class.justify-center]="sidebarCollapsed()"
+               [title]="sidebarCollapsed() ? 'Inventaire Central' : ''">
+               <mat-icon class="scale-75 text-emerald-400 group-hover:scale-110 transition-transform">warehouse</mat-icon>
+               @if (!sidebarCollapsed()) {
+                 <div class="flex flex-col min-w-0">
+                    <span class="animate-fade-in">Inventaire Central</span>
+                    <span class="text-[8px] text-white/20 font-bold tracking-tighter">Flux Logistique</span>
+                 </div>
+               }
+            </a>
           </div>
 
           <!-- FINANCE -->
@@ -286,7 +300,7 @@ export class AdminLayoutComponent implements OnDestroy {
     global: true,
     ops: false,
     partners: false,
-    catalog: false,
+    catalog: true,
     finance: false,
     support: false,
     admin: false

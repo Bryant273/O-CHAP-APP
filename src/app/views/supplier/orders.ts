@@ -62,7 +62,7 @@ import { Unsubscribe } from 'firebase/firestore';
                     </span>
                   </td>
                   <td class="px-8 py-6">
-                    <span class="text-xs font-black text-[#FF6200] font-mono tracking-tight">{{ formatPrice(o['total']) }}</span>
+                    <span class="text-xs font-black text-[#FF6200] font-price tracking-tight">{{ formatPrice(o['total']) }} FCFA</span>
                   </td>
                   <td class="px-8 py-6">
                     <span [class]="getStatusClass(asString(o['status']))" class="text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider inline-flex items-center gap-1.5 cursor-pointer">
@@ -94,7 +94,12 @@ import { Unsubscribe } from 'firebase/firestore';
 
       @if (selectedOrder(); as o) {
          <div class="fixed inset-0 z-[100] flex items-center justify-center p-6 lg:p-12">
-            <div class="absolute inset-0 bg-[#0D1B2A]/80 backdrop-blur-md" (click)="selectedOrder.set(null)"></div>
+            <div class="absolute inset-0 bg-[#0D1B2A]/80 backdrop-blur-md" 
+                 (click)="selectedOrder.set(null)"
+                 role="button"
+                 aria-label="Fermer les détails"
+                 tabindex="0"
+                 (keydown.enter)="selectedOrder.set(null)"></div>
             <div class="relative w-full max-w-2xl bg-white rounded-[3rem] shadow-2xl animate-fade-in border border-[#e4e6ea] overflow-hidden">
                <div class="p-10 border-b border-[#e4e6ea] flex justify-between items-center bg-[#f8f9fa]">
                   <div>
@@ -150,10 +155,10 @@ import { Unsubscribe } from 'firebase/firestore';
                                        <span class="text-xs font-bold text-dark">{{ asRecord(item)['name'] }}</span>
                                     </td>
                                     <td class="px-6 py-4 text-center">
-                                       <span class="text-xs font-black text-muted font-mono">x{{ asRecord(item)['quantity'] }}</span>
+                                       <span class="text-xs font-black text-muted font-price">x{{ asRecord(item)['quantity'] }}</span>
                                     </td>
                                     <td class="px-6 py-4 text-right">
-                                       <span class="text-xs font-black text-dark font-mono">{{ formatPrice(asNumber(asRecord(item)['price']) * asNumber(asRecord(item)['quantity'])) }}</span>
+                                       <span class="text-xs font-black text-dark font-price">{{ formatPrice(asNumber(asRecord(item)['price']) * asNumber(asRecord(item)['quantity'])) }} FCFA</span>
                                     </td>
                                  </tr>
                               }
@@ -161,7 +166,7 @@ import { Unsubscribe } from 'firebase/firestore';
                            <tfoot class="bg-[#fafbfc] border-t-2 border-[#e4e6ea]">
                               <tr>
                                  <td colspan="2" class="px-6 py-6 text-right text-[10px] font-black uppercase tracking-widest">Total Transaction</td>
-                                 <td class="px-6 py-6 text-right text-lg text-primary font-black font-mono tracking-tighter">{{ formatPrice(o.total) }}</td>
+                                 <td class="px-6 py-6 text-right text-lg text-primary font-black font-price tracking-tighter">{{ formatPrice(o.total) }} FCFA</td>
                               </tr>
                            </tfoot>
                         </table>
@@ -201,7 +206,7 @@ export class SupplierOrders implements OnInit, OnDestroy {
   private unsub?: Unsubscribe;
   
   currentFilter = signal('all');
-  selectedOrder = signal<any | null>(null);
+  selectedOrder = signal<OchapOrder | null>(null);
 
   filters = [
     { id: 'all', label: 'Toutes' },
@@ -236,12 +241,12 @@ export class SupplierOrders implements OnInit, OnDestroy {
   }
 
   asString(val: unknown): string { return String(val || ''); }
-  asArray(val: unknown): any[] { return Array.isArray(val) ? val : []; }
-  asRecord(val: unknown): Record<string, any> { return val as Record<string, any>; }
+  asArray(val: unknown): Record<string, unknown>[] { return Array.isArray(val) ? val : []; }
+  asRecord(val: unknown): Record<string, unknown> { return val as Record<string, unknown>; }
   asNumber(val: unknown): number { return Number(val) || 0; }
   
   formatPrice(val: number | unknown): string {
-    return Number(val || 0).toLocaleString('fr-FR') + ' FCFA';
+    return Number(val || 0).toLocaleString('fr-FR');
   }
 
   getItemsSummary(items: unknown): string {

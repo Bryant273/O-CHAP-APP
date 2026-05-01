@@ -169,14 +169,20 @@ export class DataService {
   }
 
   handleFirestoreError(error: unknown, operation: OperationType, path: string | null) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
     const errInfo = {
-      error: errorMessage,
+      error: error instanceof Error ? error.message : String(error),
       operationType: operation,
       path: path,
       authInfo: {
         userId: auth.currentUser?.uid,
-        email: auth.currentUser?.email
+        email: auth.currentUser?.email,
+        emailVerified: auth.currentUser?.emailVerified,
+        isAnonymous: auth.currentUser?.isAnonymous,
+        tenantId: auth.currentUser?.tenantId,
+        providerInfo: auth.currentUser?.providerData?.map(provider => ({
+          providerId: provider.providerId,
+          email: provider.email,
+        })) || []
       }
     };
     console.error('Firestore Error:', JSON.stringify(errInfo));
@@ -327,6 +333,7 @@ export class DataService {
         // 3. Set order data
         transaction.set(orderRef, {
           ...orderData,
+          id: orderRef.id,
           status: 'pending',
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
@@ -431,6 +438,7 @@ export class DataService {
       await runTransaction(db, async (transaction) => {
         transaction.set(docRef, {
           ...product,
+          id: docRef.id,
           supplierId: userId, // Current authenticated user is the supplier
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),

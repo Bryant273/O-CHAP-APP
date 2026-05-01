@@ -23,6 +23,7 @@
   --font-display: "Inter", "Calibri", sans-serif;
   --font-sans: "Inter", "Calibri", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
+  --font-price: "Calibri", "Segoe UI", "Candara", "Bitstream Vera Sans", "DejaVu Sans", "Bitstream Vera Sans", "Trebuchet MS", "Verdana", "Verdana Ref", sans-serif;
 
   --radius-std: 8px;
   --radius-lg: 12px;

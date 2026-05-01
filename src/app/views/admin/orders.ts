@@ -52,7 +52,7 @@ import { DataService } from '../../services/data.service';
                         <span class="text-[10px] font-bold text-[#0D1B2A] font-mono">{{order.customerUid}}</span>
                       </div>
                    </td>
-                   <td class="px-8 py-5 text-xs font-black text-[#0D1B2A] italic">{{formatAmount(order.total)}} FCFA</td>
+                   <td class="px-8 py-5 text-xs font-black text-[#0D1B2A] italic font-price">{{formatAmount(order.total)}} FCFA</td>
                    <td class="px-8 py-5">
                       <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all"
                             [class.bg-emerald-50]="order.status === 'delivered' || order.status === 'confirmed'"

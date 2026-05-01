@@ -26,7 +26,7 @@ import { DataService } from '../../services/data.service';
             <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
             <div class="relative z-10">
                <div class="text-[10px] font-black uppercase tracking-widest text-emerald-100/60 mb-2">Encours à facturer</div>
-               <div class="text-3xl font-black tracking-tighter">{{formatAmount(totalVolume())}} F</div>
+               <div class="text-3xl font-black tracking-tighter font-price">{{formatAmount(totalVolume())}} F</div>
                <div class="mt-6 flex items-center gap-2">
                   <span class="px-2 py-0.5 rounded-full bg-white/20 text-[8px] font-black uppercase tracking-widest">Global</span>
                   <span class="text-[8px] font-bold text-emerald-100/40 italic">Sync : temps réel</span>
@@ -37,12 +37,12 @@ import { DataService } from '../../services/data.service';
             <div class="text-[10px] font-black text-[#9699a8] uppercase tracking-widest mb-4 flex items-center gap-2">
                <span class="w-2 h-2 rounded-full bg-blue-500"></span> Commission Plateforme
             </div>
-            <div class="text-3xl font-black text-[#0D1B2A] tracking-tighter">{{formatAmount(estimatedCommissions())}} F</div>
+            <div class="text-3xl font-black text-[#0D1B2A] tracking-tighter font-price">{{formatAmount(estimatedCommissions())}} F</div>
             <div class="mt-4 text-[9px] text-[#5a5e72] font-bold italic">Basé sur 10% du volume HT</div>
          </div>
          <div class="bg-[#f8f9fa] p-8 rounded-[2.5rem] border border-[#e4e6ea] border-dashed">
             <div class="text-[10px] font-black text-[#9699a8] uppercase tracking-widest mb-4">Payouts Fournisseurs</div>
-            <div class="text-3xl font-black text-[#5a5e72] tracking-tighter">{{formatAmount(payouts())}} F</div>
+            <div class="text-3xl font-black text-[#5a5e72] tracking-tighter font-price">{{formatAmount(payouts())}} F</div>
             <div class="mt-4 text-[9px] text-emerald-600 font-black uppercase italic animate-pulse">En attente de cycle</div>
          </div>
       </div>
@@ -72,7 +72,7 @@ import { DataService } from '../../services/data.service';
                      <tr class="hover:bg-[#fafbfc] transition-all">
                         <td class="px-8 py-4 text-[11px] font-mono font-bold text-[#0D1B2A]">#INV-{{(s.id || '').slice(-6).toUpperCase()}}</td>
                         <td class="px-8 py-4 text-[11px] font-black text-[#0D1B2A]">{{s.name}}</td>
-                        <td class="px-8 py-4 text-[11px] font-black text-[#0D1B2A] italic">{{formatAmount((s.productCount || 0) * 12500)}} F</td>
+                        <td class="px-8 py-4 text-[11px] font-black text-[#0D1B2A] italic font-price">{{formatAmount((s.productCount || 0) * 12500)}} F</td>
                         <td class="px-8 py-4">
                            <span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[8px] font-black uppercase tracking-widest border border-emerald-100">Payée</span>
                         </td>

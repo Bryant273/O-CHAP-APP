@@ -69,7 +69,7 @@ import { DataService } from '../../services/data.service';
                  </div>
                  <div class="text-right">
                     <div class="text-[8px] font-black text-[#9699a8] uppercase tracking-widest">Total Dépenses</div>
-                    <div class="text-[11px] font-black text-emerald-600 mt-1">125.000 F</div>
+                    <div class="text-[11px] font-black text-emerald-600 mt-1 font-price">125 000 F</div>
                  </div>
               </div>
 

@@ -25,7 +25,7 @@ import { DataService } from '../../services/data.service';
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
          <div class="bg-white p-6 rounded-[2rem] border border-[#e4e6ea] shadow-sm transform hover:-translate-y-1 transition-all duration-300">
             <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-4"><mat-icon>monetization_on</mat-icon></div>
-            <div class="text-2xl font-black text-[#0D1B2A] tracking-tighter">{{formatAmount(totalRevenue())}} F</div>
+            <div class="text-2xl font-black text-[#0D1B2A] tracking-tighter font-price">{{formatAmount(totalRevenue())}} F</div>
             <div class="text-[9px] font-black text-[#9699a8] uppercase tracking-[0.2em] mt-1">Chiffre d'Affaires</div>
          </div>
          <div class="bg-white p-6 rounded-[2rem] border border-[#e4e6ea] shadow-sm transform hover:-translate-y-1 transition-all duration-300">
@@ -35,7 +35,7 @@ import { DataService } from '../../services/data.service';
          </div>
          <div class="bg-white p-6 rounded-[2rem] border border-[#e4e6ea] shadow-sm transform hover:-translate-y-1 transition-all duration-300">
             <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4"><mat-icon>payments</mat-icon></div>
-            <div class="text-2xl font-black text-[#0D1B2A] tracking-tighter">{{formatAmount(avgOrderValue())}} F</div>
+            <div class="text-2xl font-black text-[#0D1B2A] tracking-tighter font-price">{{formatAmount(avgOrderValue())}} F</div>
             <div class="text-[9px] font-black text-[#9699a8] uppercase tracking-[0.2em] mt-1">Panier Moyen</div>
          </div>
          <div class="bg-white p-6 rounded-[2rem] border border-[#e4e6ea] shadow-sm transform hover:-translate-y-1 transition-all duration-300">

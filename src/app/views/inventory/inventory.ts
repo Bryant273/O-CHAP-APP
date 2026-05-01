@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, signal, computed, OnInit, OnDestroy
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
+import { RouterLink } from '@angular/router';
 import { auth, db } from '../../services/firebase';
 import { onSnapshot, collection, query, where, Unsubscribe, QuerySnapshot, DocumentData, updateDoc, doc, serverTimestamp, addDoc, deleteDoc } from 'firebase/firestore';
 import { OchapProduct } from '../../services/data.service';
@@ -9,7 +10,7 @@ import { OchapProduct } from '../../services/data.service';
 @Component({
   selector: 'app-inventory',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatIconModule],
+  imports: [CommonModule, FormsModule, MatIconModule, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="space-y-8 animate-fade-in">
@@ -55,7 +56,7 @@ import { OchapProduct } from '../../services/data.service';
       <!-- FILTRES & CATÉGORIES -->
       <div class="flex flex-wrap items-center gap-3 py-2">
          <button (click)="filterCat.set('all')" [class.bg-primary]="filterCat() === 'all'" [class.text-white]="filterCat() === 'all'" class="px-5 h-9 rounded-full text-[10px] font-black uppercase tracking-widest border border-[#e4e6ea] hover:border-primary transition-all" title="Filtrer par tout">Tous</button>
-         @for (cat of ['frigo', 'tv', 'clim', 'laver', 'cuisine']; track cat) {
+         @for (cat of ['frigo', 'congel', 'tv', 'clim', 'laver', 'cuisine', 'micro', 'cafe']; track cat) {
             <button (click)="filterCat.set(cat)" [class.bg-primary]="filterCat() === cat" [class.text-white]="filterCat() === cat" class="px-5 h-9 rounded-full text-[10px] font-black uppercase tracking-widest border border-[#e4e6ea] hover:border-primary transition-all" [title]="'Filtrer par ' + cat">
               {{cat}}
             </button>
@@ -101,10 +102,18 @@ import { OchapProduct } from '../../services/data.service';
                            </span>
                         </td>
                         <td class="px-8 py-4 text-center">
-                           <div class="flex flex-col items-center gap-1.5">
-                              <span class="text-xs font-black" [class.text-red-600]="(product.stock || 0) <= (product.threshold || 0)">
-                                 {{product.stock || 0}}
-                              </span>
+                           <div class="flex flex-col items-center gap-2">
+                              <div class="flex items-center bg-[#f8f9fa] border border-[#e4e6ea] rounded-lg overflow-hidden shadow-sm">
+                                 <button (click)="updateQuickStock(product.id, (product.stock || 0) - 1, product.threshold || 10)" class="w-6 h-6 flex items-center justify-center hover:bg-[#f0f2f5] transition-all text-[#5a5e72]">
+                                    <mat-icon class="scale-50">remove</mat-icon>
+                                 </button>
+                                 <span class="w-8 text-center text-[10px] font-black" [class.text-red-600]="(product.stock || 0) <= (product.threshold || 0)">
+                                    {{product.stock || 0}}
+                                 </span>
+                                 <button (click)="updateQuickStock(product.id, (product.stock || 0) + 1, product.threshold || 10)" class="w-6 h-6 flex items-center justify-center hover:bg-[#f0f2f5] transition-all text-[#5a5e72]">
+                                    <mat-icon class="scale-50">add</mat-icon>
+                                 </button>
+                              </div>
                               <div class="w-12 h-1 bg-[#f0f2f5] rounded-full overflow-hidden">
                                  <div class="h-full transition-all duration-700" 
                                       [class.bg-red-500]="(product.stock || 0) <= (product.threshold || 0)"
@@ -117,6 +126,9 @@ import { OchapProduct } from '../../services/data.service';
                         <td class="px-8 py-4 text-right text-xs font-black text-[#0D1B2A]">{{product.price}} FCFA</td>
                         <td class="px-8 py-4">
                            <div class="flex justify-center gap-2">
+                              <a [routerLink]="['/products', product.id]" class="w-8 h-8 rounded-xl bg-gray-50 text-gray-600 flex items-center justify-center hover:bg-[#0D1B2A] hover:text-white transition-all" title="Voir les détails">
+                                 <mat-icon class="scale-75">visibility</mat-icon>
+                              </a>
                               <button (click)="editProduct(product)" class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all" title="Modifier le produit">
                                  <mat-icon class="scale-75">edit</mat-icon>
                               </button>
@@ -140,10 +152,10 @@ import { OchapProduct } from '../../services/data.service';
 
       <!-- Add/Edit Product Panel -->
       @if (showAddPanel()) {
-        <div class="fixed inset-0 z-[1000] flex justify-end">
+        <div class="fixed inset-0 z-[9999] flex justify-end">
           <div class="absolute inset-0 bg-[#0D1B2A]/40 backdrop-blur-sm animate-fade-in" (click)="showAddPanel.set(false)" tabindex="-1" role="presentation"></div>
-          <div class="relative w-full max-w-xl bg-white h-full shadow-2xl animate-slide-left p-8 flex flex-col">
-            <div class="flex items-center justify-between mb-8 pb-6 border-b border-[#e4e6ea]">
+          <div class="relative w-full max-w-xl bg-white h-full shadow-2xl animate-slide-left flex flex-col overflow-hidden">
+            <div class="flex items-center justify-between p-8 border-b border-[#e4e6ea] bg-white shrink-0">
                <div>
                   <h3 class="text-xl font-black text-[#0D1B2A] tracking-tighter">{{ editing() ? 'Modifier' : 'Nouveau' }} Article.</h3>
                   <p class="text-[9px] font-black text-[#9699a8] uppercase tracking-widest mt-1">Édition des métadonnées catalogue</p>
@@ -151,8 +163,8 @@ import { OchapProduct } from '../../services/data.service';
                <button (click)="showAddPanel.set(false)" class="w-10 h-10 rounded-full hover:bg-[#f0f2f5] transition-all flex items-center justify-center text-[#5a5e72]" title="Fermer le panneau"><mat-icon>close</mat-icon></button>
             </div>
 
-            <div class="flex-1 overflow-y-auto no-scrollbar space-y-8">
-               <div class="space-y-6">
+            <div class="flex-1 overflow-y-auto no-scrollbar p-8 space-y-8 bg-[#fafbfc]">
+               <div class="space-y-6 bg-white p-8 rounded-[2rem] border border-[#e4e6ea] shadow-sm">
                    <div class="space-y-1.5">
                     <label for="pName" class="text-[10px] font-black text-[#5a5e72]/60 uppercase tracking-widest ml-1">Désignation</label>
                     <input id="pName" type="text" [(ngModel)]="currentProd.name" placeholder="Ex: Réfrigérateur LG ThinQ" class="w-full h-12 bg-[#fcfcfd] border border-[#e4e6ea] rounded-2xl px-5 text-sm font-bold focus:border-primary outline-none transition-all">
@@ -172,11 +184,36 @@ import { OchapProduct } from '../../services/data.service';
                   <div class="space-y-1.5">
                     <label for="pCat" class="text-[10px] font-black text-[#5a5e72]/60 uppercase tracking-widest ml-1">Catégorie Métier</label>
                     <select id="pCat" [(ngModel)]="currentProd.category" class="w-full h-12 bg-[#fcfcfd] border border-[#e4e6ea] rounded-2xl px-5 text-sm font-bold focus:border-primary outline-none transition-all appearance-none cursor-pointer">
-                      <option value="frigo">Réfrigérateurs</option>
-                      <option value="tv">Téléviseurs</option>
-                      <option value="clim">Climatiseurs</option>
-                      <option value="laver">Lave-linge</option>
-                      <option value="cuisine">Cuisinières</option>
+                      <optgroup label="Froid">
+                        <option value="frigo">Réfrigérateurs</option>
+                        <option value="congel">Congélateurs</option>
+                        <option value="cave">Caves à vin</option>
+                      </optgroup>
+                      <optgroup label="TV & Son">
+                        <option value="tv">Téléviseurs</option>
+                        <option value="home">Home Cinéma</option>
+                        <option value="barre">Barres de son</option>
+                      </optgroup>
+                      <optgroup label="Confort">
+                        <option value="clim">Climatiseurs</option>
+                        <option value="mobile">Mobiles</option>
+                        <option value="ventilo">Ventilateurs</option>
+                      </optgroup>
+                      <optgroup label="Maison">
+                        <option value="laver">Lave-linge</option>
+                        <option value="secher">Sèche-linge</option>
+                        <option value="vaisselle">Lave-vaisselle</option>
+                      </optgroup>
+                      <optgroup label="Cuisine">
+                        <option value="cuisine">Cuisinières</option>
+                        <option value="four">Fours</option>
+                        <option value="micro">Micro-ondes</option>
+                      </optgroup>
+                      <optgroup label="Petit">
+                        <option value="cafe">Cafetières</option>
+                        <option value="mixeur">Mixeurs</option>
+                        <option value="fer">Fers</option>
+                      </optgroup>
                     </select>
                   </div>
 
@@ -191,9 +228,28 @@ import { OchapProduct } from '../../services/data.service';
                      </div>
                   </div>
 
-                  <div class="space-y-1.5">
-                    <label for="pMedia" class="text-[10px] font-black text-[#5a5e72]/60 uppercase tracking-widest ml-1">URL Média</label>
-                    <input id="pMedia" type="text" [(ngModel)]="currentProd.imageUrl" placeholder="https://..." class="w-full h-12 bg-[#fcfcfd] border border-[#e4e6ea] rounded-2xl px-5 text-[11px] font-medium outline-none transition-all text-[#5a5e72]">
+                  <div class="space-y-4">
+                    <p class="text-[10px] font-black text-[#5a5e72]/60 uppercase tracking-widest ml-1">Visuel du Produit</p>
+                    <div class="flex items-start gap-4">
+                      <input type="file" #fileInput (change)="onFileSelected($event)" accept="image/png, image/jpeg, image/jpg" class="hidden">
+                      <button type="button" (click)="fileInput.click()" class="w-24 h-24 rounded-2xl bg-[#f0f2f5] border-2 border-dashed border-[#e4e6ea] flex flex-col items-center justify-center overflow-hidden shrink-0 group relative hover:border-primary transition-all p-0">
+                        @if (currentProd.imageUrl) {
+                          <img [src]="currentProd.imageUrl" class="w-full h-full object-cover" referrerpolicy="no-referrer" alt="Aperçu">
+                          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
+                             <mat-icon class="text-white scale-75">sync</mat-icon>
+                          </div>
+                        } @else {
+                          <mat-icon class="text-[#9699a8] scale-110">add_a_photo</mat-icon>
+                          <span class="text-[7px] font-black text-[#9699a8] uppercase text-center mt-1">Photo</span>
+                        }
+                      </button>
+                      <div class="flex-1">
+                        <input type="text" [(ngModel)]="currentProd.imageUrl" placeholder="URL ou image importée" class="w-full h-11 bg-[#fcfcfd] border border-[#e4e6ea] rounded-xl px-4 text-[10px] font-medium outline-none focus:border-primary transition-all">
+                        <p class="text-[8px] text-[#9699a8] mt-2 font-medium italic leading-tight">
+                          Cliquez sur le cadre pour importer des fichiers PNG/JPG. Les photos sont optimisées pour le catalogue.
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
                   <div class="space-y-1.5">
@@ -203,7 +259,7 @@ import { OchapProduct } from '../../services/data.service';
               </div>
             </div>
 
-            <div class="pt-8 border-t border-[#e4e6ea] mt-auto">
+            <div class="p-8 border-t border-[#e4e6ea] bg-white shrink-0 mt-auto">
                <button (click)="saveProduct()" [disabled]="!isValid()" 
                        class="w-full h-14 bg-[#0D1B2A] text-white rounded-[1.5rem] text-[11px] font-black uppercase tracking-[0.25em] shadow-2xl shadow-navy/20 hover:bg-primary transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-4">
                   @if (loading()) {
@@ -259,6 +315,18 @@ export class InventoryComponent implements OnInit, OnDestroy {
 
   asNumber(val: unknown): number { return val as number; }
   asString(val: unknown): string { return val as string; }
+
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e: ProgressEvent<FileReader>) => {
+        this.currentProd.imageUrl = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
 
   ngOnInit() {
     const currentUser = auth.currentUser;
@@ -354,12 +422,8 @@ export class InventoryComponent implements OnInit, OnDestroy {
     }
   }
 
-  async updateQuickStock(productId: string, stockVal: string, thresholdVal: string) {
-    const newStock = parseInt(stockVal, 10);
-    const newThreshold = parseInt(thresholdVal, 10);
-    
-    if (isNaN(newStock) || newStock < 0) return;
-    if (isNaN(newThreshold) || newThreshold < 0) return;
+  async updateQuickStock(productId: string, newStock: number, newThreshold: number) {
+    if (newStock < 0) return;
     
     try {
       await updateDoc(doc(db, 'products', productId), {

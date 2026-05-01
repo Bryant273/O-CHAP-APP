@@ -43,7 +43,7 @@ import { DataService } from '../../services/data.service';
                        <div class="text-sm font-black text-[#0D1B2A]">{{zone.name}}</div>
                        <div class="flex items-center gap-3 mt-1">
                           <span class="text-[9px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase">{{zone.status || 'Active'}}</span>
-                          <span class="text-[9px] text-[#9699a8] font-bold uppercase tracking-widest italic">{{zone.deliveryPrice || 0}} FCFA / Livraison</span>
+                          <span class="text-[9px] text-[#9699a8] font-bold uppercase tracking-widest italic font-price">{{formatAmount(zone.deliveryPrice)}} FCFA / Livraison</span>
                        </div>
                     </div>
                  </div>
@@ -65,4 +65,8 @@ import { DataService } from '../../services/data.service';
 })
 export class AdminZones {
   public dataService = inject(DataService);
+
+  formatAmount(val: number | unknown): string {
+    return new Intl.NumberFormat('fr-FR').format(Number(val) || 0);
+  }
 }

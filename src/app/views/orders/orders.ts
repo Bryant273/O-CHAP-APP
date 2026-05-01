@@ -132,11 +132,11 @@ import { Unsubscribe } from 'firebase/firestore';
                                     </div>
                                     <div>
                                        <h4 class="text-xs font-black text-ink uppercase">{{ item['name'] }}</h4>
-                                       <p class="text-[10px] font-bold text-muted mt-1">{{ item['price'] }} FCFA &times; {{ item['quantity'] }}</p>
+                                       <p class="text-[10px] font-bold text-muted mt-1 font-price">{{ item['price'] }} FCFA &times; {{ item['quantity'] }}</p>
                                     </div>
                                  </div>
                                  <div class="text-right">
-                                    <p class="text-xs font-black text-ink font-mono">{{ calculateItemTotal(item) }} FCFA</p>
+                                    <p class="text-xs font-black text-ink font-price">{{ calculateItemTotal(item) }} FCFA</p>
                                  </div>
                               </div>
                             }
@@ -164,7 +164,7 @@ import { Unsubscribe } from 'firebase/firestore';
                           <div class="pt-2">
                              <div class="flex justify-between items-end mb-2">
                                 <span class="text-[10px] font-black text-muted uppercase tracking-widest">Sous-total</span>
-                                <span class="text-xs font-bold text-ink font-mono">{{ order['total'] }} FCFA</span>
+                                <span class="text-xs font-bold text-ink font-price">{{ order['total'] }} FCFA</span>
                              </div>
                              <div class="flex justify-between items-end mb-6">
                                 <span class="text-[10px] font-black text-muted uppercase tracking-widest">Frais logistiques</span>
@@ -172,7 +172,7 @@ import { Unsubscribe } from 'firebase/firestore';
                              </div>
                              <div class="flex justify-between items-end pt-4 border-t-2 border-dashed border-surface-2">
                                 <span class="text-[11px] font-black text-ink uppercase tracking-widest">Total Payé</span>
-                                <span class="text-2xl font-black text-primary font-mono tracking-tighter">{{ order['total'] }} <span class="text-[10px] font-sans opacity-40 uppercase">FCFA</span></span>
+                                <span class="text-2xl font-black text-primary font-price tracking-tighter">{{ order['total'] }} <span class="text-[10px] font-sans opacity-40 uppercase">FCFA</span></span>
                              </div>
                           </div>
                        </div>

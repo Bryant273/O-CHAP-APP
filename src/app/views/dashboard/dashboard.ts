@@ -28,7 +28,7 @@ import {AuthService} from '../../services/auth.service';
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
         <div class="bg-white p-5 rounded-[2rem] border border-[#e4e6ea] shadow-sm">
           <div class="w-10 h-10 rounded-xl bg-orange-50 text-primary flex items-center justify-center mb-4"><mat-icon>payments</mat-icon></div>
-          <div class="text-2xl font-black text-[#0D1B2A]">{{formatAmount(totalRevenue())}}</div>
+          <div class="text-2xl font-black text-[#0D1B2A] font-price">{{formatAmount(totalRevenue())}}</div>
           <div class="text-[10px] font-bold text-[#5a5e72] uppercase tracking-wider">Revenus Réels (CFA)</div>
           <div class="mt-3 flex items-center gap-1.5 text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full w-min whitespace-nowrap">
             <mat-icon class="scale-50">trending_up</mat-icon> Live Sync
@@ -147,7 +147,7 @@ import {AuthService} from '../../services/auth.service';
                       <td class="px-8 py-5">
                          <div class="text-xs font-black text-[#0D1B2A] group-hover:text-primary transition-colors">#OC-{{order.id.slice(-6).toUpperCase()}}</div>
                       </td>
-                      <td class="px-8 py-5 text-xs font-black text-[#0D1B2A] italic">{{formatOrderAmount(order.total)}} CFA</td>
+                      <td class="px-8 py-5 text-xs font-black text-[#0D1B2A] italic font-price">{{formatOrderAmount(order.total)}} CFA</td>
                       <td class="px-8 py-5">
                          <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all"
                                [class.bg-emerald-50]="order.status === 'delivered' || order.status === 'confirmed'"

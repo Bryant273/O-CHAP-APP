@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, computed, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { DataService } from '../../services/data.service';
@@ -60,18 +60,11 @@ import { AuthService } from '../../services/auth.service';
     @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
   `]
 })
-export class SupplierNotifications implements OnInit {
+export class SupplierNotifications {
   public dataService = inject(DataService);
   private authService = inject(AuthService);
   
   notifications = computed(() => this.dataService.notifications$());
-
-  ngOnInit() {
-    const user = this.authService.user$();
-    if (user) {
-      this.dataService.watchNotifications(user.uid);
-    }
-  }
 
   getIcon(type: string): string {
     switch (type) {
@@ -91,10 +84,11 @@ export class SupplierNotifications implements OnInit {
     }
   }
 
-  formatTime(createdAt: any): string {
+  formatTime(createdAt: unknown): string {
     if (!createdAt) return '';
-    const date = createdAt.toDate ? createdAt.toDate() : new Date(createdAt);
-    return date.toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    const date = (createdAt as { toDate?: () => Date } | string | number | Date);
+    const resolvedDate = (date as { toDate?: () => Date }).toDate ? (date as { toDate?: () => Date }).toDate!() : new Date(date as string | number | Date);
+    return resolvedDate.toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
   }
 
   async markAllRead() {
