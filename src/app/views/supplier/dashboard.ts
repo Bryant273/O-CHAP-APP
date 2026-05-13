@@ -13,35 +13,38 @@ import { DataService, OchapOrder, OchapProduct } from '../../services/data.servi
   imports: [CommonModule, RouterLink, MatIconModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="space-y-10 animate-fade-in pb-20">
+    <div class="space-y-10 animate-fade-up pb-20 px-6">
       
       <!-- PERFORMANCE BANNER -->
-      <div class="relative overflow-hidden bg-[#0D1B2A] rounded-[2.5rem] p-10 text-white shadow-2xl shadow-navy/20 group">
-         <div class="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-primary/20 to-transparent flex items-center justify-center opacity-50 group-hover:opacity-100 transition-opacity">
-            <mat-icon class="scale-[5] opacity-10 rotate-12">trending_up</mat-icon>
+      <div class="relative overflow-hidden bg-navy rounded-2xl p-10 text-white shadow-xl shadow-navy/10 group">
+         <div class="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-primary/5 to-transparent flex items-center justify-center opacity-30 group-hover:opacity-50 transition-opacity">
+            <mat-icon class="scale-[6] opacity-10 rotate-12">auto_graph</mat-icon>
          </div>
          
-         <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+         <div class="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-10">
             <div class="space-y-4">
-               <div class="inline-flex items-center gap-3 px-4 py-1.5 bg-white/10 rounded-full border border-white/5 backdrop-blur-sm">
-                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span class="text-[9px] font-black uppercase tracking-[0.2em]">STATUT BOUTIQUE : PREMIUM</span>
+               <div class="inline-flex items-center gap-3 px-4 py-1.5 bg-white/5 rounded-xl border border-white/10 backdrop-blur-md">
+                  <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                  <span class="text-[9px] font-black uppercase tracking-[0.2em]">PARTENAIRE CERTIFIÉ</span>
                </div>
-               <h2 class="text-3xl md:text-4xl font-black tracking-tighter leading-tight">Bonjour, {{ supplierName() }}. <br><span class="text-primary">{{ dynamicSubtitle() }}</span></h2>
-               <p class="text-white/50 text-sm font-medium">{{ currentDate() }}</p>
+               <h2 class="text-3xl lg:text-4xl font-display font-semibold tracking-tight leading-tight">
+                 Bonjour, {{ supplierName() }}. <br>
+                 <span class="text-primary opacity-90">{{ dynamicSubtitle() }}</span>
+               </h2>
+               <p class="text-white/30 text-xs font-medium tracking-wide">{{ currentDate() }}</p>
             </div>
             
-            <div class="flex gap-6">
-               <div class="h-24 px-8 rounded-3xl bg-white/5 border border-white/5 backdrop-blur-md flex flex-col justify-center">
-                  <span class="text-[9px] font-black text-white/40 uppercase tracking-widest mb-1">Score Qualité</span>
+            <div class="flex flex-wrap gap-4 lg:gap-6">
+               <div class="min-w-[120px] p-6 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xl flex flex-col justify-center items-center text-center group-hover:bg-white/10 transition-colors">
+                  <span class="text-[9px] font-black text-white/30 uppercase tracking-widest mb-2">Score Qualité</span>
                   <div class="flex items-center gap-2">
-                     <span class="text-2xl font-black">{{ averageRating() }}</span>
-                     <mat-icon class="text-primary scale-75">star</mat-icon>
+                     <span class="text-3xl font-display font-bold">{{ averageRating() }}</span>
+                     <mat-icon class="text-primary scale-75">stars</mat-icon>
                   </div>
                </div>
-               <div class="h-24 px-8 rounded-3xl bg-white/5 border border-white/5 backdrop-blur-md flex flex-col justify-center">
-                   <span class="text-[9px] font-black text-white/40 uppercase tracking-widest mb-1">Commandes</span>
-                   <span class="text-2xl font-black">{{ totalOrdersCount() }}</span>
+               <div class="min-w-[120px] p-6 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xl flex flex-col justify-center items-center text-center group-hover:bg-white/10 transition-colors">
+                    <span class="text-[9px] font-black text-white/30 uppercase tracking-widest mb-2">Commandes</span>
+                    <span class="text-3xl font-display font-bold">{{ totalOrdersCount() }}</span>
                </div>
             </div>
          </div>
@@ -50,23 +53,18 @@ import { DataService, OchapOrder, OchapProduct } from '../../services/data.servi
       <!-- ANALYTICS CARDS -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         @for (stat of stats(); track stat.label) {
-          <div class="bg-white p-7 rounded-[2.2rem] border border-[#e4e6ea] hover:shadow-xl hover:shadow-gray-200/50 transition-all group relative overflow-hidden">
-            <div class="flex justify-between items-start relative z-10 mb-6">
-               <div [class]="stat.iconBg" class="w-12 h-12 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
-                 <mat-icon [class]="stat.iconColor" class="scale-90">{{ stat.icon }}</mat-icon>
+          <div class="bg-white p-6 rounded-xl border border-surface-2 hover:shadow-oc transition-all duration-300 group relative overflow-hidden flex flex-col">
+            <div class="flex justify-between items-start mb-6 relative z-10">
+               <div [class]="stat.iconBg" class="w-11 h-11 rounded-lg flex items-center justify-center group-hover:scale-105 transition-all duration-500 shadow-sm shadow-black/5">
+                 <mat-icon [class]="stat.iconColor" class="scale-75">{{ stat.icon }}</mat-icon>
                </div>
-               <div [class]="stat.trendClass" class="text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest border border-current opacity-70">
+               <div [class]="stat.trendClass" class="text-[8px] font-black px-2.5 py-1 rounded-lg uppercase tracking-widest border border-current opacity-80 backdrop-blur-md">
                   {{ stat.trend }}
                </div>
             </div>
-            <div class="space-y-1 relative z-10">
-               <h3 class="text-3xl font-black text-[#0D1B2A] tracking-tight font-price">{{ stat.value }}</h3>
-               <p class="text-[10px] font-black text-[#9699a8] uppercase tracking-[0.15em] ml-1">{{ stat.label }}</p>
-            </div>
-            
-            <!-- Sparkline Style Decoration -->
-            <div class="absolute bottom-0 left-0 right-0 h-1 bg-[#F5F6F8]">
-               <div class="h-full bg-primary/20 transition-all duration-1000" [style.width.%]="50 + (Math.random() * 40)"></div>
+            <div class="mt-auto relative z-10">
+               <h3 class="text-2xl font-display font-bold text-navy tracking-tight mb-0.5">{{ stat.value }}</h3>
+               <p class="text-[9px] font-bold text-muted uppercase tracking-[0.1em] opacity-60">{{ stat.label }}</p>
             </div>
           </div>
         }
@@ -74,58 +72,58 @@ import { DataService, OchapOrder, OchapProduct } from '../../services/data.servi
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Revenue Insights (Left 2 cols) -->
-        <div class="lg:col-span-2 bg-white p-10 rounded-[2.5rem] border border-[#e4e6ea] shadow-oc-sm">
-           <div class="flex items-center justify-between mb-12">
+        <div class="lg:col-span-2 bg-white p-10 rounded-2xl border border-surface-2 shadow-oc overflow-hidden relative group">
+           <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 relative z-10">
               <div>
-                 <h4 class="text-xl font-black text-[#0D1B2A] tracking-tighter">Volume de Ventes.</h4>
-                 <p class="text-[10px] font-black text-[#9699a8] uppercase tracking-widest mt-1">Performance hebdomadaire du magasin</p>
+                 <h4 class="text-lg font-display font-bold text-navy tracking-tight">Volume d'Affaire.</h4>
+                 <p class="text-[9px] font-black text-muted uppercase tracking-[0.15em] mt-1 opacity-60">Analyse hebdomadaire</p>
               </div>
-              <div class="flex gap-2">
-                 <button class="px-4 py-2 rounded-full border border-primary text-primary text-[9px] font-black uppercase tracking-widest">7 Jours</button>
-                 <button class="px-4 py-2 rounded-full border border-[#e4e6ea] text-[#9699a8] text-[9px] font-black uppercase tracking-widest hover:border-primary hover:text-primary transition-all">30 Jours</button>
+              <div class="flex bg-surface-2 p-1 rounded-xl gap-1">
+                 <button class="px-5 py-2 rounded-lg bg-white shadow-sm text-navy text-[9px] font-black uppercase tracking-widest">7 Jours</button>
+                 <button class="px-5 py-2 rounded-lg text-muted text-[9px] font-black uppercase tracking-widest hover:text-navy transition-all">30 Jours</button>
               </div>
            </div>
            
-           <div class="flex items-end gap-5 h-64 px-4">
+           <div class="flex items-end gap-5 h-64 px-4 relative z-10">
               @for (val of weeklyRevenue(); track $index) {
-                <div class="flex-1 flex flex-col items-center gap-4">
-                   <div class="w-full max-w-[50px] relative group">
-                      <div [style.height.px]="val * 2" 
-                           class="w-full bg-[#f8f9fa] rounded-t-2xl group-hover:bg-primary/10 transition-colors cursor-pointer relative">
-                         <!-- Visual Marker -->
-                         <div class="absolute top-0 left-0 w-full h-1.5 bg-primary/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                         
-                         <!-- Active Bar -->
-                         <div [style.height.px]="(val * 2) * 0.4"
-                              class="absolute bottom-0 left-0 w-full bg-primary rounded-t-2xl opacity-80 group-hover:opacity-100 transition-all shadow-lg shadow-primary/20"
-                              [class.opacity-100]="$last && val > 0"></div>
+                <div class="flex-1 flex flex-col items-center gap-5 group/bar">
+                   <div class="w-full relative h-full flex flex-col justify-end">
+                      <div [style.height.%]="(val / maxWeeklyRevenue()) * 100" 
+                           class="w-full bg-surface-2 rounded-lg transition-all duration-700 ease-out cursor-pointer relative overflow-hidden group-hover/bar:bg-primary/5">
+                        
+                         <!-- Active/Filled Part -->
+                         <div class="absolute inset-x-0 bottom-0 bg-primary opacity-10 group-hover/bar:opacity-30 transition-all rounded-lg" [style.height.%]="100"></div>
+                         <div class="absolute inset-x-0 bottom-0 bg-primary rounded-lg transition-all duration-1000 shadow-sm"
+                              [style.height.%]="40"
+                              [class.opacity-100]="$last"></div>
                       </div>
-                      <!-- Value Hover -->
-                      <div class="absolute -top-12 left-1/2 -translate-x-1/2 bg-[#0D1B2A] text-white px-3 py-1.5 rounded-xl text-[10px] font-black opacity-0 group-hover:opacity-100 transition-all -translate-y-2 group-hover:translate-y-0 shadow-xl z-20 pointer-events-none">
-                         {{val | number:'1.0-1'}}K CFA
+
+                      <!-- Tooltip -->
+                      <div class="absolute -top-14 left-1/2 -translate-x-1/2 bg-navy text-white px-3 py-2 rounded-xl text-[10px] font-black opacity-0 group-hover/bar:opacity-100 transition-all scale-75 group-hover/bar:scale-100 shadow-xl z-20 pointer-events-none flex flex-col items-center">
+                         {{val | number:'1.0-0'}}K <small class="text-[7px] opacity-60 ml-0.5 font-sans">CFA</small>
                       </div>
                    </div>
-                   <span class="text-[10px] font-black text-[#9699a8] uppercase tracking-widest">{{ getDayLabel($index) }}</span>
+                   <span class="text-[9px] font-black text-muted uppercase tracking-widest group-hover/bar:text-primary transition-colors">{{ getDayLabel($index) }}</span>
                 </div>
               }
            </div>
         </div>
 
-        <!-- Inventory Alerts (Right col) -->
-        <div class="bg-[#0D1B2A] p-10 rounded-[2.5rem] text-white border border-[#1d2d3d] shadow-2xl shadow-navy/30">
-           <div class="mb-10">
-              <h4 class="text-xl font-black tracking-tighter">Alertes Stock.</h4>
-              <p class="text-[10px] font-black text-white/40 uppercase tracking-widest mt-1">Articles nécessitant une attention</p>
+        <!-- Inventory Alerts -->
+        <div class="bg-navy p-10 rounded-2xl text-white border border-white/5 shadow-xl relative overflow-hidden group">
+           <div class="mb-10 relative z-10">
+              <h4 class="text-lg font-display font-bold tracking-tight">Santé Logistique.</h4>
+              <p class="text-[9px] font-black text-white/30 uppercase tracking-[0.15em] mt-1">Niveaux critiques</p>
            </div>
            
-           <div class="space-y-6">
+           <div class="space-y-6 relative z-10">
               @for (cat of categories(); track cat.label) {
                  <div class="space-y-3">
-                    <div class="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
-                       <span class="text-white/60">{{ cat.label }}</span>
-                       <span [style.color]="cat.color">{{ cat.value }}%</span>
+                    <div class="flex justify-between items-center text-[9px] font-black uppercase tracking-widest">
+                       <span class="text-white/40">{{ cat.label }}</span>
+                       <span [style.color]="cat.color" class="text-[11px]">{{ cat.value }}%</span>
                     </div>
-                    <div class="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                    <div class="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
                        <div class="h-full rounded-full transition-all duration-1000 ease-out" 
                             [style.width.%]="cat.value" 
                             [style.background-color]="cat.color"></div>
@@ -134,65 +132,68 @@ import { DataService, OchapOrder, OchapProduct } from '../../services/data.servi
               }
            </div>
 
-           <div class="mt-12 p-6 rounded-[1.5rem] bg-white/5 border border-white/5 backdrop-blur-sm space-y-4">
-              <div class="text-[9px] font-black text-primary uppercase tracking-[0.2em]">Conseil de Croissance</div>
-              <p class="text-[11px] font-medium text-white/70 leading-relaxed italic">"Le stock de Réfrigérateurs est bas. Réapprovisionnez avant la promotion de ce weekend pour maximiser vos revenus."</p>
+           <div class="mt-12 p-6 rounded-xl bg-white/5 border border-white/10 backdrop-blur-md space-y-3 relative z-10">
+              <div class="flex items-center gap-2">
+                 <mat-icon class="scale-75 text-primary">lightbulb</mat-icon>
+                 <div class="text-[9px] font-black text-primary uppercase tracking-widest">O'CHAP INSIGHT</div>
+              </div>
+              <p class="text-[12px] font-medium text-white/60 leading-relaxed italic">"Réapprovisionnement recommandé sur les Réfrigérateurs avant le weekend."</p>
            </div>
         </div>
       </div>
 
       <!-- QUICK INVENTORY MANAGEMENT -->
-      <div class="bg-white rounded-[3rem] border border-[#e4e6ea] shadow-oc-sm overflow-hidden mt-12">
-        <div class="px-10 py-8 border-b border-[#e4e6ea] flex items-center justify-between">
+      <div class="bg-white rounded-xl border border-surface-2 shadow-sm overflow-hidden mt-8">
+        <div class="px-8 py-6 border-b border-surface-2 flex items-center justify-between">
            <div>
-             <h3 class="text-xl font-black text-[#0D1B2A] tracking-tighter italic">Gestion Rapide du <span class="text-primary">Stock.</span></h3>
-             <p class="text-[10px] font-black text-[#9699a8] uppercase tracking-widest mt-1">Mise à jour instantanée de vos produits</p>
+             <h3 class="text-lg font-display font-bold text-navy tracking-tight">Gestion du <span class="text-primary">Stock.</span></h3>
+             <p class="text-[9px] font-bold text-muted uppercase tracking-widest mt-1 opacity-60">Mise à jour rapide</p>
            </div>
-           <div class="flex items-center gap-3">
-              <span class="text-[9px] font-black uppercase text-muted tracking-widest">Temps réel activé</span>
-              <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+           <div class="flex items-center gap-2">
+              <span class="text-[8px] font-black uppercase text-muted tracking-widest">En ligne</span>
+              <div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
            </div>
         </div>
         
         <div class="overflow-x-auto no-scrollbar">
           <table class="w-full border-collapse">
             <thead>
-              <tr class="bg-[#fafbfc]">
-                <th class="px-10 py-5 text-left text-[10px] font-black text-[#9699a8] uppercase tracking-[0.2em]">Produit</th>
-                <th class="px-10 py-5 text-left text-[10px] font-black text-[#9699a8] uppercase tracking-[0.2em]">Prix</th>
-                <th class="px-10 py-5 text-center text-[10px] font-black text-[#9699a8] uppercase tracking-[0.2em]">Niveau de Stock</th>
-                <th class="px-10 py-5 text-right text-[10px] font-black text-[#9699a8] uppercase tracking-[0.2em]">Actions</th>
+              <tr class="bg-surface-1">
+                <th class="px-8 py-4 text-left text-[9px] font-black text-muted uppercase tracking-widest">Produit</th>
+                <th class="px-8 py-4 text-left text-[9px] font-black text-muted uppercase tracking-widest">Prix</th>
+                <th class="px-8 py-4 text-center text-[9px] font-black text-muted uppercase tracking-widest">Stock</th>
+                <th class="px-8 py-4 text-right text-[9px] font-black text-muted uppercase tracking-widest">Actions</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-[#f5f6f8]">
+            <tbody class="divide-y divide-surface-2">
               @for (p of myProducts(); track p.id) {
-                <tr class="hover:bg-[#fafbfc] group transition-all">
-                  <td class="px-10 py-6">
-                    <div class="flex items-center gap-4">
-                       <div class="w-12 h-12 rounded-2xl bg-[#f8f9fa] border border-[#e4e6ea] overflow-hidden group-hover:scale-105 transition-transform">
+                <tr class="hover:bg-surface-1 group transition-all">
+                  <td class="px-8 py-4">
+                    <div class="flex items-center gap-3">
+                       <div class="w-10 h-10 rounded-lg bg-surface-2 border border-surface-2 overflow-hidden group-hover:scale-105 transition-transform">
                           <img [src]="p.imageUrl || 'https://picsum.photos/seed/'+p.id+'/200'" class="w-full h-full object-cover" referrerpolicy="no-referrer" [alt]="p.name">
                        </div>
                        <div class="flex flex-col">
-                          <span class="text-xs font-black text-[#0D1B2A]">{{ p.name }}</span>
-                          <span class="text-[9px] font-bold text-[#9699a8] uppercase tracking-widest">{{ p.category }}</span>
+                          <span class="text-[11px] font-bold text-navy">{{ p.name }}</span>
+                          <span class="text-[8px] font-bold text-muted uppercase tracking-widest">{{ p.category }}</span>
                        </div>
                     </div>
                   </td>
-                  <td class="px-10 py-6">
-                     <span class="text-xs font-black text-[#0D1B2A] font-price tracking-tight">{{ formatPrice(p.price) }} FCFA</span>
+                  <td class="px-8 py-4">
+                     <span class="text-[11px] font-bold text-navy font-price tracking-tight">{{ formatPrice(p.price) }} <small class="text-[7px] opacity-40">FCFA</small></span>
                   </td>
-                  <td class="px-10 py-6 text-center">
-                     <div class="flex flex-col items-center gap-2">
-                        <span [class]="p.stock > 10 ? 'text-[#00925c]' : 'text-[#FF6200]'" class="text-xs font-black font-price">{{ p.stock }}</span>
-                        <div class="w-20 h-1 bg-[#f0f2f5] rounded-full overflow-hidden">
+                  <td class="px-8 py-4 text-center">
+                     <div class="flex flex-col items-center gap-1.5">
+                        <span [class]="p.stock > 10 ? 'text-[#00925c]' : 'text-[#FF6200]'" class="text-[11px] font-bold font-price">{{ p.stock }}</span>
+                        <div class="w-16 h-1 bg-surface-2 rounded-full overflow-hidden">
                            <div class="h-full rounded-full transition-all duration-500" 
                                 [style.width.%]="(p.stock / 100) * 100 > 100 ? 100 : (p.stock / 100) * 100"
                                 [style.background-color]="p.stock > 10 ? '#00925c' : '#FF6200'"></div>
                         </div>
                      </div>
                   </td>
-                  <td class="px-10 py-6 text-right">
-                     <button (click)="openStockModal(p)" class="px-4 py-2 bg-navy text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-primary transition-all active:scale-95 shadow-lg shadow-navy/10">Éditer Stock</button>
+                  <td class="px-8 py-4 text-right">
+                     <button (click)="openStockModal(p)" class="px-3 py-1.5 bg-navy text-white rounded-lg text-[9px] font-bold uppercase tracking-widest hover:bg-primary transition-all active:scale-95 shadow-sm">Éditer</button>
                   </td>
                 </tr>
               }
@@ -259,63 +260,63 @@ import { DataService, OchapOrder, OchapProduct } from '../../services/data.servi
       }
 
       <!-- RECENT OPERATIONS -->
-      <div class="bg-white rounded-[3rem] border border-[#e4e6ea] shadow-oc-sm overflow-hidden">
-        <div class="px-10 py-8 border-b border-[#e4e6ea] flex items-center justify-between">
+      <div class="bg-white rounded-xl border border-surface-2 shadow-sm overflow-hidden mb-12">
+        <div class="px-8 py-6 border-b border-surface-2 flex items-center justify-between">
            <div>
-             <h4 class="text-xl font-black text-[#0D1B2A] tracking-tighter">Flux des Commandes.</h4>
-             <p class="text-[10px] font-black text-[#9699a8] uppercase tracking-widest mt-1">Dernières interactions marchandes</p>
+             <h4 class="text-lg font-display font-bold text-navy tracking-tight">Flux des Commandes</h4>
+             <p class="text-[9px] font-bold text-muted uppercase tracking-widest mt-1 opacity-60">Dernières interactions</p>
            </div>
-           <button routerLink="/supplier/orders" class="px-6 py-3 rounded-full bg-[#f8f9fa] border border-[#e4e6ea] text-[10px] font-black uppercase tracking-widest hover:border-primary hover:text-primary transition-all">Tout l'historique</button>
+           <button routerLink="/supplier/orders" class="px-4 py-2 rounded-lg border border-surface-2 text-[9px] font-bold uppercase tracking-widest hover:border-primary hover:text-primary transition-all">Voir Historique</button>
         </div>
         
         <div class="overflow-x-auto">
           <table class="w-full border-collapse">
             <thead>
-              <tr class="bg-[#fafbfc] border-b border-[#e4e6ea]">
-                <th class="px-10 py-5 text-left text-[10px] font-black text-[#9699a8] uppercase tracking-[0.2em]">Transaction</th>
-                <th class="px-10 py-5 text-left text-[10px] font-black text-[#9699a8] uppercase tracking-[0.2em]">Client</th>
-                <th class="px-10 py-5 text-right text-[10px] font-black text-[#9699a8] uppercase tracking-[0.2em]">Valeur</th>
-                <th class="px-10 py-5 text-center text-[10px] font-black text-[#9699a8] uppercase tracking-[0.2em]">Statut Logistique</th>
-                <th class="px-10 py-5 text-center text-[10px] font-black text-[#9699a8] uppercase tracking-[0.2em]">Détails</th>
+              <tr class="bg-surface-1 border-b border-surface-2">
+                <th class="px-8 py-4 text-left text-[9px] font-black text-muted uppercase tracking-widest">Transaction</th>
+                <th class="px-8 py-4 text-left text-[9px] font-black text-muted uppercase tracking-widest">Client</th>
+                <th class="px-8 py-4 text-right text-[9px] font-black text-muted uppercase tracking-widest">Valeur</th>
+                <th class="px-8 py-4 text-center text-[9px] font-black text-muted uppercase tracking-widest">Statut</th>
+                <th class="px-8 py-4 text-center text-[9px] font-black text-muted uppercase tracking-widest">Actions</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-[#f5f6f8]">
+            <tbody class="divide-y divide-surface-2">
               @for (order of recentOrders(); track order['id']) {
-                <tr class="hover:bg-[#fafbfc] group transition-all">
-                  <td class="px-10 py-6">
-                    <span class="text-xs font-black text-[#0D1B2A] font-mono tracking-tighter">#{{ asString(order['id']).slice(-8).toUpperCase() }}</span>
+                <tr class="hover:bg-surface-1 group transition-all">
+                  <td class="px-8 py-4">
+                    <span class="text-[10px] font-mono font-bold text-navy">#{{ asString(order['id']).slice(-6).toUpperCase() }}</span>
                   </td>
-                  <td class="px-10 py-6">
+                  <td class="px-8 py-4">
                     <div class="flex flex-col">
-                      <span class="text-xs font-black text-[#0D1B2A]">{{ order['customerName'] || 'Particulier O\\'CHAP' }}</span>
-                      <span class="text-[9px] font-bold text-[#9699a8] uppercase mt-0.5">{{ order['date'] || 'Instante' }}</span>
+                      <span class="text-[11px] font-bold text-navy">{{ order['customerName'] || 'Particulier O\\'CHAP' }}</span>
+                      <span class="text-[8px] font-medium text-muted uppercase opacity-60">{{ order['date'] || 'Aujourd\\'hui' }}</span>
                     </div>
                   </td>
-                  <td class="px-10 py-6 text-right">
-                    <span class="text-xs font-black text-primary font-price">{{ formatPrice(order['total']) }} FCFA</span>
+                  <td class="px-8 py-4 text-right">
+                    <span class="text-[11px] font-bold text-primary font-price">{{ formatPrice(order['total']) }} <small class="text-[7px]">FCFA</small></span>
                   </td>
-                  <td class="px-10 py-6">
+                  <td class="px-8 py-4">
                     <div class="flex justify-center">
-                       <span [class]="getStatusClass(asString(order['status']))" class="text-[9px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest flex items-center gap-2 border border-current opacity-80 group-hover:opacity-100 transition-all">
-                         <mat-icon class="scale-[0.6]">{{ getStatusIcon(asString(order['status'])) }}</mat-icon>
+                       <span [class]="getStatusClass(asString(order['status']))" class="text-[8px] font-bold px-2 py-1 rounded uppercase tracking-widest flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition-all border border-current">
+                         <mat-icon class="scale-[0.5]">{{ getStatusIcon(asString(order['status'])) }}</mat-icon>
                          {{ getStatusLabel(asString(order['status'])) }}
                        </span>
                     </div>
                   </td>
-                  <td class="px-10 py-6">
+                  <td class="px-8 py-4">
                     <div class="flex justify-center">
-                      <button [routerLink]="['/supplier/orders', order['id']]" class="w-10 h-10 rounded-2xl bg-white border border-[#e4e6ea] text-[#0D1B2A] hover:bg-primary hover:text-white hover:border-primary hover:scale-105 active:scale-95 transition-all shadow-sm flex items-center justify-center">
-                        <mat-icon class="scale-75">launch</mat-icon>
+                      <button [routerLink]="['/supplier/orders', order['id']]" class="w-8 h-8 rounded-lg bg-white border border-surface-2 text-navy hover:bg-primary hover:text-white hover:border-primary transition-all shadow-sm flex items-center justify-center">
+                        <mat-icon class="scale-50">launch</mat-icon>
                       </button>
                     </div>
                   </td>
                 </tr>
               } @empty {
                 <tr>
-                  <td colspan="5" class="py-32 text-center">
-                    <div class="flex flex-col items-center gap-6 opacity-20">
-                       <mat-icon class="scale-[3]">receipt_long</mat-icon>
-                       <p class="text-[10px] font-black uppercase tracking-[0.3em]">En attente de commandes...</p>
+                  <td colspan="5" class="py-24 text-center">
+                    <div class="flex flex-col items-center gap-4 opacity-20">
+                       <mat-icon class="scale-150">receipt_long</mat-icon>
+                       <p class="text-[9px] font-black uppercase tracking-widest">En attente de commandes</p>
                     </div>
                   </td>
                 </tr>
@@ -549,7 +550,7 @@ export class SupplierDashboard implements OnInit, OnDestroy {
   asString(val: unknown): string { return String(val || ''); }
   
   formatPrice(val: number | string): string {
-    return Number(val || 0).toLocaleString('fr-FR');
+    return this.dataService.formatAmount(val);
   }
 
   getStatusLabel(status: string): string {

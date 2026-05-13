@@ -125,9 +125,9 @@ type PanelType = 'none' | 'cart' | 'wishlist' | 'orders' | 'profile';
                   @if (authService.user$()?.photoURL) {
                     <img [src]="authService.user$()?.photoURL" alt="Avatar" class="w-full h-full object-cover">
                   } @else {
-                    <div class="w-full h-full flex items-center justify-center bg-dark text-white-soft text-[10px] font-bold">
+                    <span class="w-full h-full flex items-center justify-center bg-dark text-white-soft text-[10px] font-bold">
                       {{authService.user$()?.displayName?.charAt(0)}}
-                    </div>
+                    </span>
                   }
                 </button>
 
@@ -285,172 +285,245 @@ type PanelType = 'none' | 'cart' | 'wishlist' | 'orders' | 'profile';
         <!-- Main Content area -->
         <main class="main-content">
           
-          <div class="max-w-7xl mx-auto">
+          <div class="max-w-7xl mx-auto px-6 py-8">
             
             <!-- Welcome Header -->
-            <div class="mb-10 animate-fade-up">
-              <h1 class="text-4xl lg:text-5xl font-display font-extrabold text-dark tracking-tight mb-2">
-                @if (selectedCategory() === 'all') { Panier d'Antan, <span class="text-primary">Confort d'aujourd'hui.</span> }
-                @else { {{ asString(selectedCategory().toUpperCase()) }} }
+            <div class="mb-12 animate-fade-up" style="animation-delay: 0.1s">
+              <div class="flex items-center gap-3 mb-4">
+                 <span class="w-12 h-px bg-primary/30"></span>
+                 <span class="text-[10px] font-black text-primary uppercase tracking-[0.4em]">Excellence O'CHAP</span>
+              </div>
+              <h1 class="text-4xl lg:text-5xl font-display font-black text-navy tracking-tighter mb-4 leading-tight">
+                @if (selectedCategory() === 'all') { Panier d'Antan, <br><span class="text-primary italic">Confort Durable.</span> }
+                @else { {{ asString(selectedCategory().toUpperCase()) }}<span class="text-primary">.</span> }
               </h1>
-              <p class="text-muted text-lg max-w-2xl leading-relaxed">Découvrez l'excellence de l'électroménager premium à Abidjan. Innovation, design et service certifié pour votre intérieur.</p>
+              <p class="text-muted text-lg max-w-2xl font-medium leading-relaxed opacity-70">L'excellence de l'électroménager premium à Abidjan. Innovation, design épuré et service après-vente certifié par les plus grandes marques mondiales.</p>
             </div>
 
-            <!-- Featured/Promo Section -->
-            @if (featuredProducts().length > 0) {
-              <div class="mb-12 grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-up" style="animation-delay: 0.1s">
-                @for (prod of featuredProducts(); track prod['id']; let first = $first) {
-                  <div class="group relative overflow-hidden rounded-xl bg-dark border border-border shadow-oc h-[350px] lg:h-[400px]">
+            <!-- Minimalist Hero Banner -->
+            @if (heroProduct(); as prod) {
+              <div [routerLink]="['/products', prod['id']]" 
+                   class="mb-16 relative overflow-hidden rounded-[3rem] bg-[#0D1B2A] h-[400px] lg:h-[500px] group cursor-pointer shadow-2xl shadow-navy/20 border border-white/5 animate-fade-in group">
+                
+                <img [src]="asString(prod['imageUrl'])" 
+                     class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-all duration-[8000ms] ease-out opacity-60" 
+                     referrerpolicy="no-referrer"
+                     [alt]="asString(prod['name'])">
+                
+                <div class="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-navy via-navy/40 to-transparent flex flex-col justify-center p-10 lg:p-20">
+                  <div class="max-w-2xl">
+                    <div class="inline-flex items-center gap-3 px-4 py-1.5 bg-primary rounded-full mb-8 shadow-lg shadow-primary/20">
+                       <mat-icon class="scale-50 text-white">star</mat-icon>
+                       <span class="text-white text-[9px] font-black uppercase tracking-[0.3em]">
+                         MAÎTRE DU FROID — ÉDITION LIMITÉE
+                       </span>
+                    </div>
                     
-                    <img [src]="asString(prod['imageUrl']) || 'https://picsum.photos/seed/'+prod['id']+'/800'" 
-                         class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700" 
-                         referrerpolicy="no-referrer"
-                         [alt]="asString(prod['name'])">
-                    
-                    <div class="absolute inset-0 bg-gradient-to-t from-dark via-dark/40 to-transparent p-8 flex flex-col justify-end text-white">
-                      <div class="flex items-center gap-2 mb-3">
-                         <span class="px-2.5 py-0.5 bg-primary text-white text-[10px] font-bold uppercase tracking-widest rounded-md">
-                           {{ prod['isPromo'] ? 'PROMOTION' : 'NOUVEAUTÉ' }}
-                         </span>
-                      </div>
-                      
-                      <h2 class="text-2xl font-display font-extrabold mb-2 tracking-tight">
-                        {{ prod['name'] }}
-                      </h2>
-                      
-                      <p class="text-white/70 mb-6 text-sm line-clamp-2 max-w-sm">
-                        {{ prod['description'] || 'Innovation et design certifié O’CHAP pour votre intérieur.' }}
-                      </p>
+                    <h2 class="text-4xl lg:text-7xl font-display font-black text-white mb-8 tracking-tighter italic leading-[0.95]">
+                      {{ prod['name'] }}
+                    </h2>
   
-                      <div class="flex items-center justify-between">
-                         <div class="flex flex-col">
-                            <span class="text-primary text-2xl font-bold font-price">{{ formatPrice(prod['price']) }} <small class="text-[10px] opacity-60 uppercase font-sans">FCFA</small></span>
-                         </div>
-                         
-                         <button (click)="addToCart($event, prod)" class="bg-primary hover:bg-white hover:text-dark px-6 py-2.5 rounded-lg font-bold text-xs uppercase tracking-widest transition-all shadow-md active:scale-95">
-                           Ajouter
-                         </button>
-                      </div>
+                    <div class="flex items-center gap-10">
+                       <div class="flex flex-col">
+                          <span class="text-white/40 text-[9px] font-black uppercase tracking-widest mb-2">Offre de Lancement</span>
+                          <span class="text-primary text-5xl font-black font-price tracking-tighter">{{ formatPrice(prod['price']) }} <span class="text-[12px] opacity-40 uppercase font-sans">FCFA</span></span>
+                       </div>
+                       
+                       <div class="h-20 w-20 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center text-white group-hover:bg-primary group-hover:scale-110 transition-all duration-700 shadow-2xl">
+                          <mat-icon class="scale-125">arrow_forward</mat-icon>
+                       </div>
                     </div>
                   </div>
-                }
+                </div>
               </div>
-            } @else {
-               <div class="mb-12 bg-white-soft rounded-[2rem] p-16 border-2 border-dashed border-surface-2 flex flex-col items-center justify-center text-center group">
-                  <div class="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-sm mb-6 group-hover:scale-110 transition-transform">
-                     <mat-icon class="text-primary opacity-40">auto_awesome</mat-icon>
-                  </div>
-                  <h3 class="text-xl font-display font-medium text-dark mb-2">Explorez l'Univers O'CHAP.</h3>
-                  <p class="text-muted text-sm max-w-xs">Nos produits en vogue apparaîtront ici. Ajoutez des produits via l'inventaire pour activer cet espace.</p>
-               </div>
             }
-  
-            <!-- Catalogue Section -->
-            <div class="flex flex-col gap-6 mb-10 pt-6">
-               <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+
+            <!-- Filters Bar (Faceted Filter Trigger) -->
+            <div class="flex flex-col gap-8 mb-12">
+               <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-8 border-b border-[#f0f2f5]">
                   <div>
-                    <h2 class="text-2xl font-display font-extrabold text-dark tracking-tight leading-none mb-1">Nos <span class="text-primary">Incontournables.</span></h2>
-                    <p class="text-[10px] font-bold text-muted uppercase tracking-[0.2em] opacity-60">SÉLECTION PREMIUM — ABIDJAN & LIBREVILLE</p>
+                    <h2 class="text-3xl font-display font-black text-navy tracking-tight leading-none mb-2">La Collection <span class="text-primary italic">Signature.</span></h2>
+                    <p class="text-[10px] font-bold text-muted uppercase tracking-[0.3em] opacity-60">SÉLECTION QUALITÉ CONTRÔLÉE — O'CHAP AFRICA 2026</p>
                   </div>
-                  <div class="flex items-center gap-3">
-                     <button (click)="filtersExpanded.set(!filtersExpanded())" class="flex items-center gap-2.5 px-4 py-2 rounded-lg bg-white border border-border hover:border-primary transition-all group shadow-sm active:scale-95">
-                        <mat-icon class="scale-75 text-muted group-hover:text-primary">tune</mat-icon>
-                        <span class="text-[10px] font-bold uppercase tracking-widest text-dark">{{filtersExpanded() ? 'Cacher Filtres' : 'Filtres'}}</span>
-                     </button>
-                     <div class="relative">
-                       <select [ngModel]="selectedSort()" (ngModelChange)="selectedSort.set($event)" class="bg-white border border-border rounded-lg px-6 py-2 text-[10px] font-bold uppercase tracking-widest outline-none cursor-pointer focus:border-primary transition-all appearance-none pr-10 shadow-sm">
-                          <option value="default">TRI: DÉFAUT</option>
-                          <option value="cheap">PRIX: CROISSANT</option>
-                          <option value="expensive">PRIX: DÉCROISSANT</option>
+                  <div class="flex flex-wrap items-center gap-4">
+                     <!-- Sort Control -->
+                     <div class="relative group">
+                       <select [ngModel]="selectedSort()" (ngModelChange)="selectedSort.set($event)" class="bg-white border border-[#e4e6ea] rounded-2xl px-8 h-12 text-[10px] font-black uppercase tracking-widest outline-none cursor-pointer focus:border-primary transition-all appearance-none pr-12 shadow-sm group-hover:shadow-md">
+                          <option value="default">Ordre: Intelligence</option>
+                          <option value="cheap">Prix: Les plus accessibles</option>
+                          <option value="expensive">Prix: Excellence & Luxe</option>
                        </select>
-                       <mat-icon class="absolute right-3 top-1/2 -translate-y-1/2 text-muted scale-50 pointer-events-none">expand_more</mat-icon>
+                       <mat-icon class="absolute right-4 top-1/2 -translate-y-1/2 text-muted scale-75 pointer-events-none group-focus-within:rotate-180 transition-transform">expand_more</mat-icon>
                      </div>
+
+                     <!-- Filters Toggle -->
+                     <button (click)="filtersExpanded.set(!filtersExpanded())" 
+                             [class.bg-dark]="filtersExpanded()"
+                             [class.text-white]="filtersExpanded()"
+                             class="flex items-center gap-4 px-8 h-12 rounded-2xl border border-[#e4e6ea] hover:border-primary transition-all group shadow-sm active:scale-95">
+                        <mat-icon class="scale-75 transition-transform" [class.rotate-180]="filtersExpanded()">tune</mat-icon>
+                        <span class="text-[10px] font-black uppercase tracking-widest">{{filtersExpanded() ? 'Fermer les filtres' : 'Affiner la recherche'}}</span>
+                     </button>
                   </div>
                </div>
   
-               <!-- Expandable Filters -->
-               <div class="bg-white-soft border border-surface-2 rounded-3xl overflow-hidden shadow-sm transition-all duration-500"
+               <!-- ADVANCED FACETED FILTERS PANEL -->
+               <div class="bg-white border border-[#e4e6ea] rounded-[2.5rem] overflow-hidden shadow-2xl shadow-navy/5 transition-all duration-700 ease-out"
                     [class.max-h-0]="!filtersExpanded()"
                     [class.opacity-0]="!filtersExpanded()"
-                    [class.py-0]="!filtersExpanded()"
-                    [class.p-8]="filtersExpanded()">
+                    [class.p-0]="!filtersExpanded()"
+                    [class.p-12]="filtersExpanded()"
+                    [class.mb-8]="filtersExpanded()">
                   
-                  <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-                     <div class="space-y-4">
-                        <h4 class="text-[10px] font-bold uppercase text-dark tracking-widest">Budget (FCFA)</h4>
-                        <div class="flex items-center gap-4">
-                           <div class="flex-1">
-                              <label for="price-min" class="text-[8px] font-bold text-muted uppercase block mb-1 font-sans">Min</label>
-                              <input id="price-min" type="number" [(ngModel)]="priceRange().min" (input)="updatePrice(priceRange().min, priceRange().max)" class="w-full bg-white border border-surface-2 rounded-lg px-3 py-2 text-xs font-sans focus:ring-1 focus:ring-primary outline-none">
+                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+                     <!-- Price Range Facet -->
+                     <div class="space-y-6">
+                        <div class="flex items-center gap-3">
+                           <mat-icon class="text-primary scale-75">payments</mat-icon>
+                           <h4 class="text-[11px] font-black uppercase text-navy tracking-[0.2em]">Gamme de Prix</h4>
+                        </div>
+                        <div class="space-y-4">
+                           <div class="grid grid-cols-2 gap-4">
+                              <div class="space-y-1">
+                                 <label class="text-[9px] font-black text-muted uppercase tracking-tighter ml-1">Minimum</label>
+                                 <input type="number" [(ngModel)]="priceRange().min" (input)="updatePrice(priceRange().min, priceRange().max)" class="w-full bg-[#f8f9fa] border border-[#e4e6ea] rounded-xl h-11 px-4 text-xs font-bold outline-none focus:bg-white focus:border-primary transition-all">
+                              </div>
+                              <div class="space-y-1">
+                                 <label class="text-[9px] font-black text-muted uppercase tracking-tighter ml-1">Maximum</label>
+                                 <input type="number" [(ngModel)]="priceRange().max" (input)="updatePrice(priceRange().min, priceRange().max)" class="w-full bg-[#f8f9fa] border border-[#e4e6ea] rounded-xl h-11 px-4 text-xs font-bold outline-none focus:bg-white focus:border-primary transition-all">
+                              </div>
                            </div>
-                           <div class="flex-1">
-                              <label for="price-max" class="text-[8px] font-bold text-muted uppercase block mb-1 font-sans">Max</label>
-                              <input id="price-max" type="number" [(ngModel)]="priceRange().max" (input)="updatePrice(priceRange().min, priceRange().max)" class="w-full bg-white border border-surface-2 rounded-lg px-3 py-2 text-xs font-sans focus:ring-1 focus:ring-primary outline-none">
-                           </div>
+                           <input type="range" [min]="0" [max]="2000000" [step]="50000" [(ngModel)]="priceRange().max" (input)="updatePrice(priceRange().min, priceRange().max)" class="w-full accent-primary">
                         </div>
                      </div>
   
-                      <div class="space-y-4 md:col-start-4">
-                        <h4 class="text-[10px] font-bold uppercase text-dark tracking-widest font-display">Disponibilité</h4>
-                        <label class="flex items-center gap-3 cursor-pointer group">
-                           <div class="w-10 h-6 rounded-full relative transition-all duration-300 shadow-inner" 
+                     <!-- Brand Facet -->
+                     <div class="space-y-6">
+                        <div class="flex items-center gap-3">
+                           <mat-icon class="text-primary scale-75">verified</mat-icon>
+                           <h4 class="text-[11px] font-black uppercase text-navy tracking-[0.2em]">Marques</h4>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                           @for (brand of availableBrands(); track brand) {
+                              <button (click)="toggleBrand(brand)"
+                                      [class.bg-primary]="selectedBrands().includes(brand)"
+                                      [class.text-white]="selectedBrands().includes(brand)"
+                                      [class.border-primary]="selectedBrands().includes(brand)"
+                                      class="px-4 py-2 rounded-xl border border-[#e4e6ea] text-[9px] font-black uppercase tracking-widest hover:border-primary transition-all">
+                                 {{ brand }}
+                              </button>
+                           }
+                        </div>
+                     </div>
+
+                     <!-- Rating Facet -->
+                     <div class="space-y-6">
+                        <div class="flex items-center gap-3">
+                           <mat-icon class="text-primary scale-75">star_outline</mat-icon>
+                           <h4 class="text-[11px] font-black uppercase text-navy tracking-[0.2em]">Note Clientel</h4>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                           @for (star of [5, 4, 3, 2]; track star) {
+                              <button (click)="selectedRating.set(star === selectedRating() ? 0 : star)"
+                                      class="flex items-center gap-3 h-10 px-4 rounded-xl transition-all group hover:bg-gray-50"
+                                      [class.bg-primary/10]="selectedRating() === star">
+                                 <div class="flex gap-0.5 text-primary">
+                                    @for (i of [1,2,3,4,5]; track i) {
+                                       <mat-icon class="scale-50">{{ i <= star ? 'star' : 'star_border' }}</mat-icon>
+                                    }
+                                 </div>
+                                 <span class="text-[9px] font-black uppercase tracking-widest" [class.text-primary]="selectedRating() === star">{{ star }}+ Étoiles</span>
+                              </button>
+                           }
+                        </div>
+                     </div>
+
+                     <!-- Stock Facet -->
+                     <div class="space-y-6 lg:border-l lg:border-[#f0f2f5] lg:pl-12">
+                        <h4 class="text-[11px] font-black uppercase text-navy tracking-[0.2em]">Disponibilité Stock</h4>
+                        <label class="flex items-center gap-4 cursor-pointer group">
+                           <div class="w-12 h-7 rounded-full relative transition-all duration-300 shadow-inner" 
                                 [class.bg-emerald-500]="onlyInStock()"
-                                [class.bg-slate-300]="!onlyInStock()">
+                                [class.bg-slate-200]="!onlyInStock()">
                               <input type="checkbox" [(ngModel)]="onlyInStock" class="hidden">
-                              <div class="absolute w-4 h-4 bg-white rounded-full top-1 left-1 transition-all duration-300 shadow-sm" [style.transform]="onlyInStock() ? 'translateX(16px)' : ''"></div>
+                              <div class="absolute w-5 h-5 bg-white rounded-full top-1 left-1 transition-all duration-300 shadow-md" [style.transform]="onlyInStock() ? 'translateX(20px)' : ''"></div>
                            </div>
-                           <span class="text-[10px] font-bold uppercase tracking-wider transition-colors font-sans"
+                           <span class="text-[11px] font-black uppercase tracking-widest transition-colors font-sans"
                                  [class.text-emerald-700]="onlyInStock()"
                                  [class.text-muted]="!onlyInStock()">
-                             {{ onlyInStock() ? 'En stock uniquement' : 'Tous les produits' }}
+                             {{ onlyInStock() ? 'Prêt pour expédition' : 'Total Catalogue' }}
                            </span>
                         </label>
+                        <div class="pt-4 mt-4 border-t border-[#f0f2f5]">
+                           <button (click)="resetFilters()" class="text-[9px] font-black text-red-500 uppercase tracking-widest flex items-center gap-2 hover:opacity-70 transition-opacity">
+                              <mat-icon class="scale-50">refresh</mat-icon> Réinitialiser tout
+                           </button>
+                        </div>
                      </div>
                   </div>
                </div>
             </div>
   
-            <!-- Grid Layout -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <!-- PROFESSIONAL PRODUCT GRID -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-12">
               @for (p of sortedProducts(); track p['id']) {
-                <div class="product-card group" [routerLink]="['/products', p['id']]">
-                  <div class="product-card-image">
-                    <img [src]="p['imageUrl'] || 'https://picsum.photos/seed/'+p['id']+'/400/500'" 
+                <div class="product-card group animate-fade-in" [routerLink]="['/products', p['id']]">
+                  <!-- Image Container: Professional Inset -->
+                  <div class="aspect-square relative bg-[#fafbfc] rounded-[2.5rem] overflow-hidden flex items-center justify-center p-10 border border-[#f0f2f5] shadow-sm group-hover:border-primary/20 transition-all duration-500">
+                    <img [src]="p['imageUrl']" 
                          [alt]="asString(p['name'])"
-                         class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" referrerpolicy="no-referrer">
+                         class="max-w-full max-h-full object-contain transition-transform duration-1000 group-hover:scale-110 drop-shadow-2xl" 
+                         referrerpolicy="no-referrer">
                     
                     @if (p['isPromo']) {
-                      <div class="absolute top-3 left-3 bg-primary text-white-soft text-[8px] font-bold px-2 py-1 rounded-full uppercase shadow-oc">PROMO</div>
+                      <div class="absolute top-6 left-6 bg-primary text-white text-[8px] font-black px-4 py-2 rounded-xl uppercase shadow-xl shadow-primary/20 z-10 tracking-[0.2em]">OFFRE SPÉCIALE</div>
                     }
-  
-                    <div class="product-card-actions">
+
+                    @if (p['stock'] === 0) {
+                      <div class="absolute inset-0 bg-[#0D1B2A]/40 backdrop-blur-[2px] flex items-center justify-center z-10 transition-all">
+                        <span class="px-6 py-2 border-2 border-white/40 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl">Rupture Fatale</span>
+                      </div>
+                    }
+
+                    <!-- Quick Interaction Layer -->
+                    <div class="absolute inset-0 bg-navy/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                    <div class="absolute bottom-6 left-6 right-6 translate-y-12 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-700 flex gap-3 z-20">
                       <button (click)="toggleWishlist($event, p)" 
-                              [class.text-primary]="isInWishlist(asString(p['id']))"
-                              class="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-oc hover:bg-primary hover:text-white transition-all">
-                        <mat-icon class="scale-[0.6]">{{ isInWishlist(asString(p['id'])) ? 'favorite' : 'favorite_border' }}</mat-icon>
+                              [class.bg-red-500]="isInWishlist(asString(p['id']))"
+                              [class.text-white]="isInWishlist(asString(p['id']))"
+                              [class.text-red-500]="!isInWishlist(asString(p['id']))"
+                              class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shadow-xl hover:scale-110 active:scale-90 transition-all">
+                        <mat-icon class="scale-90">{{ isInWishlist(asString(p['id'])) ? 'favorite' : 'favorite_border' }}</mat-icon>
                       </button>
-                      <button (click)="addToCart($event, p)" class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-dark hover:bg-dark hover:text-white transition-all shadow-oc">
-                        <mat-icon class="scale-[0.6]">add_shopping_cart</mat-icon>
+                      <button (click)="addToCart($event, p)" [disabled]="p['stock'] === 0" class="flex-1 h-12 rounded-2xl bg-[#0D1B2A] text-white flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-primary transition-all shadow-xl active:scale-95 disabled:opacity-50">
+                        <mat-icon class="scale-75">add_shopping_cart</mat-icon>
+                        Acquérir
                       </button>
                     </div>
                   </div>
-  
-                  <div class="mt-4 flex flex-col items-center text-center px-1 pb-4">
-                     <p class="text-[9px] font-bold text-muted uppercase tracking-widest mb-1 opacity-60">{{p['category']}}</p>
-                     <h3 class="text-sm font-medium text-dark leading-snug mb-2 group-hover:text-primary transition-colors line-clamp-1 truncate w-full">{{p['name']}}</h3>
-                     <p class="text-base font-price text-primary mb-3">{{ formatPrice(p['price']) }} <small class="text-[10px] opacity-60">FCFA</small></p>
-                     
-                     <div class="flex items-center justify-center pt-2">
-                        <button [routerLink]="['/products', p['id']]" class="px-5 py-2 rounded-full border border-primary/20 text-primary text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all transform group-hover:translate-y-[-2px] shadow-sm hover:shadow-primary/20">
-                          Voir plus
-                        </button>
+
+                  <!-- Details Container: Optimized Density -->
+                  <div class="mt-8 px-2 flex flex-col items-center text-center">
+                     <div class="flex items-center gap-2 mb-2">
+                        <span class="text-[9px] font-black text-primary uppercase tracking-[0.2em] px-2 py-0.5 bg-primary/5 rounded">{{p['brand'] || 'O\'CHAP'}}</span>
+                        <div class="flex gap-0.5 transform scale-[0.6]">
+                           @for (i of [1,2,3,4,5]; track i) {
+                              <mat-icon class="text-amber-400">star</mat-icon>
+                           }
+                        </div>
+                     </div>
+                     <h3 class="text-[15px] font-black text-[#0D1B2A] leading-tight mb-3 group-hover:text-primary transition-colors tracking-tight line-clamp-1 w-full px-4">{{p['name']}}</h3>
+                     <div class="flex items-center justify-center gap-3">
+                        <span class="text-xl font-price font-black text-[#0D1B2A] tracking-tighter">{{ formatPrice(p['price']) }} <span class="text-[10px] opacity-40 uppercase font-sans tracking-normal ml-1">CFA</span></span>
                      </div>
                   </div>
                 </div>
               } @empty {
-                <div class="col-span-full py-24 flex flex-col items-center justify-center text-center opacity-20">
-                   <mat-icon class="scale-[3] mb-4">inventory_2</mat-icon>
-                   <p class="font-display font-medium text-lg">Aucun produit trouvé.</p>
+                <div class="col-span-full py-40 flex flex-col items-center justify-center text-center opacity-30">
+                   <div class="w-24 h-24 rounded-[3rem] bg-gray-50 flex items-center justify-center mb-8"><mat-icon class="scale-[2.5]">inventory_2</mat-icon></div>
+                   <h3 class="font-display font-black text-2xl uppercase tracking-[0.3em]">Aucun matching trouvé.</h3>
+                   <p class="text-xs font-bold text-muted uppercase tracking-widest mt-2">Essayez de reset les filtres ou changez votre recherche.</p>
                 </div>
               }
             </div>
@@ -499,6 +572,45 @@ type PanelType = 'none' | 'cart' | 'wishlist' | 'orders' | 'profile';
             </div>
           </footer>
         </main>
+      </div>
+
+      <!-- Scroll to Top (Hidden by default, shown via scroll listener) -->
+      @if (showScrollTop()) {
+        <button (click)="scrollToTop()" 
+                class="fixed bottom-[140px] right-6 z-50 w-12 h-12 bg-white rounded-2xl shadow-2xl border border-surface-2 flex items-center justify-center text-ink hover:bg-primary hover:text-white transition-all animate-fade-in active:scale-95">
+          <mat-icon>arrow_upward</mat-icon>
+        </button>
+      }
+
+      <!-- Quick Cart Peek (Floating Toast on add) -->
+      @if (showAddedToast()) {
+        <div class="fixed top-24 right-6 z-[3000] bg-navy text-white px-6 py-4 rounded-2xl shadow-2xl animate-fade-in flex items-center gap-4">
+           <mat-icon class="text-primary">check_circle</mat-icon>
+           <div>
+              <p class="text-[10px] font-black uppercase tracking-widest">Produit ajouté !</p>
+              <p class="text-[9px] opacity-60">Consultez votre panier pour finaliser.</p>
+           </div>
+        </div>
+      }
+
+      <!-- Mobile Category Navigation (Floating Bottom) -->
+      <div class="lg:hidden fixed bottom-[72px] left-0 right-0 z-40 px-4 animate-fade-up pointer-events-none" style="animation-delay: 0.5s">
+        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 pt-1 pointer-events-auto">
+           <button (click)="selectCategory('all')" 
+                   class="cat-chip-float" 
+                   [class.cat-chip-float-active]="selectedCategory() === 'all'">
+             Tous
+           </button>
+           @for (group of categories; track group.id) {
+              @for (item of group.items; track item.id) {
+                 <button (click)="selectCategory(item.id)" 
+                         class="cat-chip-float" 
+                         [class.cat-chip-float-active]="selectedCategory() === item.id">
+                    {{item.name}}
+                 </button>
+              }
+           }
+        </div>
       </div>
 
       <!-- Mobile Nav -->
@@ -707,6 +819,33 @@ type PanelType = 'none' | 'cart' | 'wishlist' | 'orders' | 'profile';
     .animate-fade-up-short {
       animation: fadeUpShort 0.2s cubic-bezier(0, 0, 0.2, 1);
     }
+    .cat-chip-float {
+      background-color: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(8px);
+      border: 1px solid #e2e8f0;
+      padding: 0.5rem 1.25rem;
+      border-radius: 9999px;
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #64748b;
+      white-space: nowrap;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+    }
+    .cat-chip-float:hover {
+      border-color: #f97316;
+      color: #f97316;
+      transform: translateY(-1px);
+    }
+    .cat-chip-float-active {
+      background-color: #f97316;
+      color: white;
+      border-color: #f97316;
+      box-shadow: 0 20px 25px -5px rgba(249, 115, 22, 0.3);
+    }
     .sidebar.collapsed {
       width: 80px;
     }
@@ -746,6 +885,8 @@ export class StorefrontComponent implements OnInit, OnDestroy {
   searchQueryInput = '';
   showReturnsPolicy = signal(false);
   sidebarCollapsed = signal(false);
+  showScrollTop = signal(false);
+  showAddedToast = signal(false);
   openGroups = signal<Record<string, boolean>>({ 'group-froid': true });
   
   // Advanced Filters
@@ -754,6 +895,18 @@ export class StorefrontComponent implements OnInit, OnDestroy {
   onlyInStock = signal(false);
   minRating = signal(0);
   filtersExpanded = signal(false);
+  selectedBrands = signal<string[]>([]);
+  selectedRating = signal<number>(0);
+
+  availableBrands = computed(() => {
+    const prods = this.products();
+    const brandsSet = new Set<string>();
+    prods.forEach(p => {
+      const brand = (p['brand'] as string);
+      if (brand) brandsSet.add(brand);
+    });
+    return Array.from(brandsSet).sort();
+  });
 
   private unsub?: Unsubscribe;
   private unsubNotif?: Unsubscribe;
@@ -889,18 +1042,35 @@ export class StorefrontComponent implements OnInit, OnDestroy {
     return [...all].sort(() => 0.5 - Math.random()).slice(0, 3);
   });
 
+  heroProduct = computed(() => {
+    const all = this.products();
+    if (!all || all.length === 0) return null;
+    
+    // Logic: Look for a hero product (quality/price balance)
+    // We prioritize products with "Premium" in name OR high price but marked as promo
+    const candidates = all.filter(p => 
+      this.asString(p['name']).toLowerCase().includes('premium') || 
+      (this.asNumber(p['price']) > 500000 && p['isPromo'])
+    );
+    
+    return candidates.length > 0 ? candidates[0] : all[0];
+  });
+
   filteredProducts = computed(() => {
     let prods = this.products();
     const cat = this.selectedCategory();
     const queryStr = this.searchQuery().toLowerCase();
     const price = this.priceRange();
     const inStock = this.onlyInStock();
+    const brands = this.selectedBrands();
+    const ratingLimit = this.selectedRating();
 
     // Search 
     if (queryStr) {
       prods = prods.filter(p => 
         (p['name'] as string).toLowerCase().includes(queryStr) || 
-        (p['description'] as string || '').toLowerCase().includes(queryStr)
+        (p['description'] as string || '').toLowerCase().includes(queryStr) ||
+        (p['brand'] as string || '').toLowerCase().includes(queryStr)
       );
     }
 
@@ -917,8 +1087,34 @@ export class StorefrontComponent implements OnInit, OnDestroy {
       prods = prods.filter(p => (p['stock'] as number) > 0);
     }
 
+    // Brands Facet
+    if (brands.length > 0) {
+      prods = prods.filter(p => brands.includes(p['brand'] as string));
+    }
+
+    // Rating Facet (Simulated since real ratings might not exist yet, 
+    // but we can assume products have a rating field or default to 5 for now)
+    if (ratingLimit > 0) {
+      prods = prods.filter(p => (p['rating'] as number || 5) >= ratingLimit);
+    }
+
     return prods;
   });
+
+  resetFilters() {
+    this.priceRange.set({min: 0, max: 2000000});
+    this.onlyInStock.set(false);
+    this.selectedBrands.set([]);
+    this.selectedRating.set(0);
+    this.searchQuery.set('');
+    this.searchQueryInput = '';
+  }
+
+  toggleBrand(brand: string) {
+    this.selectedBrands.update(prev => 
+      prev.includes(brand) ? prev.filter(b => b !== brand) : [...prev, brand]
+    );
+  }
 
   sortedProducts = computed(() => {
     const prods = [...this.filteredProducts()];
@@ -936,11 +1132,17 @@ export class StorefrontComponent implements OnInit, OnDestroy {
   }
 
   asString(val: unknown): string { return (val as string) || ''; }
+
+  calculateDiscount(p: Record<string, unknown>): number {
+    const retail = this.asNumber(p['retailPrice']);
+    const price = this.asNumber(p['price']);
+    if (retail <= 0) return 0;
+    return Math.round(((retail - price) / retail) * 100);
+  }
   asRecord(val: unknown): Record<string, unknown> { return val as Record<string, unknown>; }
   asNumber(val: unknown): number { return Number(val) || 0; }
   formatPrice(val: unknown): string {
-    if (val === undefined || val === null) return '0';
-    return new Intl.NumberFormat('fr-FR').format(Number(val));
+    return this.dataService.formatAmount(val);
   }
 
   checkout() {
@@ -1013,6 +1215,19 @@ export class StorefrontComponent implements OnInit, OnDestroy {
     this.notificationMenuOpen.set(false);
   }
 
+  @HostListener('window:scroll')
+  onWindowScroll() {
+    if (isPlatformBrowser(this.platformId)) {
+      this.showScrollTop.set(window.scrollY > 400);
+    }
+  }
+
+  scrollToTop() {
+    if (isPlatformBrowser(this.platformId)) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
   ngOnInit() {
     this.watchProducts();
     
@@ -1021,6 +1236,13 @@ export class StorefrontComponent implements OnInit, OnDestroy {
     if (routeData && routeData['category']) {
       this.selectedCategory.set(routeData['category']);
     }
+
+    // Handle direct checkout param
+    this.route.queryParams.subscribe(params => {
+       if (params['checkout'] === 'true') {
+          this.openPanel('cart');
+       }
+    });
   }
 
   ngOnDestroy() {
@@ -1099,6 +1321,8 @@ export class StorefrontComponent implements OnInit, OnDestroy {
       return;
     }
     this.cartService.addToCart(product);
+    this.showAddedToast.set(true);
+    setTimeout(() => this.showAddedToast.set(false), 3000);
     this.openPanel('cart');
   }
 

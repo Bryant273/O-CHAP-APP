@@ -115,6 +115,7 @@ import { CommonModule } from '@angular/common';
               <div class="pl-9 space-y-1 animate-fade-in flex flex-col">
                 <a routerLink="/admin/products" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Produits</a>
                 <a routerLink="/admin/promo" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Promotions</a>
+                <a routerLink="/admin/marketing" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Marketing IA</a>
               </div>
             }
           </div>

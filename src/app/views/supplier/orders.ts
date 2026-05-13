@@ -258,7 +258,7 @@ export class SupplierOrders implements OnInit, OnDestroy {
     try {
       await this.dataService.updateOrderStatus(orderId, status);
       if (this.selectedOrder()?.id === orderId) {
-        this.selectedOrder.update(o => o ? { ...o, status } : null);
+        this.selectedOrder.update(o => o ? { ...o, status: status as any } : null);
       }
     } catch (e) {
       console.error('Update status error', e);

@@ -103,7 +103,7 @@ import { FormsModule } from '@angular/forms';
                              <div class="bg-surface/50 rounded-[2rem] border border-white p-6 transition-all hover:border-primary/20 hover:shadow-xl hover:shadow-black/[0.02] group">
                                 <div class="flex items-center justify-between mb-4 pb-4 border-b border-white/60">
                                    <div class="flex items-center gap-4">
-                                      <div class="w-10 h-10 rounded-xl bg-white border border-surface-2 flex items-center justify-center text-dark font-mono text-[9px] font-black shadow-sm uppercase">#{{ order.id ? order.id.slice(-6) : '...' }}</div>
+                                      <div class="w-10 h-10 rounded-xl bg-white border border-surface-2 flex items-center justify-center text-dark font-mono text-[9px] font-black shadow-sm uppercase">#{{ order.id.slice(-6) }}</div>
                                       <div>
                                          <p class="text-[10px] font-black text-muted uppercase tracking-widest">Commandé le {{ formatDate(order.createdAt) }}</p>
                                          <p class="text-xs font-bold text-dark mt-0.5">Statut : {{ order.status }}</p>
@@ -221,10 +221,11 @@ export class SavGarantiesComponent implements OnInit {
   private router = inject(Router);
 
   eligibleOrders = computed(() => {
+    // Only orders within let's say 2 years for warranty, or 14 days for return
     return this.dataService.orders$().filter(o => o.status !== 'cancelled');
   });
 
-  activeRequest = signal<any>(null);
+  activeRequest = signal<{orderId: string, item: any} | null>(null);
   requestType = 'repair';
   requestDesc = '';
 
@@ -260,6 +261,7 @@ export class SavGarantiesComponent implements OnInit {
     const req = this.activeRequest();
     if (!req) return;
 
+    // Use prompt to simulate "smart" problem categorization or just save to DB
     const success = await this.dataService.createSavRequest({
       orderId: req.orderId,
       productId: req.item.id,

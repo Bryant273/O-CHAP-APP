@@ -96,7 +96,7 @@ export class AdminOrders {
   public dataService = inject(DataService);
 
   formatAmount(val: number | unknown): string {
-    return new Intl.NumberFormat('fr-FR').format(Number(val) || 0);
+    return this.dataService.formatAmount(val);
   }
 
   formatDate(ts: unknown): string {

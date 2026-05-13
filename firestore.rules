@@ -17,7 +17,7 @@ service cloud.firestore {
     function existing() { return resource.data; }
 
     function isValidId(id) { 
-      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+      return id is string && id.size() > 0 && id.size() <= 256; 
     }
 
     // RBAC: Check roles from trusted user document
@@ -102,7 +102,11 @@ service cloud.firestore {
 
     // USERS COLLECTION
     match /users/{userId} {
-      allow get: if isValidId(userId) && isSignedIn() && (authUid() == userId || isPrincipalAdmin() || isAdmin());
+      allow get: if isValidId(userId) && (
+        (isSignedIn() && (authUid() == userId || isPrincipalAdmin() || isAdmin())) ||
+        (resource == null) ||
+        (resource.data.get('role', 'client') in ['supplier', 'fournisseur'])
+      );
       allow list: if isPrincipalAdmin() || isAdmin();
       allow create: if isValidId(userId) && isSignedIn() && authUid() == userId && isValidUser(incoming());
       allow update: if isValidId(userId) && isSignedIn() && authUid() == userId && 
@@ -114,8 +118,8 @@ service cloud.firestore {
 
     // SUPPLIERS COLLECTION
     match /suppliers/{supplierId} {
-      allow get: if isValidId(supplierId) && isSignedIn();
-      allow list: if isSignedIn();
+      allow get: if isValidId(supplierId);
+      allow list: if true;
       allow create: if isValidId(supplierId) && (isSupplier() || isPrincipalAdmin()) && isValidSupplier(incoming());
       allow update: if isValidId(supplierId) && (isPrincipalAdmin() || isAdmin() || (isSupplier() && existing().ownerUid == authUid())) &&
                      isValidSupplier(incoming()) &&
@@ -139,7 +143,11 @@ service cloud.firestore {
       ) &&
       isValidProduct(incoming()) &&
       incoming().get('supplierId', '') == existing().get('supplierId', '') &&
-      incoming().diff(existing()).affectedKeys().hasOnly(['name', 'description', 'price', 'stockLevel', 'stock', 'threshold', 'category', 'imageUrl', 'isActive', 'updatedAt', 'rating', 'reviewCount']);
+      incoming().diff(existing()).affectedKeys().hasOnly([
+        'name', 'description', 'price', 'retailPrice', 'stock', 'unit', 'brand', 
+        'imageUrl', 'galleryUrls', 'category', 'technicalSpecs', 'supplierName',
+        'supplierId', 'isActive', 'updatedAt', 'rating', 'reviewCount', 'threshold'
+      ]);
       allow delete: if isValidId(productId) && (isPrincipalAdmin() || isAdmin() || (isSupplier() && existing().get('supplierId', '') == authUid()));
     }
 
@@ -198,6 +206,12 @@ service cloud.firestore {
     // SYSTEM COLLECTION
     match /system/{docId} {
       allow read: if true;
+    }
+
+    // CATEGORIES COLLECTION
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isPrincipalAdmin() || isAdmin();
     }
   }
 }

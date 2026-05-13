@@ -1,4 +1,4 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { 
   db 
 } from './firebase';
@@ -23,6 +23,11 @@ import {
   deleteDoc
 } from 'firebase/firestore';
 import { auth } from './firebase';
+import { GoogleGenAI } from '@google/genai';
+import * as XLSX from 'xlsx';
+import { AuthService } from './auth.service';
+
+declare const GEMINI_API_KEY: string;
 
 export enum OperationType {
   CREATE = 'create',
@@ -72,15 +77,18 @@ export interface OchapProduct {
   retailPrice?: number;
   supplierId?: string;
   brand?: string;
+  supplierRef?: string;
+  galleryUrls?: string[];
   threshold?: number;
   rating?: number;
   reviewCount?: number;
   createdAt?: unknown;
   updatedAt?: unknown;
   supplierName?: string;
-  stockLevel?: number;
-  stockUnit?: string;
+  aiAnalysis?: string;
   technicalSpecs?: string;
+  profitMargin?: number;
+  seasonalTrend?: string;
   [key: string]: unknown;
 }
 
@@ -90,10 +98,12 @@ export interface OchapOrder {
   customerName: string;
   customerUid?: string;
   supplierId?: string;
-  items: unknown[];
+  items: OchapOrderItem[];
   total: number;
   totalAmount?: number;
-  status: string;
+  status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'shipped' | 'transit' | 'delivered' | 'completed' | 'cancelled' | 'return_requested' | 'returned';
+  trackingHistory?: { status: string; timestamp: unknown; note?: string }[];
+  invoiceUrl?: string;
   createdAt: unknown;
   updatedAt?: unknown;
   date?: string | unknown;
@@ -142,19 +152,31 @@ export class DataService {
   private users = signal<OchapUser[]>([]);
   private zones = signal<OchapZone[]>([]);
   private notifications = signal<OchapNotification[]>([]);
+  private categories = signal<{id: string, name: string}[]>([]);
   
   public products$ = this.products.asReadonly();
   public orders$ = this.orders.asReadonly();
   public users$ = this.users.asReadonly();
   public zones$ = this.zones.asReadonly();
   public notifications$ = this.notifications.asReadonly();
+  public categories$ = this.categories.asReadonly();
+
+  public formatAmount(val: number | string | unknown): string {
+    const n = Math.round(Number(val) || 0);
+    return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  }
 
   // Unified derived signals for roles
   public suppliers$ = signal<OchapUser[]>([]);
   public clients$ = signal<OchapUser[]>([]);
 
+  private ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+  private authService = inject(AuthService);
+
+  public currentUser$ = computed(() => this.authService.profile$());
+
   constructor() {
-    this.testConnection();
+    this.watchAllCategories();
   }
 
   async testConnection() {
@@ -239,6 +261,32 @@ export class DataService {
     return onSnapshot(collection(db, path), (snapshot) => {
       this.zones.set(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as OchapZone)));
     }, (error) => this.handleFirestoreError(error, OperationType.LIST, path));
+  }
+
+  watchAllCategories() {
+    if (!this.isBrowser) return this.noop;
+    const path = 'categories';
+    return onSnapshot(collection(db, path), (snapshot) => {
+      this.categories.set(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as {id: string, name: string})));
+    }, (error) => this.handleFirestoreError(error, OperationType.LIST, path));
+  }
+
+  async addCategory(name: string) {
+    const path = 'categories';
+    try {
+      await addDoc(collection(db, path), { name, createdAt: serverTimestamp() });
+    } catch (error: unknown) {
+      this.handleFirestoreError(error, OperationType.CREATE, path);
+    }
+  }
+
+  async deleteCategory(id: string) {
+    const path = `categories/${id}`;
+    try {
+      await deleteDoc(doc(db, 'categories', id));
+    } catch (error: unknown) {
+      this.handleFirestoreError(error, OperationType.DELETE, path);
+    }
   }
 
   // --- SUPPLIER WATCHERS ---
@@ -479,6 +527,19 @@ export class DataService {
     }
   }
 
+  async clearAllProducts() {
+    const path = 'products';
+    try {
+      const snap = await getDocs(collection(db, path));
+      const promises = snap.docs.map(d => deleteDoc(d.ref));
+      await Promise.all(promises);
+      return true;
+    } catch (error: unknown) {
+      this.handleFirestoreError(error, OperationType.DELETE, path);
+      return false;
+    }
+  }
+
   async updateStock(productId: string, newStock: number) {
     const path = `products/${productId}`;
     try {
@@ -639,5 +700,224 @@ export class DataService {
       this.handleFirestoreError(error, OperationType.DELETE, 'multiple-collections');
       return false;
     }
+  }
+
+  // --- AI FEATURES (GEMINI) ---
+
+  async generateDescription(productName: string, category: string): Promise<string> {
+    try {
+      const response = await this.ai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: `En tant qu'expert marketing pour la marketplace O'CHAP, rédige une description captivante et professionnelle pour un produit nommé "${productName}" dans la catégorie "${category}". La description doit être concise, mettre en avant les bénéfices et inciter à l'achat. Réponse en français pur.`,
+      });
+      return response.text || "";
+    } catch (error) {
+      console.error('Gemini Error:', error);
+      return "Erreur lors de la génération de la description.";
+    }
+  }
+
+  async analyzeInventoryPerformance(): Promise<string> {
+    const products = this.products$();
+    const orders = this.orders$();
+    
+    // Create a summary for the prompt
+    const productSummary = products.map(p => ({
+      name: p.name,
+      stock: p.stock as number,
+      threshold: (p.threshold as number) || 5,
+      price: p.price
+    }));
+
+    const orderSummary = orders.slice(0, 50).map(o => ({
+      date: o.date,
+      total: o.total,
+      status: o.status
+    }));
+
+    try {
+      const response = await this.ai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: `Analyse cet inventaire pour la boutique O'CHAP. 
+        Produits: ${JSON.stringify(productSummary)}
+        Dernières commandes: ${JSON.stringify(orderSummary)}
+        Directives: 
+        1. Identifie les produits à risque de rupture (en dessous du seuil).
+        2. Suggère des réapprovisionnements prioritaires.
+        3. Identifie les produits qui ne tournent pas assez.
+        4. Donne 3 conseils stratégiques courts pour augmenter les ventes.
+        Réponds sous forme de rapport Markdown structuré en français.`,
+      });
+      return response.text || "";
+    } catch (error) {
+      console.error('Gemini Analysis Error:', error);
+      return "Impossible d'effectuer l'analyse intelligente pour le moment.";
+    }
+  }
+
+  // --- EXPORT TOOLS ---
+
+  exportProductsToExcel() {
+    const products = this.products$();
+    const worksheet = XLSX.utils.json_to_sheet(products.map(p => ({
+      ID: p.id,
+      Nom: p.name,
+      Catégorie: p.category,
+      Marque: p.brand || 'N/A',
+      Prix: p.price,
+      Stock: p.stock,
+      Fournisseur: p.supplierName || p.supplierId
+    })));
+    
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Catalogue');
+    XLSX.writeFile(workbook, `Catalogue_OCHAP_${new Date().toISOString().split('T')[0]}.xlsx`);
+  }
+
+  // --- NEW BUSINESS FEATURES ---
+
+  async runMarketingAutomation() {
+    try {
+      const productsInShortage = this.products().filter(p => ((p.stock as number) || 0) < ((p.threshold as number) || 5));
+      const latestPromos = this.products().filter(p => p['isPromo']);
+
+      const prompt = `
+        Agis en tant qu'Expert Marketing pour O'CHAP Afrique.
+        Génère 3 idées de campagnes marketing automatisées.
+        Contexte : Nous avons ${productsInShortage.length} produits en stock faible et ${latestPromos.length} produits en promotion.
+        L'audience est à Abidjan et Libreville.
+        Le ton doit être professionnel, premium et dynamique.
+        
+        Retourne un tableau JSON d'objets : { title: string, subject: string, message: string, channel: "Email" | "SMS" | "Push" }
+      `;
+
+      const result = await this.ai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: prompt
+      });
+      const text = result.text || "";
+      const cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
+      return JSON.parse(cleaned);
+    } catch (e) {
+      console.error('Marketing AI Error:', e);
+      return [];
+    }
+  }
+
+  async getAdvancedAnalytics() {
+    try {
+      const products = this.products();
+      const orders = this.orders().slice(0, 50);
+      
+      const prompt = `
+        Analyse les données business pour O'CHAP Afrique (Abidjan/Libreville).
+        Données : 
+        - Produits: ${JSON.stringify(products.slice(0, 10).map(p => ({ n: p.name, c: p.category, b: p.brand, p: p.price, m: p.profitMargin })))}
+        - Commandes: ${orders.length} commandes récentes.
+        
+        Génère un rapport analytique structuré en JSON avec les champs suivants :
+        - globalHealth: "excellent" | "stable" | "critical"
+        - profitAnalysis: string (analyse des marges)
+        - topPerformingBrands: string[]
+        - seasonalInsights: string (conseils pour la saison actuelle en Afrique)
+        - stockAlerts: string[]
+      `;
+
+      const result = await this.ai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: prompt
+      });
+      const text = result.text || "";
+      const cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
+      return JSON.parse(cleaned);
+    } catch (e) {
+      console.error('Analytics AI Error:', e);
+      return { globalHealth: 'stable', profitAnalysis: 'Analyse indisponible.', topPerformingBrands: [], seasonalInsights: '', stockAlerts: [] };
+    }
+  }
+
+  async createSavRequest(data: any) {
+    try {
+      await addDoc(collection(db, 'sav_requests'), {
+        ...data,
+        createdAt: serverTimestamp()
+      });
+      return true;
+    } catch (e) {
+      console.error('SAV Error:', e);
+      return false;
+    }
+  }
+
+  async generateInvoice(orderId: string): Promise<string> {
+    const order = this.orders$().find(o => o.id === orderId);
+    if (!order) throw new Error('Commande introuvable');
+
+    const { jsPDF } = await import('jspdf');
+    const doc = new jsPDF();
+
+    // Set professional font
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(22);
+    doc.setTextColor(13, 27, 42); // Navy
+    doc.text('O\'CHAP AFRIQUE', 20, 20);
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100);
+    doc.text('Abidjan, Côte d\'Ivoire', 20, 30);
+    doc.text('Email: info@ochap.afrique', 20, 35);
+
+    // Business info decoration
+    doc.setDrawColor(255, 96, 0); // Primary orange
+    doc.setLineWidth(1.5);
+    doc.line(20, 45, 190, 45);
+
+    // Order Info
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(13, 27, 42);
+    doc.text(`FACTURE N° ${orderId.slice(-8).toUpperCase()}`, 20, 60);
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Date : ${new Date(((order.createdAt as any)?.seconds || 0) * 1000).toLocaleDateString('fr-FR')}`, 20, 70);
+    doc.text(`Statut : ${order.status?.toUpperCase()}`, 20, 75);
+    doc.text(`Client : ${(this.currentUser$() as any)?.displayName || 'Client O\'CHAP'}`, 20, 80);
+
+    // Table Header
+    doc.setFillColor(240, 242, 245);
+    doc.rect(20, 95, 170, 10, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.text('Produit', 25, 102);
+    doc.text('Qté', 140, 102);
+    doc.text('Total (CFA)', 165, 102);
+
+    // Table Body
+    let y = 115;
+    order.items.forEach((item: any) => {
+      doc.setFont('helvetica', 'normal');
+      doc.text(item.name, 25, y);
+      doc.text(item.quantity.toString(), 142, y);
+      doc.text(this.formatAmount(item.price * item.quantity), 165, y);
+      y += 10;
+    });
+
+    // Total
+    doc.line(20, y + 5, 190, y + 5);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.text('TOTAL PAYÉ', 120, y + 15);
+    doc.setTextColor(255, 96, 0);
+    doc.text(`${this.formatAmount(order.totalAmount || order.total)} CFA`, 165, y + 15);
+
+    // Footer
+    doc.setFontSize(8);
+    doc.setTextColor(150);
+    doc.text('Merci de votre confiance. Facture générée numériquement par O\'CHAP ENGINE.', 20, 280);
+
+    // Return blob URL
+    const blob = doc.output('blob');
+    return URL.createObjectURL(blob);
   }
 }

@@ -23,25 +23,25 @@ import { DataService } from '../../services/data.service';
 
       <!-- User Stats Cards -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-         <div class="bg-white p-6 rounded-[2rem] border border-[#e4e6ea] shadow-sm flex items-center gap-5">
-            <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center"><mat-icon>admin_panel_settings</mat-icon></div>
+         <div class="bg-white p-4 rounded-xl border border-surface-2 shadow-sm flex items-center gap-4">
+            <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center"><mat-icon class="scale-75">admin_panel_settings</mat-icon></div>
             <div>
-               <div class="text-2xl font-black text-[#0D1B2A]">{{adminsCount()}}</div>
-               <div class="text-[9px] font-bold text-[#9699a8] uppercase tracking-widest">Administrateurs</div>
+               <div class="text-xl font-display font-bold text-navy">{{adminsCount()}}</div>
+               <div class="text-[9px] font-bold text-muted uppercase tracking-widest opacity-60">Administrateurs</div>
             </div>
          </div>
-         <div class="bg-white p-6 rounded-[2rem] border border-[#e4e6ea] shadow-sm flex items-center gap-5">
-            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center"><mat-icon>storefront</mat-icon></div>
+         <div class="bg-white p-4 rounded-xl border border-surface-2 shadow-sm flex items-center gap-4">
+            <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center"><mat-icon class="scale-75">storefront</mat-icon></div>
             <div>
-               <div class="text-2xl font-black text-[#0D1B2A]">{{suppliersCount()}}</div>
-               <div class="text-[9px] font-bold text-[#9699a8] uppercase tracking-widest">Marchands</div>
+               <div class="text-xl font-display font-bold text-navy">{{suppliersCount()}}</div>
+               <div class="text-[9px] font-bold text-muted uppercase tracking-widest opacity-60">Marchands</div>
             </div>
          </div>
-         <div class="bg-white p-6 rounded-[2rem] border border-[#e4e6ea] shadow-sm flex items-center gap-5">
-            <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center"><mat-icon>groups</mat-icon></div>
+         <div class="bg-white p-4 rounded-xl border border-surface-2 shadow-sm flex items-center gap-4">
+            <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><mat-icon class="scale-75">groups</mat-icon></div>
             <div>
-               <div class="text-2xl font-black text-[#0D1B2A]">{{clientsCount()}}</div>
-               <div class="text-[9px] font-bold text-[#9699a8] uppercase tracking-widest">Clients</div>
+               <div class="text-xl font-display font-bold text-navy">{{clientsCount()}}</div>
+               <div class="text-[9px] font-bold text-muted uppercase tracking-widest opacity-60">Clients</div>
             </div>
          </div>
       </div>

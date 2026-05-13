@@ -23,7 +23,7 @@ import { Unsubscribe } from 'firebase/firestore';
         <div class="oc-brand !text-xl">O'<span>CHAP</span></div>
         <div class="flex items-center gap-4">
            <button routerLink="/notifications" class="w-10 h-10 rounded-full bg-surface-2 flex items-center justify-center text-ink hover:bg-primary hover:text-white transition-all relative">
-             <mat-icon class="scale-90">notifications</mat-icon>
+              <mat-icon class="scale-90">notifications</mat-icon>
            </button>
         </div>
       </header>
@@ -65,14 +65,14 @@ import { Unsubscribe } from 'firebase/firestore';
                   <!-- Top Row: ID, Date, Status -->
                   <div class="flex flex-wrap items-start justify-between gap-6 mb-10 pb-10 border-b border-surface-2/60">
                     <div class="flex gap-6">
-                      <div class="w-16 h-16 rounded-3xl bg-navy/5 flex items-center justify-center text-navy shrink-0">
-                         <mat-icon class="scale-125">package_2</mat-icon>
-                      </div>
-                      <div>
-                        <p class="text-[10px] font-black text-muted uppercase tracking-widest mb-1">Réf. Livraison</p>
-                        <h2 class="text-xl font-black text-ink font-mono tracking-tight uppercase">#{{ asString(order['id']).slice(-8) }}</h2>
-                        <p class="text-[11px] font-bold text-muted mt-0.5">Expédiée le {{ formatDate(order['createdAt']) }}</p>
-                      </div>
+                       <div class="w-16 h-16 rounded-3xl bg-navy/5 flex items-center justify-center text-navy shrink-0">
+                          <mat-icon class="scale-125">package_2</mat-icon>
+                       </div>
+                       <div>
+                         <p class="text-[10px] font-black text-muted uppercase tracking-widest mb-1">Réf. Livraison</p>
+                         <h2 class="text-xl font-black text-ink font-mono tracking-tight uppercase">#{{ asString(order['id']).slice(-8) }}</h2>
+                         <p class="text-[11px] font-bold text-muted mt-0.5">Expédiée le {{ formatDate(order['createdAt']) }}</p>
+                       </div>
                     </div>
                     
                     <div class="flex flex-col items-end gap-3 shrink-0">
@@ -120,9 +120,40 @@ import { Unsubscribe } from 'firebase/firestore';
                           </div>
                        </div>
 
+                       <!-- Tracking History Log -->
+                       @if (order['trackingHistory'] && asArray(order['trackingHistory']).length > 0) {
+                          <div class="bg-surface/30 rounded-[2.5rem] border border-surface-2 p-8 shadow-sm">
+                             <div class="flex items-center gap-3 mb-8">
+                                <mat-icon class="text-primary scale-90">history</mat-icon>
+                                <h4 class="text-[10px] font-black text-ink uppercase tracking-[0.2em]">Journal Logistique Détaillé</h4>
+                             </div>
+                             <div class="space-y-8 relative ml-4 border-l-2 border-primary/20 pl-10 pb-2">
+                                @for (log of asArray(order['trackingHistory']); track $index) {
+                                   <div class="relative group">
+                                      <div class="absolute -left-[45px] top-1 w-2.5 h-2.5 rounded-full bg-white border-2 border-primary shadow-sm group-first:scale-125 transition-transform"></div>
+                                      <div>
+                                         <div class="flex items-center gap-2 mb-1.5">
+                                            <span class="text-[10px] font-black text-ink uppercase tracking-wider">{{ log['status'] }}</span>
+                                            <span class="w-1 h-1 bg-muted/40 rounded-full"></span>
+                                            <span class="text-[9px] font-bold text-muted opacity-60">{{ formatDate(log['timestamp']) }}</span>
+                                         </div>
+                                         <p class="text-[11px] font-black text-muted leading-relaxed max-w-xl">{{ log['description'] || 'Opération logistique standard effectuée.' }}</p>
+                                         @if (log['location']) {
+                                            <div class="flex items-center gap-1.5 mt-2.5 text-[9px] font-black text-primary uppercase tracking-widest italic bg-primary/5 px-3 py-1 rounded-full w-fit">
+                                               <mat-icon class="scale-[0.5] -ml-1">location_on</mat-icon>
+                                               {{ log['location'] }}
+                                            </div>
+                                         }
+                                      </div>
+                                   </div>
+                                }
+                             </div>
+                          </div>
+                       }
+
                        <!-- Items Detail Grid -->
                        <div class="bg-surface/50 rounded-3xl p-6 border border-surface-2/60">
-                          <p class="text-[10px] font-black text-muted uppercase tracking-widest mb-6">Détails de la cargaison</p>
+                          <p class="text-[10px] font-black text-muted uppercase tracking-widest mb-6 px-1">Détails de la cargaison</p>
                           <div class="space-y-4">
                             @for (item of asArray(order['items']); track $index) {
                               <div class="flex items-center justify-between pb-4 border-b border-surface-2/40 last:border-0 last:pb-0">
@@ -164,7 +195,7 @@ import { Unsubscribe } from 'firebase/firestore';
                           <div class="pt-2">
                              <div class="flex justify-between items-end mb-2">
                                 <span class="text-[10px] font-black text-muted uppercase tracking-widest">Sous-total</span>
-                                <span class="text-xs font-bold text-ink font-price">{{ order['total'] }} FCFA</span>
+                                <span class="text-xs font-bold text-ink font-price">{{ order['totalAmount'] || order['total'] }} FCFA</span>
                              </div>
                              <div class="flex justify-between items-end mb-6">
                                 <span class="text-[10px] font-black text-muted uppercase tracking-widest">Frais logistiques</span>
@@ -172,15 +203,16 @@ import { Unsubscribe } from 'firebase/firestore';
                              </div>
                              <div class="flex justify-between items-end pt-4 border-t-2 border-dashed border-surface-2">
                                 <span class="text-[11px] font-black text-ink uppercase tracking-widest">Total Payé</span>
-                                <span class="text-2xl font-black text-primary font-price tracking-tighter">{{ order['total'] }} <span class="text-[10px] font-sans opacity-40 uppercase">FCFA</span></span>
+                                <span class="text-2xl font-black text-primary font-price tracking-tighter">{{ order['totalAmount'] || order['total'] }} <span class="text-[10px] font-sans opacity-40 uppercase">FCFA</span></span>
                              </div>
                           </div>
                        </div>
 
                        <div class="grid grid-cols-2 gap-3 mt-auto">
-                          <button class="h-14 bg-dark text-white rounded-2xl flex flex-col items-center justify-center gap-0.5 hover:bg-black transition-all active:scale-95 group shadow-xl shadow-black/10">
+                          <button (click)="downloadInvoice(asString(order['id']))"
+                                  class="h-14 bg-dark text-white rounded-2xl flex flex-col items-center justify-center gap-0.5 hover:bg-black transition-all active:scale-95 group shadow-xl shadow-black/10">
                              <mat-icon class="scale-75 group-hover:-translate-y-0.5 transition-transform">receipt</mat-icon>
-                             <span class="text-[9px] font-black uppercase tracking-widest">Facture</span>
+                             <span class="text-[9px] font-black uppercase tracking-widest">Facture PDF</span>
                           </button>
                           <button (click)="reorder(order)" class="h-14 bg-white border-2 border-surface-2 text-ink rounded-2xl flex flex-col items-center justify-center gap-0.5 hover:border-primary/40 hover:text-primary transition-all active:scale-95 group">
                              <mat-icon class="scale-75 group-hover:rotate-180 transition-transform duration-500">refresh</mat-icon>
@@ -194,6 +226,12 @@ import { Unsubscribe } from 'firebase/firestore';
                                 <span class="text-[10px] font-black uppercase tracking-widest">Laisser un avis client</span>
                              </button>
                           }
+                          
+                          <button routerLink="/after-sales" 
+                                  class="col-span-2 h-12 text-[9px] font-black text-muted uppercase tracking-widest hover:text-dark transition-colors flex items-center justify-center gap-2">
+                             <mat-icon class="scale-50">support_agent</mat-icon>
+                             Besoin d'assistance ? SAV & Garantie
+                          </button>
                        </div>
                     </div>
                   </div>
@@ -218,8 +256,8 @@ import { Unsubscribe } from 'firebase/firestore';
              
              <button routerLink="/" 
                      class="px-10 h-14 bg-navy text-white rounded-2xl flex items-center gap-4 hover:bg-primary transition-all active:scale-95 shadow-2xl shadow-navy/20 group">
-               <span class="text-[11px] font-black uppercase tracking-[0.15em]">Lancer le Shopping</span>
-               <mat-icon class="group-hover:translate-x-1 transition-transform">arrow_forward</mat-icon>
+                <span class="text-[11px] font-black uppercase tracking-[0.15em]">Lancer le Shopping</span>
+                <mat-icon class="group-hover:translate-x-1 transition-transform">arrow_forward</mat-icon>
              </button>
           </div>
         }
@@ -237,6 +275,11 @@ export class OrdersComponent implements OnDestroy {
   public cartService = inject(CartService);
   private dataService = inject(DataService);
   private router = inject(Router);
+
+  async downloadInvoice(orderId: string) {
+    const url = await this.dataService.generateInvoice(orderId);
+    window.open(url, '_blank');
+  }
   
   orders = this.dataService.orders$;
   private unsub?: Unsubscribe;

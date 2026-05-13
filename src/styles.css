@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 @import "tailwindcss";
 
@@ -7,90 +7,55 @@
   --color-primary: #D4AF37; /* Balanced Gold */
   --color-primary-light: #E5C35D;
   --color-primary-dim: rgba(212, 175, 55, 0.1);
-  --color-dark: #1A1A1A;
-  --color-navy: #0F172A; /* Deep Navy for better contrast */
+  --color-dark: #0F172A; /* Deep Navy for better contrast */
+  --color-navy: #0F172A;
   --color-navy-light: #1E293B;
-  --color-dash-bg: #F1F5F9;
+  --color-dash-bg: #F8FAFC;
   --color-surface: #FFFFFF;
-  --color-surface-2: #F8FAFC;
+  --color-surface-2: #F1F5F9;
   --color-surface-3: #E2E8F0;
   --color-white-soft: #FFFFFF;
   --color-ink: #0F172A;
   --color-muted: #64748B;
   --color-border: #E2E8F0;
 
-  /* Typography - Inter & Calibri for maximum readability */
-  --font-display: "Inter", "Calibri", sans-serif;
-  --font-sans: "Inter", "Calibri", sans-serif;
+  /* Typography - Outfit for display, Inter for body */
+  --font-display: "Outfit", "Inter", sans-serif;
+  --font-sans: "Inter", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
-  --font-price: "Calibri", "Segoe UI", "Candara", "Bitstream Vera Sans", "DejaVu Sans", "Bitstream Vera Sans", "Trebuchet MS", "Verdana", "Verdana Ref", sans-serif;
+  --font-price: "Outfit", sans-serif;
 
   --radius-std: 8px;
   --radius-lg: 12px;
-  --radius-xl: 24px;
+  --radius-xl: 16px;
   
-  --shadow-oc: 0 1px 3px rgba(0,0,0,0.1);
-  --shadow-oc-lg: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-oc: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-oc-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.05), 0 4px 6px -4px rgba(15, 23, 42, 0.05);
+  --shadow-glass: 0 4px 20px -2px rgba(15, 23, 42, 0.04);
 }
 
 @layer base {
   body {
-    @apply font-sans bg-surface text-ink antialiased m-0 p-0 text-[14px] leading-normal overflow-x-hidden transition-colors duration-300;
-  }
-  
-  button, 
-  a, 
-  input[type="button"], 
-  input[type="submit"], 
-  input[type="reset"],
-  [role="button"],
-  .cursor-pointer {
-    cursor: pointer;
+    @apply font-sans bg-surface text-ink antialiased m-0 p-0 text-[14px] leading-relaxed overflow-x-hidden transition-colors duration-300;
   }
   
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display font-bold tracking-tight;
+    @apply font-display font-semibold tracking-tight;
   }
-  
-  /* Scrollbar Customization */
-  ::-webkit-scrollbar {
-    @apply w-1.5 h-1.5;
-  }
-  ::-webkit-scrollbar-track {
-    @apply bg-transparent;
-  }
-  ::-webkit-scrollbar-thumb {
-    @apply bg-surface-2 rounded-full hover:bg-muted/30 transition-colors;
-  }
-  
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+
+  button, a {
+    cursor: pointer;
   }
 }
 
 @layer components {
   /* Site Specific Layouts */
   .header {
-    @apply h-16 bg-white-soft border-b border-surface-2 flex items-center gap-4 px-5 fixed top-0 inset-x-0 z-[1000] shadow-sm;
+    @apply h-16 bg-white/80 backdrop-blur-md border-b border-surface-2 flex items-center gap-4 px-6 fixed top-0 inset-x-0 z-[1000];
   }
 
   .sidebar {
-    @apply fixed top-16 left-0 w-64 h-[calc(100vh-64px)] bg-white-soft border-r border-surface-2 overflow-y-auto z-[900] transition-all duration-300 flex flex-col;
-  }
-
-  .sidebar-collapsed {
-    @apply !w-0 -translate-x-full;
-  }
-
-  .oc-brand {
-    @apply flex items-center gap-1 font-display font-black tracking-tighter uppercase italic text-dark;
-  }
-  .oc-brand span {
-    @apply text-primary;
+    @apply fixed top-16 left-0 w-64 h-[calc(100vh-16px)] bg-white border-r border-surface-2 overflow-y-auto z-[900] transition-all duration-300 flex flex-col;
   }
 
   .main-content {
@@ -98,55 +63,28 @@
     margin-left: 16rem;
   }
 
-  .main-content-collapsed {
-    @apply !ml-0;
+  .oc-brand {
+    @apply flex items-center gap-1 font-display font-bold tracking-tighter uppercase text-navy text-xl;
+  }
+  .oc-brand span {
+    @apply text-primary;
   }
 
   /* Interaction Components */
   .btn-primary {
-    @apply bg-primary text-white px-6 py-2 rounded-lg font-sans font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-300 hover:brightness-110 active:scale-95 disabled:opacity-50;
-  }
-
-  .btn-ghost {
-    @apply bg-surface-3 text-ink px-6 py-2 rounded-lg font-sans font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-300 hover:bg-dark hover:text-white active:scale-95;
-  }
-
-  .btn-login {
-    @apply bg-dark text-white-soft px-5 py-2 rounded-lg font-sans font-bold text-xs uppercase tracking-wider hover:bg-primary transition-all active:scale-95;
-  }
-
-  .icon-btn {
-    @apply w-10 h-10 rounded-full flex items-center justify-center text-ink hover:bg-surface-2 hover:text-primary transition-all relative;
-  }
-
-  .oc-badge {
-    @apply absolute top-1.5 right-1.5 bg-primary text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white-soft;
-  }
-
-  /* Universal Sections */
-  .hero {
-    @apply bg-dark text-white-soft px-10 py-14 relative overflow-hidden;
-    background: linear-gradient(135deg, var(--color-dark) 0%, #1E1C18 60%, #2A2521 100%);
+    @apply bg-navy text-white px-6 py-2.5 rounded-lg font-display font-semibold text-xs border border-navy uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-300 hover:bg-primary hover:border-primary active:scale-95 disabled:opacity-50;
   }
 
   .product-card {
-    @apply bg-white rounded-lg border border-border overflow-hidden transition-all duration-300 hover:shadow-oc-lg relative cursor-pointer;
-  }
-
-  .sidebar-item, .oc-nav-item {
-    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-ink font-sans font-semibold text-[13px] transition-all duration-300 hover:bg-surface-3 cursor-pointer;
-  }
-
-  .sidebar-item-active {
-    @apply bg-primary text-white shadow-sm;
+    @apply bg-white rounded-xl border border-surface-2 overflow-hidden transition-all duration-300 hover:shadow-oc-lg hover:-translate-y-1 relative cursor-pointer;
   }
 
   .cat-chip {
-    @apply flex items-center gap-2 px-4 py-2 bg-white border border-border rounded-lg text-[12px] font-sans font-bold uppercase tracking-tight text-ink transition-all duration-300 hover:border-primary hover:text-primary;
+    @apply shrink-0 flex items-center gap-2 px-4 py-2 bg-white border border-surface-2 rounded-lg text-[10px] font-display font-bold uppercase tracking-widest text-muted transition-all duration-300 hover:border-primary hover:text-primary active:scale-95;
   }
 
   .cat-chip-active {
-    @apply border-primary bg-primary text-white shadow-sm;
+    @apply border-primary bg-primary text-white shadow-lg shadow-primary/20 scale-105;
   }
 
   /* Animations library */
@@ -160,27 +98,43 @@
   }
 
   .sidebar-group-header {
-    @apply flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer text-ink font-sans font-bold text-[12px] uppercase tracking-tight transition-all duration-300 hover:bg-surface-3;
+    @apply flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer text-ink font-display font-bold text-[12px] uppercase tracking-tight transition-all duration-300 hover:bg-surface-2;
+  }
+
+  .sidebar-item, .oc-nav-item {
+    @apply flex items-center gap-3 px-6 py-3 rounded-xl text-ink/70 font-sans font-semibold text-[13px] transition-all duration-300 hover:bg-surface-2 hover:text-primary cursor-pointer;
+  }
+
+  .sidebar-item-active {
+    @apply bg-primary/10 text-primary shadow-sm;
   }
 
   .sidebar-sub-item {
-    @apply flex items-center gap-3 pl-10 pr-3 py-2 rounded-lg text-muted font-sans font-medium text-[13px] transition-all duration-300 hover:text-primary hover:bg-surface-3;
+    @apply flex items-center gap-3 pl-12 pr-4 py-2.5 rounded-xl text-muted font-sans font-medium text-[13px] transition-all duration-300 hover:text-primary hover:bg-surface-2;
   }
 
   .sidebar-sub-item-active {
-    @apply text-primary font-medium;
+    @apply text-primary font-bold bg-primary/5;
+  }
+
+  .icon-btn {
+    @apply w-12 h-12 rounded-2xl flex items-center justify-center text-ink hover:bg-primary/10 hover:text-primary transition-all relative;
+  }
+
+  .oc-badge {
+    @apply absolute top-2 right-2 bg-primary text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white;
   }
 
   /* Side Panels & Overlays */
   .oc-panel {
-    @apply fixed right-0 top-0 h-screen w-full sm:w-[450px] bg-white-soft z-[2000] transform transition-transform duration-500 ease-out flex flex-col shadow-oc-lg border-l border-surface-2;
+    @apply fixed right-0 top-0 h-screen w-full sm:w-[500px] bg-white z-[2000] transform transition-transform duration-500 ease-out flex flex-col shadow-oc-lg border-l border-surface-2 rounded-l-[3rem];
   }
   .oc-panel-hidden {
     @apply translate-x-full;
   }
   
   .oc-overlay {
-    @apply fixed inset-0 bg-dark/40 backdrop-blur-sm z-[1500] transition-opacity duration-300 cursor-pointer;
+    @apply fixed inset-0 bg-navy/60 backdrop-blur-md z-[1500] transition-opacity duration-500 cursor-pointer;
   }
   .oc-overlay-hidden {
     @apply opacity-0 pointer-events-none;
