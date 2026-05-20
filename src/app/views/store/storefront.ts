@@ -287,18 +287,7 @@ type PanelType = 'none' | 'cart' | 'wishlist' | 'orders' | 'profile';
           
           <div class="max-w-7xl mx-auto px-6 py-8">
             
-            <!-- Welcome Header -->
-            <div class="mb-12 animate-fade-up" style="animation-delay: 0.1s">
-              <div class="flex items-center gap-3 mb-4">
-                 <span class="w-12 h-px bg-primary/30"></span>
-                 <span class="text-[10px] font-black text-primary uppercase tracking-[0.4em]">Excellence O'CHAP</span>
-              </div>
-              <h1 class="text-4xl lg:text-5xl font-display font-black text-navy tracking-tighter mb-4 leading-tight">
-                @if (selectedCategory() === 'all') { Panier d'Antan, <br><span class="text-primary italic">Confort Durable.</span> }
-                @else { {{ asString(selectedCategory().toUpperCase()) }}<span class="text-primary">.</span> }
-              </h1>
-              <p class="text-muted text-lg max-w-2xl font-medium leading-relaxed opacity-70">L'excellence de l'électroménager premium à Abidjan. Innovation, design épuré et service après-vente certifié par les plus grandes marques mondiales.</p>
-            </div>
+            <!-- Header removed as requested -->
 
             <!-- Minimalist Hero Banner -->
             @if (heroProduct(); as prod) {

@@ -14,7 +14,7 @@ export const supplierGuard: CanActivateFn = () => {
       return true;
     }
 
-    if (role === 'supplier' || role === 'fournisseur') {
+    if (role === 'supplier' || role === 'fournisseur' || role === 'manager_sup') {
       return true;
     }
     router.navigate(['/']);

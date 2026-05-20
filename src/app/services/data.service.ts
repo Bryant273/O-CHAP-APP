@@ -668,6 +668,18 @@ export class DataService {
     }
   }
 
+  async updateUserRole(userId: string, newRole: string) {
+    const path = `users/${userId}`;
+    try {
+      await updateDoc(doc(db, 'users', userId), {
+        role: newRole,
+        updatedAt: serverTimestamp()
+      });
+    } catch (error: unknown) {
+      this.handleFirestoreError(error, OperationType.UPDATE, path);
+    }
+  }
+
   async clearAllData() {
     const isAdmin = auth.currentUser?.email === 'acherie812@gmail.com';
     if (!isAdmin) throw new Error('Seul l\'administrateur principal peut réinitialiser la base de données.');
@@ -836,7 +848,7 @@ export class DataService {
     }
   }
 
-  async createSavRequest(data: any) {
+  async createSavRequest(data: Record<string, unknown>) {
     try {
       await addDoc(collection(db, 'sav_requests'), {
         ...data,
@@ -881,9 +893,9 @@ export class DataService {
 
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Date : ${new Date(((order.createdAt as any)?.seconds || 0) * 1000).toLocaleDateString('fr-FR')}`, 20, 70);
+    doc.text(`Date : ${new Date(((order.createdAt as { seconds: number })?.seconds || 0) * 1000).toLocaleDateString('fr-FR')}`, 20, 70);
     doc.text(`Statut : ${order.status?.toUpperCase()}`, 20, 75);
-    doc.text(`Client : ${(this.currentUser$() as any)?.displayName || 'Client O\'CHAP'}`, 20, 80);
+    doc.text(`Client : ${(this.currentUser$() as OchapUser)?.displayName || 'Client O\'CHAP'}`, 20, 80);
 
     // Table Header
     doc.setFillColor(240, 242, 245);
@@ -895,7 +907,7 @@ export class DataService {
 
     // Table Body
     let y = 115;
-    order.items.forEach((item: any) => {
+    order.items.forEach((item: OchapOrderItem) => {
       doc.setFont('helvetica', 'normal');
       doc.text(item.name, 25, y);
       doc.text(item.quantity.toString(), 142, y);

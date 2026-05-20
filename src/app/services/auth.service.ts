@@ -31,15 +31,31 @@ export class AuthService {
     if (!u) return false;
     const email = u.email?.toLowerCase();
     if (email === 'acherie812@gmail.com') return true;
-    return p?.['role'] === 'admin';
+    return p?.['role'] === 'admin' || p?.['role'] === 'manager_erp';
+  });
+
+  public isManagerSup = computed(() => {
+    const p = this.profile();
+    return p?.['role'] === 'manager_sup';
   });
 
   public isSupplier = computed(() => {
     const p = this.profile();
-    return p?.['role'] === 'supplier' || p?.['role'] === 'fournisseur';
+    const role = p?.['role'];
+    return role === 'supplier' || role === 'fournisseur' || role === 'manager_sup';
   });
 
-  public isStaff = computed(() => this.isAdmin() || this.isSupplier());
+  public isLivreur = computed(() => {
+    const p = this.profile();
+    return p?.['role'] === 'livreur';
+  });
+
+  public isAuditeur = computed(() => {
+    const p = this.profile();
+    return p?.['role'] === 'auditeur';
+  });
+
+  public isStaff = computed(() => this.isAdmin() || this.isSupplier() || this.isLivreur() || this.isAuditeur());
 
   async updateProfile(updates: Partial<OchapUser>) {
     const user = this.user();
@@ -109,7 +125,7 @@ export class AuthService {
     return result.user;
   }
 
-  async signupWithEmail(email: string, pass: string, name: string, role: 'client' | 'supplier' = 'client') {
+  async signupWithEmail(email: string, pass: string, name: string, role = 'client') {
     const result = await createUserWithEmailAndPassword(auth, email, pass);
     await updateProfile(result.user, { displayName: name });
     await this.ensureProfile(result.user, name, role);

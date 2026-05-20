@@ -73,7 +73,17 @@ import { DataService } from '../../services/data.service';
                          </div>
                       </div>
                       <div class="flex items-center gap-3">
-                         <span class="px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[8px] font-black uppercase tracking-widest border border-emerald-100">Super Admin</span>
+                         <select (change)="changeRole(user.id, $any($event.target).value)" 
+                                 class="px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[8px] font-black uppercase tracking-widest border border-emerald-100 outline-none cursor-pointer hover:bg-emerald-100 transition-all">
+                            <option [value]="user.role" selected>{{user.role}}</option>
+                            <option value="admin">admin</option>
+                            <option value="manager_erp">manager_erp</option>
+                            <option value="manager_sup">manager_sup</option>
+                            <option value="livreur">livreur</option>
+                            <option value="auditeur">auditeur</option>
+                            <option value="fournisseur">fournisseur</option>
+                            <option value="client">client</option>
+                         </select>
                          <button class="w-8 h-8 rounded-lg flex items-center justify-center text-[#9699a8] hover:bg-white hover:text-red-500 transition-all opacity-0 group-hover:opacity-100">
                             <mat-icon class="scale-75">more_vert</mat-icon>
                          </button>
@@ -111,7 +121,17 @@ import { DataService } from '../../services/data.service';
                          </div>
                       </div>
                       <div class="flex items-center gap-2">
-                         <span class="px-2 py-0.5 rounded-full bg-[#f0f2f5] text-[#5a5e72] text-[8px] font-black uppercase tracking-widest">Supplier</span>
+                         <select (change)="changeRole(user.id, $any($event.target).value)"
+                                 class="px-2 py-0.5 rounded-full bg-[#f0f2f5] text-[#5a5e72] text-[8px] font-black uppercase tracking-widest outline-none border border-transparent hover:border-emerald-500 transition-all">
+                            <option [value]="user.role" selected>{{user.role}}</option>
+                            <option value="admin">admin</option>
+                            <option value="manager_erp">manager_erp</option>
+                            <option value="manager_sup">manager_sup</option>
+                            <option value="livreur">livreur</option>
+                            <option value="auditeur">auditeur</option>
+                            <option value="fournisseur">fournisseur</option>
+                            <option value="client">client</option>
+                         </select>
                          <mat-icon class="text-emerald-500 scale-50">verified_user</mat-icon>
                       </div>
                    </div>
@@ -184,7 +204,17 @@ import { DataService } from '../../services/data.service';
                             <div class="text-[9px] text-[#9699a8] font-bold">{{user.email}}</div>
                          </div>
                       </div>
-                      <span class="text-[9px] font-black text-blue-600 uppercase">Client</span>
+                      <select (change)="changeRole(user.id, $any($event.target).value)"
+                              class="text-[9px] font-black text-blue-600 uppercase bg-blue-50 px-2 py-0.5 rounded-lg outline-none border border-transparent hover:border-blue-500 transition-all">
+                         <option [value]="user.role" selected>{{user.role}}</option>
+                         <option value="admin">admin</option>
+                         <option value="manager_erp">manager_erp</option>
+                         <option value="manager_sup">manager_sup</option>
+                         <option value="livreur">livreur</option>
+                         <option value="auditeur">auditeur</option>
+                         <option value="fournisseur">fournisseur</option>
+                         <option value="client">client</option>
+                      </select>
                    </div>
                 }
              </div>
@@ -207,13 +237,25 @@ export class AdminUsers {
   maintenanceStatus = signal<string | null>(null);
 
   // COMPUTED SIGNALS FROM DATA SERVICE (Unified)
-  admins = computed(() => this.dataService.users$().filter(u => u.role === 'admin'));
+  admins = computed(() => this.dataService.users$().filter(u => 
+    u.role === 'admin' || u.role === 'manager_erp' || u.role === 'manager_sup' || u.role === 'livreur' || u.role === 'auditeur'
+  ));
   suppliers = this.dataService.suppliers$;
   clients = this.dataService.clients$;
 
   adminsCount = computed(() => this.admins().length);
   suppliersCount = computed(() => this.suppliers().length);
   clientsCount = computed(() => this.clients().length);
+
+  async changeRole(userId: string, newRole: string) {
+    if (!confirm(`Changer le rôle de cet utilisateur en ${newRole} ?`)) return;
+    try {
+      await this.dataService.updateUserRole(userId, newRole);
+    } catch (err: unknown) {
+      console.error(err);
+      alert('Erreur lors du changement de rôle.');
+    }
+  }
 
   isSuperAdmin = computed(() => {
     const email = this.authService.user$()?.email?.toLowerCase();

@@ -2,6 +2,7 @@ import {Routes} from '@angular/router';
 import { authGuard } from './services/auth.guard';
 import { adminGuard } from './services/admin.guard';
 import { supplierGuard } from './services/supplier.guard';
+import { roleGuard } from './services/role.guard';
 
 export const routes: Routes = [
   // Store Routes
@@ -84,7 +85,9 @@ export const routes: Routes = [
       },
       {
         path: 'analytics',
-        loadComponent: () => import('./views/admin/analytics').then(m => m.AdminAnalytics)
+        loadComponent: () => import('./views/admin/analytics').then(m => m.AdminAnalytics),
+        canActivate: [roleGuard],
+        data: { roles: ['admin', 'manager_erp'] }
       },
       {
         path: 'orders',

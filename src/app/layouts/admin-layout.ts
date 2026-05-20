@@ -47,7 +47,9 @@ import { CommonModule } from '@angular/common';
             @if (openSections()['global'] && !sidebarCollapsed()) {
               <div class="pl-9 space-y-1 animate-fade-in flex flex-col">
                 <a routerLink="/admin/dashboard" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Dashboard</a>
-                <a routerLink="/admin/analytics" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Analytiques</a>
+                @if (authService.isAdmin()) {
+                  <a routerLink="/admin/analytics" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Analytiques</a>
+                }
               </div>
             }
           </div>
@@ -136,26 +138,28 @@ import { CommonModule } from '@angular/common';
           </div>
 
           <!-- FINANCE -->
-          <div class="space-y-1">
-            <button (click)="toggleSection('finance')" 
-                    [title]="sidebarCollapsed() ? 'Finance' : ''"
-                    class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-white/50 hover:bg-white/5 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest border border-transparent"
-                    [class.justify-center]="sidebarCollapsed()">
-              <div class="flex items-center gap-3">
-                <mat-icon class="scale-75">account_balance_wallet</mat-icon> 
-                @if (!sidebarCollapsed()) { <span class="animate-fade-in">Finance</span> }
-              </div>
-              @if (!sidebarCollapsed()) {
-                <mat-icon class="scale-50 transition-transform" [class.rotate-180]="openSections()['finance']">expand_more</mat-icon>
+          @if (authService.isAdmin() || authService.isAuditeur()) {
+            <div class="space-y-1">
+              <button (click)="toggleSection('finance')" 
+                      [title]="sidebarCollapsed() ? 'Finance' : ''"
+                      class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-white/50 hover:bg-white/5 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest border border-transparent"
+                      [class.justify-center]="sidebarCollapsed()">
+                <div class="flex items-center gap-3">
+                  <mat-icon class="scale-75">account_balance_wallet</mat-icon> 
+                  @if (!sidebarCollapsed()) { <span class="animate-fade-in">Finance</span> }
+                </div>
+                @if (!sidebarCollapsed()) {
+                  <mat-icon class="scale-50 transition-transform" [class.rotate-180]="openSections()['finance']">expand_more</mat-icon>
+                }
+              </button>
+              @if (openSections()['finance'] && !sidebarCollapsed()) {
+                <div class="pl-9 space-y-1 animate-fade-in flex flex-col">
+                  <a routerLink="/admin/billing" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Facturation</a>
+                  <a routerLink="/admin/reports" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Rapports & Exports</a>
+                </div>
               }
-            </button>
-            @if (openSections()['finance'] && !sidebarCollapsed()) {
-              <div class="pl-9 space-y-1 animate-fade-in flex flex-col">
-                <a routerLink="/admin/billing" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Facturation</a>
-                <a routerLink="/admin/reports" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Rapports & Exports</a>
-              </div>
-            }
-          </div>
+            </div>
+          }
 
           <!-- SUPPORT -->
           <div class="space-y-1">
@@ -180,26 +184,28 @@ import { CommonModule } from '@angular/common';
           </div>
 
           <!-- ADMIN -->
-          <div class="space-y-1">
-            <button (click)="toggleSection('admin')" 
-                    [title]="sidebarCollapsed() ? 'Admin' : ''"
-                    class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-white/50 hover:bg-white/5 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest border border-transparent"
-                    [class.justify-center]="sidebarCollapsed()">
-              <div class="flex items-center gap-3">
-                <mat-icon class="scale-75">admin_panel_settings</mat-icon> 
-                @if (!sidebarCollapsed()) { <span class="animate-fade-in">Admin</span> }
-              </div>
-              @if (!sidebarCollapsed()) {
-                <mat-icon class="scale-50 transition-transform" [class.rotate-180]="openSections()['admin']">expand_more</mat-icon>
+          @if (authService.isAdmin()) {
+            <div class="space-y-1">
+              <button (click)="toggleSection('admin')" 
+                      [title]="sidebarCollapsed() ? 'Admin' : ''"
+                      class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-white/50 hover:bg-white/5 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest border border-transparent"
+                      [class.justify-center]="sidebarCollapsed()">
+                <div class="flex items-center gap-3">
+                  <mat-icon class="scale-75">admin_panel_settings</mat-icon> 
+                  @if (!sidebarCollapsed()) { <span class="animate-fade-in">Admin</span> }
+                </div>
+                @if (!sidebarCollapsed()) {
+                  <mat-icon class="scale-50 transition-transform" [class.rotate-180]="openSections()['admin']">expand_more</mat-icon>
+                }
+              </button>
+              @if (openSections()['admin'] && !sidebarCollapsed()) {
+                <div class="pl-9 space-y-1 animate-fade-in flex flex-col">
+                  <a routerLink="/admin/users" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Utilisateurs & Rôles</a>
+                  <a routerLink="/admin/settings" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Paramètres</a>
+                </div>
               }
-            </button>
-            @if (openSections()['admin'] && !sidebarCollapsed()) {
-              <div class="pl-9 space-y-1 animate-fade-in flex flex-col">
-                <a routerLink="/admin/users" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Utilisateurs & Rôles</a>
-                <a routerLink="/admin/settings" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Paramètres</a>
-              </div>
-            }
-          </div>
+            </div>
+          }
         </div>
 
         <div class="p-4 border-t border-white/5 bg-black/10">
