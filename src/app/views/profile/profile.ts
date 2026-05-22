@@ -1,9 +1,17 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../services/auth.service';
 import { FormsModule } from '@angular/forms';
+
+interface Address {
+  id: string;
+  label: string;
+  street: string;
+  city: string;
+  phone: string;
+}
 
 @Component({
   selector: 'app-profile',
@@ -195,32 +203,120 @@ import { FormsModule } from '@angular/forms';
           }
 
           @if (activeTab() === 'billing') {
-            <div class="space-y-8">
+            <div class="space-y-8 animate-fade-up">
+              <!-- Addresses List -->
               <div class="bg-white border border-surface-2 rounded-3xl p-8">
-                <h3 class="text-[10px] font-black uppercase text-muted tracking-widest mb-8">Adresse de Livraison</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div class="md:col-span-2 flex flex-col gap-1.5">
-                    <label for="pAddress" class="text-[9px] font-black uppercase text-muted tracking-widest ml-1">Rue / Quartier</label>
-                    <input id="pAddress" type="text" placeholder="Ex: Akanda, Batterie IV" class="w-full bg-surface-2 border-transparent rounded-2xl px-5 py-3.5 text-sm font-bold outline-none focus:bg-white focus:border-primary transition-all">
+                <div class="flex items-center justify-between mb-8">
+                  <div>
+                    <h3 class="text-[10px] font-black uppercase text-muted tracking-widest">Mes Adresses Enregistrées</h3>
+                    <p class="text-[10px] text-muted font-normal mt-1">Gérez vos lieux de livraison pour passer des commandes rapidement.</p>
                   </div>
-                  <div class="flex flex-col gap-1.5">
-                    <label for="pCity" class="text-[9px] font-black uppercase text-muted tracking-widest ml-1">Ville</label>
-                    <input id="pCity" type="text" placeholder="Libreville" class="w-full bg-surface-2 border-transparent rounded-2xl px-5 py-3.5 text-sm font-bold outline-none focus:bg-white focus:border-primary transition-all">
-                  </div>
-                  <div class="flex flex-col gap-1.5">
-                    <label for="pBP" class="text-[9px] font-black uppercase text-muted tracking-widest ml-1">Code Postal / BP</label>
-                    <input id="pBP" type="text" placeholder="BP 1234" class="w-full bg-surface-2 border-transparent rounded-2xl px-5 py-3.5 text-sm font-bold outline-none focus:bg-white focus:border-primary transition-all">
-                  </div>
+                  @if (!showAddForm()) {
+                    <button (click)="showAddForm.set(true)" class="bg-[#FF6200] text-white px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-lg shadow-[#FF6200]/20 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer">
+                      <mat-icon class="scale-50">add_location</mat-icon> Ajouter
+                    </button>
+                  }
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  @for (addr of addresses(); track addr.id) {
+                    <div class="p-6 border border-surface-2 rounded-2xl hover:border-primary/30 transition-all flex flex-col justify-between relative group bg-surface-1">
+                      <div>
+                        <div class="flex items-center gap-2 mb-3">
+                          <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                          <span class="text-xs font-black text-ink uppercase tracking-wider">{{ addr.label }}</span>
+                        </div>
+                        <p class="text-xs font-bold text-[#0D1B2A] mb-1">{{ addr.street }}</p>
+                        <p class="text-[11px] font-medium text-muted mb-2 uppercase tracking-wide">{{ addr.city }}</p>
+                        @if (addr.phone) {
+                          <p class="text-[10px] font-semibold text-[#5a5e72] flex items-center gap-1">
+                            <mat-icon class="scale-50 text-muted">phone</mat-icon> {{ addr.phone }}
+                          </p>
+                        }
+                      </div>
+
+                      <div class="mt-4 pt-3 border-t border-surface-2 flex justify-end">
+                        <button (click)="deleteAddress(addr.id)" class="text-[9px] font-black text-red-500 uppercase tracking-widest flex items-center gap-1 hover:underline cursor-pointer">
+                          <mat-icon class="scale-[0.6]">delete_outline</mat-icon> Supprimer
+                        </button>
+                      </div>
+                    </div>
+                  } @empty {
+                    <div class="col-span-full py-12 text-center border-2 border-dashed border-surface-2 rounded-2xl bg-surface-1">
+                      <mat-icon class="scale-125 text-muted mb-3">location_off</mat-icon>
+                      <h4 class="text-xs font-black text-[#0d1b2a] uppercase tracking-wide">Aucune adresse enregistrée</h4>
+                      <p class="text-[10px] text-muted mt-1 leading-normal">Ajoutez des lieux de livraison à Abidjan ou à l'intérieur pour commander vos produits.</p>
+                    </div>
+                  }
                 </div>
               </div>
+
+              <!-- Add Address Form -->
+              @if (showAddForm()) {
+                <div class="bg-white border-2 border-primary/20 rounded-3xl p-8 animate-fade-up">
+                  <h3 class="text-[10px] font-black uppercase text-primary tracking-widest mb-6 flex items-center gap-1.5">
+                    <mat-icon class="scale-75">add_location_alt</mat-icon> Nouvelle Adresse de Livraison
+                  </h3>
+                  
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="flex flex-col gap-1.5">
+                      <label for="addrLabel" class="text-[9px] font-black uppercase text-muted tracking-widest ml-1">Nom de l'adresse (ex: Domicile, Bureau)</label>
+                      <input id="addrLabel" type="text" [(ngModel)]="newAddressLabel" name="addrLabel" placeholder="Ex: Maison Abidjan, Ma Ville" class="w-full bg-surface-2 border-transparent rounded-2xl px-5 py-3.5 text-xs font-bold outline-none focus:bg-white focus:border-primary transition-all">
+                    </div>
+
+                    <div class="flex flex-col gap-1.5">
+                      <label for="addrCity" class="text-[9px] font-black uppercase text-muted tracking-widest ml-1">Ville / Commune</label>
+                      <select id="addrCity" [(ngModel)]="newAddressCity" name="addrCity" class="w-full bg-surface-2 border-transparent rounded-2xl px-5 py-3.5 text-xs font-bold outline-none focus:bg-white focus:border-primary transition-all">
+                        <option value="" disabled selected>Sélectionner une ville / commune</option>
+                        <option value="Abidjan - Cocody">Abidjan - Cocody (1 500 XOF)</option>
+                        <option value="Abidjan - Marcory">Abidjan - Marcory (1 500 XOF)</option>
+                        <option value="Abidjan - Plateau">Abidjan - Plateau (1 500 XOF)</option>
+                        <option value="Abidjan - Yopougon">Abidjan - Yopougon (1 500 XOF)</option>
+                        <option value="Abidjan - Koumassi">Abidjan - Koumassi (1 500 XOF)</option>
+                        <option value="Abidjan - Treichville">Abidjan - Treichville (1 500 XOF)</option>
+                        <option value="Abidjan - Bingerville">Abidjan - Bingerville (1 500 XOF)</option>
+                        <option value="Abidjan - Port-Bouët">Abidjan - Port-Bouët (1 500 XOF)</option>
+                        <option value="Abidjan - Abobo">Abidjan - Abobo (1 500 XOF)</option>
+                        <option value="Abidjan - Songon">Abidjan - Songon (1 500 XOF)</option>
+                        <option value="Bouaké">Bouaké (2 500 XOF)</option>
+                        <option value="Yamoussoukro">Yamoussoukro (2 500 XOF)</option>
+                        <option value="San-Pédro">San-Pédro (2 500 XOF)</option>
+                        <option value="Korhogo">Korhogo (2 500 XOF)</option>
+                        <option value="Daloa">Daloa (2 500 XOF)</option>
+                        <option value="Man">Man (2 500 XOF)</option>
+                        <option value="Gagnoa">Gagnoa (2 500 XOF)</option>
+                        <option value="Autre ville">Hors d'Abidjan - Autre (2 500 XOF)</option>
+                      </select>
+                    </div>
+
+                    <div class="md:col-span-2 flex flex-col gap-1.5">
+                      <label for="addrStreet" class="text-[9px] font-black uppercase text-muted tracking-widest ml-1">Adresse détaillée (Quartier, Rue, Porte, Indications)</label>
+                      <input id="addrStreet" type="text" [(ngModel)]="newAddressStreet" name="addrStreet" placeholder="Ex: Cocody Angré 8ème tranche, à côté de la pharmacie" class="w-full bg-surface-2 border-transparent rounded-2xl px-5 py-3.5 text-xs font-bold outline-none focus:bg-white focus:border-primary transition-all">
+                    </div>
+
+                    <div class="flex flex-col gap-1.5">
+                      <label for="addrPhone" class="text-[9px] font-black uppercase text-muted tracking-widest ml-1">Numéro de Téléphone pour cette livraison</label>
+                      <input id="addrPhone" type="tel" [(ngModel)]="newAddressPhone" name="addrPhone" placeholder="Ex: +225 07 00 00 00 00" class="w-full bg-surface-2 border-transparent rounded-2xl px-5 py-3.5 text-xs font-bold outline-none focus:bg-white focus:border-primary transition-all">
+                    </div>
+                  </div>
+
+                  <div class="mt-8 flex justify-end gap-3 border-t border-surface-2 pt-6">
+                    <button type="button" (click)="showAddForm.set(false)" class="px-6 py-2.5 rounded-xl border border-surface-2 text-[10px] font-black uppercase tracking-widest text-[#5a5e72] hover:bg-surface-2 transition-all cursor-pointer">
+                      Annuler
+                    </button>
+                    <button type="button" (click)="addAddress()" class="px-6 py-2.5 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#00925c] transition-all cursor-pointer active:scale-95 shadow-lg shadow-primary/20">
+                      Enregistrer l'adresse
+                    </button>
+                  </div>
+                </div>
+              }
             </div>
           }
         </div>
 
         <div class="mt-12 flex justify-end gap-4">
-          <button class="px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-muted hover:bg-surface-2 transition-all">Annuler</button>
-          <button class="px-8 py-3 bg-navy text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-primary shadow-xl shadow-navy/20 transition-all active:scale-95">
-            Enregistrer les modifications
+          <button routerLink="/" class="px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-muted hover:bg-surface-2 transition-all">
+            Fermer les options
           </button>
         </div>
       </main>
@@ -239,6 +335,59 @@ export class ProfileComponent {
   public authService = inject(AuthService);
   private router = inject(Router);
   activeTab = signal<string>('general');
+
+  // Address signals
+  addresses = computed<Address[]>(() => {
+    const p = this.authService.profile$() as Record<string, unknown>;
+    return (p?.['addresses'] as Address[]) || [];
+  });
+
+  showAddForm = signal(false);
+  newAddressLabel = '';
+  newAddressStreet = '';
+  newAddressCity = '';
+  newAddressPhone = '';
+
+  async addAddress() {
+    if (!this.newAddressLabel || !this.newAddressStreet || !this.newAddressCity) {
+      alert('Veuillez remplir au moins le libellé, la rue/quartier et la ville.');
+      return;
+    }
+
+    const newAdd = {
+      id: 'addr_' + Date.now(),
+      label: this.newAddressLabel,
+      street: this.newAddressStreet,
+      city: this.newAddressCity,
+      phone: this.newAddressPhone
+    };
+
+    const currentAddresses = this.addresses();
+    const updated = [...currentAddresses, newAdd];
+
+    const success = await this.authService.updateProfile({
+      addresses: updated as unknown[]
+    });
+
+    if (success) {
+      this.newAddressLabel = '';
+      this.newAddressStreet = '';
+      this.newAddressCity = '';
+      this.newAddressPhone = '';
+      this.showAddForm.set(false);
+    } else {
+      alert("Une erreur est survenue lors de l'enregistrement de l'adresse.");
+    }
+  }
+
+  async deleteAddress(id: string) {
+    if (!confirm('Voulez-vous vraiment supprimer cette adresse ?')) return;
+    const currentAddresses = this.addresses();
+    const updated = currentAddresses.filter(a => (a as { id: string }).id !== id);
+    await this.authService.updateProfile({
+      addresses: updated as unknown[]
+    });
+  }
 
   async confirmDelete() {
     if (confirm('Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.')) {

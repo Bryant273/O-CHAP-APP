@@ -338,6 +338,18 @@ export class SupplierDashboard implements OnInit, OnDestroy {
   private dataService = inject(DataService);
   private unsubscribeFunctions: (() => void)[] = [];
   
+  constructor() {
+    // Subscribe to auth changes to initialize watchers
+    toObservable(this.authService.user$).subscribe(user => {
+      // Clear previous watchers
+      this.clearWatchers();
+      
+      if (user) {
+        this.loadSupplierData(user.uid);
+      }
+    });
+  }
+  
   supplierName = computed(() => {
     const profile = this.authService.profile$() as Record<string, unknown>;
     return (profile?.['businessName'] as string) || (profile?.['displayName'] as string) || (this.authService.user$()?.email?.split('@')[0]) || 'Boutique O\'CHAP';
@@ -473,16 +485,6 @@ export class SupplierDashboard implements OnInit, OnDestroy {
   ngOnInit() {
     const d = new Date();
     this.currentDate.set(d.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }));
-    
-    // Subscribe to auth changes to initialize watchers
-    toObservable(this.authService.user$).subscribe(user => {
-      // Clear previous watchers
-      this.clearWatchers();
-      
-      if (user) {
-        this.loadSupplierData(user.uid);
-      }
-    });
   }
 
   private clearWatchers() {

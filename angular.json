@@ -22,6 +22,23 @@
             "define": {
               "GEMINI_API_KEY": "'YOUR_GEMINI_API_KEY'"
             },
+            "allowedCommonJsDependencies": [
+              "node-domexception",
+              "jspdf",
+              "canvg",
+              "dompurify",
+              "fflate",
+              "html2canvas",
+              "rgbcolor",
+              "raf",
+              "debug",
+              "agent-base",
+              "p-retry",
+              "google-auth-library",
+              "@grpc/grpc-js",
+              "@grpc/proto-loader",
+              "web-streams-polyfill"
+            ],
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
             "assets": [

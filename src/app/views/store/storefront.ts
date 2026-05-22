@@ -487,7 +487,7 @@ type PanelType = 'none' | 'cart' | 'wishlist' | 'orders' | 'profile';
                       </button>
                       <button (click)="addToCart($event, p)" [disabled]="p['stock'] === 0" class="flex-1 h-12 rounded-2xl bg-[#0D1B2A] text-white flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-primary transition-all shadow-xl active:scale-95 disabled:opacity-50">
                         <mat-icon class="scale-75">add_shopping_cart</mat-icon>
-                        Acquérir
+                        Acheter
                       </button>
                     </div>
                   </div>
@@ -495,7 +495,7 @@ type PanelType = 'none' | 'cart' | 'wishlist' | 'orders' | 'profile';
                   <!-- Details Container: Optimized Density -->
                   <div class="mt-8 px-2 flex flex-col items-center text-center">
                      <div class="flex items-center gap-2 mb-2">
-                        <span class="text-[9px] font-black text-primary uppercase tracking-[0.2em] px-2 py-0.5 bg-primary/5 rounded">{{p['brand'] || 'O\'CHAP'}}</span>
+                        <span class="text-[9px] font-black text-primary uppercase tracking-[0.2em] px-2 py-0.5 bg-primary/5 rounded">{{p['brand'] || "O'CHAP"}}</span>
                         <div class="flex gap-0.5 transform scale-[0.6]">
                            @for (i of [1,2,3,4,5]; track i) {
                               <mat-icon class="text-amber-400">star</mat-icon>
@@ -1010,7 +1010,7 @@ export class StorefrontComponent implements OnInit, OnDestroy {
   features = [
     { title: 'Livraison rapide', sub: '48h à Abidjan', icon: 'local_shipping' },
     { title: 'Garantie 2 ans', sub: 'SAV certifié constructeur', icon: 'verified_user' },
-    { title: 'Paiement échelonné', sub: 'Jusqu\'à 12 mois sans frais', icon: 'payments' },
+    { title: 'Paiement échelonné', sub: "Jusqu'à 12 mois sans frais", icon: 'payments' },
     { title: 'Support 7j/7', sub: 'Équipe disponible 8h–20h', icon: 'headset_mic' }
   ];
 
@@ -1143,37 +1143,8 @@ export class StorefrontComponent implements OnInit, OnDestroy {
     const items = this.cartItems();
     if (items.length === 0) return;
 
-    const user = this.authService.user$();
-    const profile = this.authService.profile$() as Record<string, unknown>;
-
-    if (!confirm('Voulez-vous confirmer votre commande sur O’CHAP ?')) return;
-
-    const orderData = {
-      customerName: (profile?.['displayName'] as string) || user?.email || 'Client',
-      customerUid: user?.uid || '',
-      deliveryAddress: (profile?.['address'] as string) || 'Adresse enregistrée',
-      deliveryZone: (profile?.['city'] as string) || 'Abidjan',
-      items: items.map(i => ({
-        id: i.id,
-        name: i.name,
-        price: i.price,
-        quantity: i.quantity,
-        imageUrl: i.imageUrl,
-        category: i.category
-      })),
-      totalAmount: this.cartSubtotal()
-    };
-
-    this.dataService.placeOrder(orderData).then(success => {
-      if (success) {
-        this.cartService.clearCart();
-        this.closeAllPanels();
-        alert('Votre commande a été enregistrée avec succès ! Retrouvez-la dans "Mes Commandes".');
-        this.router.navigate(['/orders']);
-      } else {
-        alert('Une erreur est survenue lors de la commande. Veuillez vérifier vos stocks.');
-      }
-    });
+    this.closeAllPanels();
+    this.router.navigate(['/checkout']);
   }
 
   toggleUserMenu(event: Event) {
@@ -1312,7 +1283,6 @@ export class StorefrontComponent implements OnInit, OnDestroy {
     this.cartService.addToCart(product);
     this.showAddedToast.set(true);
     setTimeout(() => this.showAddedToast.set(false), 3000);
-    this.openPanel('cart');
   }
 
   updateQty(id: string, delta: number) {

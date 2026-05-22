@@ -347,15 +347,19 @@ export class DataService {
     deliveryAddress: string,
     deliveryZone: string,
     items: OchapOrderItem[],
-    totalAmount: number
+    totalAmount: number,
+    paymentMethod?: string,
+    deliveryFee?: number,
+    phoneNumber?: string
   }) {
     const path = 'orders';
     try {
+      const createdOrderIds: string[] = [];
       await runTransaction(db, async (transaction) => {
-        // 1. Create order doc
-        const orderRef = doc(collection(db, 'orders'));
-        
-        // 2. Process each item: check stock and decrement
+        // Collect product data to group by supplier
+        const itemWithSupplierDetails: (OchapOrderItem & { supplierId: string, supplierName: string })[] = [];
+
+        // 1. Process each item: check stock, decrement, and fetch supplier data
         for (const item of orderData.items) {
           const productRef = doc(db, 'products', item.id);
           const productDoc = await transaction.get(productRef);
@@ -376,37 +380,90 @@ export class DataService {
             stock: currentStock - item.quantity,
             updatedAt: serverTimestamp()
           });
+
+          // Extract supplier
+          const supplierId = productData.supplierId || 'admin_seller';
+          const supplierName = productData.supplierName || productData.brand || 'vendeur_agree';
+
+          itemWithSupplierDetails.push({
+            ...item,
+            supplierId,
+            supplierName
+          });
         }
-        
-        // 3. Set order data
-        transaction.set(orderRef, {
-          ...orderData,
-          id: orderRef.id,
-          status: 'pending',
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        });
+
+        // 2. Group items by supplierId
+        const groups: Record<string, typeof itemWithSupplierDetails> = {};
+        for (const item of itemWithSupplierDetails) {
+          if (!groups[item.supplierId]) {
+            groups[item.supplierId] = [];
+          }
+          groups[item.supplierId].push(item);
+        }
+
+        // 3. Create an order for each supplier group
+        const totalGroups = Object.keys(groups).length;
+        for (const [supplierId, groupItems] of Object.entries(groups)) {
+          const orderRef = doc(collection(db, 'orders'));
+          createdOrderIds.push(orderRef.id);
+
+          const groupSubtotal = groupItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+          
+          // Allocate delivery fee (only on first group or fully if separate deliveries)
+          const groupDeliveryFee = (orderData.deliveryFee || 0) / totalGroups;
+          const groupTotal = groupSubtotal + groupDeliveryFee;
+
+          // Structure the order
+          transaction.set(orderRef, {
+            customerName: orderData.customerName,
+            customerUid: orderData.customerUid,
+            deliveryAddress: orderData.deliveryAddress,
+            deliveryZone: orderData.deliveryZone,
+            phoneNumber: orderData.phoneNumber || '',
+            paymentMethod: orderData.paymentMethod || 'Espèces',
+            deliveryFee: groupDeliveryFee,
+            items: groupItems.map(gi => ({
+              id: gi.id,
+              name: gi.name,
+              price: gi.price,
+              quantity: gi.quantity,
+              imageUrl: gi.imageUrl,
+              category: gi.category,
+              supplierId: gi.supplierId,
+              supplierName: gi.supplierName,
+              orderId: orderRef.id // Attach the specific order ID to each product item
+            })),
+            total: groupSubtotal, // original items subtotal
+            totalAmount: groupTotal, // subtotal + delivery fee
+            supplierId: supplierId,
+            supplierName: groupItems[0].supplierName,
+            id: orderRef.id,
+            status: 'pending',
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          });
+        }
       });
 
       // 4. Send notifications to Suppliers
-      const supplierIds = new Set<string>();
-      for (const item of orderData.items) {
+      for (const orderId of createdOrderIds) {
         try {
-          const p = await getDoc(doc(db, 'products', item.id));
-          const sId = p.data()?.['supplierId'];
-          if (sId) supplierIds.add(sId);
+          const orderSnap = await getDoc(doc(db, 'orders', orderId));
+          if (orderSnap.exists()) {
+            const oData = orderSnap.data();
+            const sId = oData['supplierId'];
+            if (sId) {
+              await this.addNotification(
+                sId, 
+                'Nouvelle Commande !', 
+                `Vous avez reçu une nouvelle commande #${orderId.slice(-8).toUpperCase()} de ${oData['items']?.length || 0} article(s).`, 
+                'order'
+              );
+            }
+          }
         } catch (e) {
-          console.error('Error fetching supplierId:', e);
+          console.error('Error fetching order for notification:', e);
         }
-      }
-
-      for (const sId of supplierIds) {
-        await this.addNotification(
-          sId, 
-          'Nouvelle Commande !', 
-          `Vous avez reçu une nouvelle commande de ${orderData.items.length} article(s).`, 
-          'order'
-        );
       }
 
       return true;
@@ -575,10 +632,35 @@ export class DataService {
   async updateOrderStatus(orderId: string, status: string) {
     const path = `orders/${orderId}`;
     try {
-      await updateDoc(doc(db, 'orders', orderId), {
+      const orderRef = doc(db, 'orders', orderId);
+      await updateDoc(orderRef, {
         status: status,
         updatedAt: serverTimestamp()
       });
+
+      // Get customer Uid and send status notification
+      const orderSnap = await getDoc(orderRef);
+      if (orderSnap.exists()) {
+        const orderData = orderSnap.data();
+        const customerUid = orderData['customerUid'];
+        if (customerUid) {
+          const statusLabels: Record<string, string> = {
+            'pending': 'Vérification en cours',
+            'confirmed': 'Préparation Logistique',
+            'shipped': 'En cours d\'expédition Abidjan',
+            'delivered': 'Livrée à destination / Reçue',
+            'completed': 'Terminée',
+            'cancelled': 'Annulée'
+          };
+          const label = statusLabels[status] || status;
+          await this.addNotification(
+            customerUid,
+            'Mise à jour d\'expédition O\'CHAP !',
+            `Le statut de votre commande #${orderId.slice(-8).toUpperCase()} est à présent : ${label}.`,
+            'system'
+          );
+        }
+      }
     } catch (error: unknown) {
       this.handleFirestoreError(error, OperationType.UPDATE, path);
     }

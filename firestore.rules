@@ -57,9 +57,12 @@ service cloud.firestore {
       return (request.method == 'create' ? data.keys().hasAll(['uid', 'email', 'role']) : true) &&
              (!data.keys().hasAny(['uid']) || data.uid == authUid()) &&
              (!data.keys().hasAny(['email']) || (data.email is string && data.email.size() <= 200)) &&
-             (!data.keys().hasAny(['role']) || data.role in ['client', 'supplier', 'admin', 'fournisseur']) &&
-             (!data.keys().hasAny(['createdAt']) || data.createdAt is string || data.createdAt == request.time) &&
-             (!data.keys().hasAny(['updatedAt']) || data.updatedAt == request.time);
+             (!data.keys().hasAny(['role']) || data.role in ['client', 'supplier', 'admin', 'fournisseur', 'livreur', 'auditeur']) &&
+             (!data.keys().hasAny(['createdAt']) || data.createdAt is string || data.createdAt is timestamp || data.createdAt == request.time) &&
+             (!data.keys().hasAny(['updatedAt']) || data.updatedAt is timestamp || data.updatedAt == request.time) &&
+             (!data.keys().hasAny(['addresses']) || data.addresses is list) &&
+             (!data.keys().hasAny(['businessName']) || (data.businessName is string && data.businessName.size() <= 200)) &&
+             (!data.keys().hasAny(['deleted']) || data.deleted is bool);
     }
 
     function isValidSupplier(data) {
@@ -68,7 +71,7 @@ service cloud.firestore {
              (!data.keys().hasAny(['ownerUid']) || data.ownerUid == authUid()) &&
              (!data.keys().hasAny(['name']) || (data.name is string && data.name.size() > 0 && data.name.size() <= 100)) &&
              (!data.keys().hasAny(['status']) || data.status in ['active', 'suspended', 'pending']) &&
-             (!data.keys().hasAny(['createdAt']) || data.createdAt is string || data.createdAt == request.time);
+             (!data.keys().hasAny(['createdAt']) || data.createdAt is string || data.createdAt is timestamp || data.createdAt == request.time);
     }
 
     function isValidProduct(data) {
@@ -78,14 +81,14 @@ service cloud.firestore {
              (!data.keys().hasAny(['name']) || (data.name is string && data.name.size() > 0 && data.name.size() <= 200)) &&
              (!data.keys().hasAny(['price']) || (data.price is number && data.price >= 0)) &&
              (!data.keys().hasAny(['stock']) || data.stock is number) &&
-             (!data.keys().hasAny(['createdAt']) || data.createdAt is string || data.createdAt == request.time);
+             (!data.keys().hasAny(['createdAt']) || data.createdAt is string || data.createdAt is timestamp || data.createdAt == request.time);
     }
 
     function isValidOrder(data) {
       return (request.method == 'create' ? data.keys().hasAll(['id', 'items', 'status']) : true) &&
              (!data.keys().hasAny(['id']) || isValidId(data.id)) &&
              (!data.keys().hasAny(['items']) || data.items is list) && 
-             (!data.keys().hasAny(['status']) || data.status in ['pending', 'confirmed', 'preparing', 'shipped', 'delivered', 'cancelled']) &&
+             (!data.keys().hasAny(['status']) || data.status in ['pending', 'confirmed', 'preparing', 'ready', 'shipped', 'transit', 'delivered', 'completed', 'cancelled', 'return_requested', 'returned']) &&
              (!data.keys().hasAny(['customerUid']) || data.customerUid is string);
     }
 
@@ -93,7 +96,7 @@ service cloud.firestore {
       return (request.method == 'create' ? data.keys().hasAll(['type', 'title', 'message', 'recipientId', 'read']) : true) &&
              (!data.keys().hasAny(['recipientId']) || (data.recipientId is string && data.recipientId.size() > 0)) &&
              (!data.keys().hasAny(['read']) || data.read is bool) &&
-             (!data.keys().hasAny(['createdAt']) || data.createdAt is string || data.createdAt == request.time);
+             (!data.keys().hasAny(['createdAt']) || data.createdAt is string || data.createdAt is timestamp || data.createdAt == request.time);
     }
 
     // -------------------------------------------------------------------------
@@ -109,10 +112,17 @@ service cloud.firestore {
       );
       allow list: if isPrincipalAdmin() || isAdmin();
       allow create: if isValidId(userId) && isSignedIn() && authUid() == userId && isValidUser(incoming());
-      allow update: if isValidId(userId) && isSignedIn() && authUid() == userId && 
-                     isValidUser(incoming()) && 
-                     incoming().get('role', 'client') == existing().get('role', 'client') &&
-                     incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'updatedAt', 'address', 'phoneNumber', 'city']);
+      allow update: if isValidId(userId) && isSignedIn() && (
+        (authUid() == userId && 
+         isValidUser(incoming()) && 
+         incoming().get('role', 'client') == existing().get('role', 'client') &&
+         incoming().diff(existing()).affectedKeys().hasOnly([
+           'displayName', 'photoURL', 'updatedAt', 'address', 'phoneNumber', 'city', 
+           'addresses', 'businessName', 'deleted', 'email'
+         ])) ||
+        ((isPrincipalAdmin() || isAdmin()) && 
+         incoming().diff(existing()).affectedKeys().hasOnly(['role', 'updatedAt']))
+      );
       allow delete: if isValidId(userId) && (isPrincipalAdmin() || isAdmin());
     }
 
@@ -139,15 +149,24 @@ service cloud.firestore {
         (isSupplier() && (
           existing().get('supplierId', '') == authUid() || 
           (existing().keys().hasAll(['supplierId']) && exists(/databases/$(database)/documents/suppliers/$(existing().supplierId)) && get(/databases/$(database)/documents/suppliers/$(existing().supplierId)).data.ownerUid == authUid())
-        ))
+        )) ||
+        // Action: Stock reduction by buyer on checkout
+        (isSignedIn() && 
+         incoming().diff(existing()).affectedKeys().hasOnly(['stock', 'updatedAt']) &&
+         incoming().stock is number &&
+         incoming().stock >= 0 &&
+         incoming().stock < existing().stock)
       ) &&
       isValidProduct(incoming()) &&
       incoming().get('supplierId', '') == existing().get('supplierId', '') &&
-      incoming().diff(existing()).affectedKeys().hasOnly([
-        'name', 'description', 'price', 'retailPrice', 'stock', 'unit', 'brand', 
-        'imageUrl', 'galleryUrls', 'category', 'technicalSpecs', 'supplierName',
-        'supplierId', 'isActive', 'updatedAt', 'rating', 'reviewCount', 'threshold'
-      ]);
+      (
+        incoming().diff(existing()).affectedKeys().hasOnly(['stock', 'updatedAt']) ||
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'name', 'description', 'price', 'retailPrice', 'stock', 'unit', 'brand', 
+          'imageUrl', 'galleryUrls', 'category', 'technicalSpecs', 'supplierName',
+          'supplierId', 'isActive', 'updatedAt', 'rating', 'reviewCount', 'threshold'
+        ])
+      );
       allow delete: if isValidId(productId) && (isPrincipalAdmin() || isAdmin() || (isSupplier() && existing().get('supplierId', '') == authUid()));
     }
 
@@ -159,7 +178,7 @@ service cloud.firestore {
         resource.data.get('supplierId', '') == authUid() || 
         isPrincipalAdmin()
       );
-      allow create: if isValidId(orderId) && isSignedIn() && isValidOrder(incoming()) && (incoming().get('id', orderId) == orderId);
+      allow create: if isValidId(orderId) && isSignedIn() && isValidOrder(incoming()) && (incoming().get('id', orderId) == orderId) && (incoming().customerUid == authUid());
       allow update: if isValidId(orderId) && isSignedIn() && 
                      isValidOrder(incoming()) &&
                      (

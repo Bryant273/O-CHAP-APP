@@ -27,6 +27,11 @@ export const routes: Routes = [
         canActivate: [authGuard]
       },
       {
+        path: 'checkout',
+        loadComponent: () => import('./views/checkout/checkout').then(m => m.CheckoutComponent),
+        canActivate: [authGuard]
+      },
+      {
         path: 'orders',
         loadComponent: () => import('./views/orders/orders').then(m => m.OrdersComponent),
         canActivate: [authGuard]

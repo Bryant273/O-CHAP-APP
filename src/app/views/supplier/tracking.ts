@@ -1,9 +1,10 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit, OnDestroy, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnDestroy, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { DataService, OchapOrder } from '../../services/data.service';
 import { AuthService } from '../../services/auth.service';
 import { Unsubscribe } from 'firebase/firestore';
+import { toObservable } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-supplier-tracking',
@@ -73,7 +74,7 @@ import { Unsubscribe } from 'firebase/firestore';
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   `]
 })
-export class SupplierTracking implements OnInit, OnDestroy {
+export class SupplierTracking implements OnDestroy {
   public authService = inject(AuthService);
   private dataService = inject(DataService);
   
@@ -82,22 +83,29 @@ export class SupplierTracking implements OnInit, OnDestroy {
   
   private unsub?: Unsubscribe;
 
+  constructor() {
+    // Watch profile changes reactively to sync layout / auth state
+    toObservable(this.authService.profile$).subscribe(profile => {
+      const user = this.authService.user$();
+      
+      if (this.unsub) {
+        this.unsub();
+        this.unsub = undefined;
+      }
+      
+      if (user && profile) {
+        if (this.authService.isSupplier()) {
+          this.unsub = this.dataService.watchSupplierOrders(user.uid);
+        } else {
+          this.unsub = this.dataService.watchUserOrders(user.uid);
+        }
+      }
+    });
+  }
+
   activeDeliveries = computed(() => {
     return this.orders().filter(o => ['shipped', 'preparing', 'confirmed'].includes(this.asString(o.status)));
   });
-
-  ngOnInit() {
-    const profile = this.authService.profile$() as Record<string, unknown>;
-    const user = this.authService.user$();
-    
-    if (profile && user) {
-      if (profile['role'] === 'fournisseur' || profile['role'] === 'manager_sup') {
-        this.unsub = this.dataService.watchSupplierOrders(user.uid);
-      } else {
-        this.unsub = this.dataService.watchUserOrders(user.uid);
-      }
-    }
-  }
 
   ngOnDestroy() {
     if (this.unsub) this.unsub();

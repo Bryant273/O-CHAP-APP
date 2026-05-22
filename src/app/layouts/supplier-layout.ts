@@ -244,6 +244,20 @@ export class SupplierLayoutComponent implements OnInit, OnDestroy {
   public dataService = inject(DataService);
   private router = inject(Router);
 
+  constructor() {
+    // Start notification watcher reactively
+    toObservable(this.authService.user$).subscribe(user => {
+      if (this.unsubscribe) {
+        this.unsubscribe();
+        this.unsubscribe = undefined;
+      }
+      
+      if (user) {
+        this.unsubscribe = this.dataService.watchNotifications(user.uid);
+      }
+    });
+  }
+
   mobileMenuOpen = signal(false);
   sidebarCollapsed = signal(false);
   showNotifications = signal(false);
@@ -271,18 +285,6 @@ export class SupplierLayoutComponent implements OnInit, OnDestroy {
       this.updatePageTitle();
     });
     this.updatePageTitle();
-
-    // Start notification watcher reactively
-    toObservable(this.authService.user$).subscribe(user => {
-      if (this.unsubscribe) {
-        this.unsubscribe();
-        this.unsubscribe = undefined;
-      }
-      
-      if (user) {
-        this.unsubscribe = this.dataService.watchNotifications(user.uid);
-      }
-    });
 
     // Update supplier unread count
     this.dataService.notifications$(); // Trigger compute

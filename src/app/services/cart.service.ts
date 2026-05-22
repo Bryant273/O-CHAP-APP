@@ -8,6 +8,8 @@ export interface CartItem {
   quantity: number;
   imageUrl: string;
   category: string;
+  supplierId?: string;
+  supplierName?: string;
 }
 
 @Injectable({
@@ -44,7 +46,9 @@ export class CartService {
         price: product['price'] as number,
         quantity: 1,
         imageUrl: (product['imageUrl'] as string) || `https://picsum.photos/seed/${productId}/400`,
-        category: (product['category'] as string) || 'Electronic'
+        category: (product['category'] as string) || 'Electronic',
+        supplierId: (product['supplierId'] as string) || 'admin_seller',
+        supplierName: (product['supplierName'] as string) || (product['brand'] as string) || 'vendeur_agree'
       };
       return [...items, newItem];
     });
