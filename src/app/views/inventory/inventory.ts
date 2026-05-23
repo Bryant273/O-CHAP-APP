@@ -7,6 +7,7 @@ import { auth, db } from '../../services/firebase';
 import { onSnapshot, collection, query, where, Unsubscribe, QuerySnapshot, DocumentData, updateDoc, doc, serverTimestamp, addDoc, deleteDoc } from 'firebase/firestore';
 import { OchapProduct } from '../../services/data.service';
 import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
+import { animate, stagger } from 'motion';
 
 @Component({
   selector: 'app-inventory',
@@ -190,29 +191,41 @@ import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
 
             <div class="flex-1 overflow-y-auto no-scrollbar p-10 space-y-10 bg-[#fafbfc]">
                <!-- IDENTITY & PRICING -->
-               <div class="space-y-8 bg-white p-10 rounded-[3rem] border border-[#f0f2f5] shadow-sm">
+               <div class="space-y-8 bg-white p-10 rounded-[3rem] border border-[#f0f2f5] shadow-sm animate-field">
                   <div class="grid grid-cols-2 gap-8">
-                    <div class="col-span-full space-y-2.5">
+                    <div class="col-span-full space-y-2.5 animate-field">
                       <label class="text-[10px] font-black text-muted uppercase tracking-[0.2em] ml-2">Désignation Commerciale</label>
                       <input type="text" [(ngModel)]="currentProd.name" placeholder="Ex: Réfrigérateur Combiné LG 400L" class="w-full h-14 bg-gray-50/50 border border-[#e4e6ea] rounded-2xl px-6 text-sm font-bold focus:bg-white focus:border-primary outline-none transition-all">
                     </div>
                     
-                    <div class="space-y-2.5">
+                    <div class="space-y-2.5 animate-field">
                       <label class="text-[10px] font-black text-muted uppercase tracking-[0.2em] ml-2">Marque Producteur</label>
                       <input type="text" [(ngModel)]="currentProd.brand" placeholder="Samsung, LG, Whirlpool..." class="w-full h-14 bg-gray-50/50 border border-[#e4e6ea] rounded-2xl px-6 text-sm font-bold focus:bg-white focus:border-primary outline-none transition-all">
                     </div>
-                    <div class="space-y-2.5">
-                      <label class="text-[10px] font-black text-muted uppercase tracking-[0.2em] ml-2">Réf. Interne (SKU)</label>
-                      <input type="text" [(ngModel)]="currentProd.supplierRef" placeholder="OCH-7712-A..." class="w-full h-14 bg-gray-50/50 border border-[#e4e6ea] rounded-2xl px-6 text-sm font-bold focus:bg-white focus:border-primary outline-none transition-all font-mono">
+                    <div class="space-y-2.5 animate-field">
+                      <div class="flex justify-between items-center ml-2">
+                        <label class="text-[10px] font-black text-muted uppercase tracking-[0.2em]">Réf. Interne (SKU)</label>
+                        @if (currentProd.supplierRef && !isSkuValid()) {
+                          <span class="text-[9px] font-bold text-red-500 uppercase">Format : OCH-XXXX-X</span>
+                        } @else {
+                          <span class="text-[8px] font-bold text-emerald-600 uppercase">Auto-généré si vide</span>
+                        }
+                      </div>
+                      <input type="text" 
+                             [(ngModel)]="currentProd.supplierRef" 
+                             (blur)="currentProd.supplierRef = (currentProd.supplierRef || '').trim().toUpperCase()"
+                             placeholder="OCH-XXXX-X (Ex: OCH-7712-A)" 
+                             [class.border-red-500]="currentProd.supplierRef && !isSkuValid()"
+                             class="w-full h-14 bg-gray-50/50 border border-[#e4e6ea] rounded-2xl px-6 text-sm font-bold focus:bg-white focus:border-primary outline-none transition-all font-mono">
                     </div>
                   </div>
                   
                   <div class="grid grid-cols-2 gap-8">
-                     <div class="space-y-2.5">
+                     <div class="space-y-2.5 animate-field">
                        <label class="text-[10px] font-black text-muted uppercase tracking-[0.2em] ml-2">Prix Public (CFA)</label>
                        <input type="number" [(ngModel)]="currentProd.price" class="w-full h-14 bg-emerald-50/30 border border-emerald-100 rounded-2xl px-6 text-lg font-black focus:bg-white focus:border-emerald-500 outline-none transition-all text-emerald-600 font-price">
                      </div>
-                     <div class="space-y-2.5">
+                     <div class="space-y-2.5 animate-field">
                        <label class="text-[10px] font-black text-muted uppercase tracking-[0.2em] ml-2">Catégorie</label>
                        <select [(ngModel)]="currentProd.category" class="w-full h-14 bg-gray-50/50 border border-[#e4e6ea] rounded-2xl px-6 text-sm font-bold focus:bg-white focus:border-primary outline-none transition-all cursor-pointer">
                           <option value="frigo">Réfrigérateurs</option>
@@ -229,11 +242,11 @@ import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
                   </div>
 
                   <div class="grid grid-cols-2 gap-8">
-                     <div class="space-y-2.5">
+                     <div class="space-y-2.5 animate-field">
                        <label class="text-[10px] font-black text-muted uppercase tracking-[0.2em] ml-2">Stock Disponible</label>
                        <input type="number" [(ngModel)]="currentProd.stock" class="w-full h-14 bg-gray-50/50 border border-[#e4e6ea] rounded-2xl px-6 text-base font-black outline-none transition-all focus:bg-white">
                      </div>
-                     <div class="space-y-2.5">
+                     <div class="space-y-2.5 animate-field">
                        <label class="text-[10px] font-black text-muted uppercase tracking-[0.2em] ml-2">Seuil de Réappro.</label>
                        <input type="number" [(ngModel)]="currentProd.threshold" class="w-full h-14 bg-orange-50/30 border border-orange-100 rounded-2xl px-6 text-base font-black outline-none transition-all focus:bg-white text-orange-600">
                      </div>
@@ -241,7 +254,7 @@ import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
                </div>
 
                <!-- MEDIA COMMAND CENTER -->
-               <div class="space-y-8 bg-white p-10 rounded-[3rem] border border-[#f0f2f5] shadow-sm">
+               <div class="space-y-8 bg-white p-10 rounded-[3rem] border border-[#f0f2f5] shadow-sm animate-field">
                   <div class="flex items-center justify-between">
                     <div>
                       <p class="text-[10px] font-black text-muted uppercase tracking-[0.2em] mb-1">Visuels Haute Résolution</p>
@@ -326,8 +339,8 @@ import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
                </div>
 
                <!-- TECHNICAL SPECS -->
-               <div class="space-y-8 bg-white p-10 rounded-[3rem] border border-[#f0f2f5] shadow-sm">
-                  <div class="space-y-2.5">
+               <div class="space-y-8 bg-white p-10 rounded-[3rem] border border-[#f0f2f5] shadow-sm animate-field">
+                  <div class="space-y-2.5 animate-field">
                     <label class="text-[10px] font-black text-muted uppercase tracking-[0.2em] ml-2">Description Commerciale</label>
                     <textarea [(ngModel)]="currentProd.description" rows="6" placeholder="Décrivez les fonctionnalités clés, garanties et avantages..." class="w-full bg-gray-50/50 border border-[#e4e6ea] rounded-[2.5rem] p-8 text-xs font-medium focus:bg-white focus:border-primary outline-none transition-all resize-none leading-relaxed"></textarea>
                   </div>
@@ -569,12 +582,36 @@ export class InventoryComponent implements OnInit, OnDestroy {
     this.closeCropper();
   }
 
+  isSkuValid(): boolean {
+    if (!this.currentProd.supplierRef) return true;
+    const regex = /^OCH-[A-Z0-9]{4}-[A-Z0-9]$/i;
+    return regex.test(this.currentProd.supplierRef.trim());
+  }
+
+  animateFormFields() {
+    setTimeout(() => {
+      const fields = document.querySelectorAll('.animate-field');
+      if (fields.length > 0) {
+        animate(
+          fields,
+          { opacity: [0, 1], y: [15, 0] },
+          {
+            delay: stagger(0.04),
+            duration: 0.4,
+            ease: 'easeOut'
+          }
+        );
+      }
+    }, 600); // Trigger after the panel slide-left transitions starts
+  }
+
   // --- FORM ACTIONS ---
   openAddPanel() {
     this.editing.set(false);
     this.currentProd = { id: '', name: '', category: 'frigo', price: 0, imageUrl: '', description: '', stock: 0, threshold: 5, brand: '', supplierRef: '' };
     this.galleryList.set([]);
     this.showAddPanel.set(true);
+    this.animateFormFields();
   }
 
   editProduct(prod: OchapProduct) {
@@ -582,10 +619,25 @@ export class InventoryComponent implements OnInit, OnDestroy {
     this.currentProd = { ...prod };
     this.galleryList.set(prod.galleryUrls || (prod.imageUrl ? [prod.imageUrl] : []));
     this.showAddPanel.set(true);
+    this.animateFormFields();
   }
 
   async saveProduct() {
     if (!this.isValid()) return;
+    
+    // Automatically generate sequential SKU if left empty
+    if (!this.currentProd.supplierRef || !this.currentProd.supplierRef.trim()) {
+      const catCharMap: Record<string, string> = {
+        frigo: 'F', congel: 'C', tv: 'T', clim: 'A', laver: 'L', cuisine: 'K', micro: 'M', cafe: 'O', phone: 'P'
+      };
+      const suffix = catCharMap[this.currentProd.category] || this.currentProd.category.toUpperCase()[0] || 'X';
+      // Use short time token (microseconds modulo 10000) for a clean OCH-XXXX-X matching 4 digits and 1 char suffix
+      const middle = (Date.now() % 10000).toString().padStart(4, '0');
+      this.currentProd.supplierRef = `OCH-${middle}-${suffix}`;
+    } else {
+      this.currentProd.supplierRef = this.currentProd.supplierRef.trim().toUpperCase();
+    }
+
     this.loading.set(true);
     
     try {
@@ -643,6 +695,7 @@ export class InventoryComponent implements OnInit, OnDestroy {
     return this.currentProd.name && 
            this.currentProd.name.length > 3 && 
            this.currentProd.price > 0 && 
-           this.currentProd.imageUrl; 
+           this.currentProd.imageUrl &&
+           (!this.currentProd.supplierRef || this.isSkuValid());
   }
 }

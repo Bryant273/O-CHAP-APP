@@ -562,6 +562,7 @@ export class SupplierDashboard implements OnInit, OnDestroy {
       case 'preparing': return 'Préparation';
       case 'shipped': return 'En livraison';
       case 'delivered': return 'Livrée';
+      case 'cancelled': return 'Annulée';
       default: return status;
     }
   }
@@ -573,6 +574,7 @@ export class SupplierDashboard implements OnInit, OnDestroy {
       case 'preparing': return 'pending';
       case 'shipped': return 'local_shipping';
       case 'delivered': return 'verified';
+      case 'cancelled': return 'cancel';
       default: return 'help_outline';
     }
   }
@@ -584,6 +586,7 @@ export class SupplierDashboard implements OnInit, OnDestroy {
       case 'preparing': return 'bg-[#fef9e6] text-[#f39c12]';
       case 'shipped': return 'bg-[#e8fdf5] text-[#00b894]';
       case 'delivered': return 'bg-[#eafaf1] text-[#00925c]';
+      case 'cancelled': return 'bg-[#fde8e8] text-[#f5222d]';
       default: return 'bg-[#f0f2f5] text-[#5a5e72]';
     }
   }

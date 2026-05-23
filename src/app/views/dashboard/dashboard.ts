@@ -264,9 +264,11 @@ export class Dashboard {
   translateStatus(status: string): string {
     const dict: Record<string, string> = {
       'pending': 'En attente',
-      'confirmed': 'Confirmée',
-      'dispatched': 'En transit',
+      'confirmed': 'Validée',
+      'preparing': 'En préparation',
+      'shipped': 'En livraison',
       'delivered': 'Livrée',
+      'completed': 'Terminée',
       'cancelled': 'Annulée'
     };
     return dict[status] || status;

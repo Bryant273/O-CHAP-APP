@@ -109,9 +109,11 @@ export class AdminOrders {
   translateStatus(status: string): string {
     const dict: Record<string, string> = {
       'pending': 'En attente',
-      'confirmed': 'Confirmée',
-      'dispatched': 'Expédiée',
+      'confirmed': 'Validée',
+      'preparing': 'Préparation',
+      'shipped': 'En livraison',
       'delivered': 'Livrée',
+      'completed': 'Terminée',
       'cancelled': 'Annulée'
     };
     return dict[status] || status;

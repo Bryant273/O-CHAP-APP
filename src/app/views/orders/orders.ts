@@ -353,7 +353,8 @@ export class OrdersComponent implements OnDestroy {
   getStatusLabel(status: string): string {
     switch(status) {
       case 'pending': return 'Vérification en cours';
-      case 'confirmed': return 'Préparation Logistique';
+      case 'confirmed': return 'Commande validée';
+      case 'preparing': return 'En cours de préparation';
       case 'shipped': return 'Expédition Abidjan';
       case 'delivered': return 'Arrivée à destination';
       case 'completed': return 'Transaction Clôturée';
@@ -367,6 +368,7 @@ export class OrdersComponent implements OnDestroy {
     switch(status) {
       case 'pending': return base + "bg-amber-500 text-white shadow-amber-500/20";
       case 'confirmed': return base + "bg-blue-500 text-white shadow-blue-500/20";
+      case 'preparing': return base + "bg-orange-500 text-white shadow-orange-500/20";
       case 'shipped': return base + "bg-navy text-white shadow-navy/20";
       case 'delivered': 
       case 'completed': return base + "bg-emerald-500 text-white shadow-emerald-500/20";
@@ -378,8 +380,9 @@ export class OrdersComponent implements OnDestroy {
   getProgressWidth(status: string): number {
     switch(status) {
       case 'pending': return 10;
-      case 'confirmed': return 35;
-      case 'shipped': return 65;
+      case 'confirmed': return 30;
+      case 'preparing': return 50;
+      case 'shipped': return 70;
       case 'delivered': return 90;
       case 'completed': return 100;
       case 'cancelled': return 0;
