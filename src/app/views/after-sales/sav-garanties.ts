@@ -202,6 +202,38 @@ import { FormsModule } from '@angular/forms';
             </div>
          </div>
       }
+
+      <!-- SUCCESS TOAST -->
+      @if (showSuccessToast()) {
+         <div class="fixed bottom-10 right-10 z-[2000] bg-emerald-600 border border-emerald-500/10 text-white rounded-3xl p-6 shadow-2xl flex items-center gap-4 max-w-sm animate-fade-in font-sans">
+            <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white shrink-0">
+               <mat-icon class="scale-90">check_circle</mat-icon>
+            </div>
+            <div class="flex-1 min-w-0">
+               <h4 class="text-xs font-black uppercase tracking-wider leading-none">Demande Enregistrée</h4>
+               <p class="text-[10px] opacity-80 mt-1 font-medium font-sans">Votre réclamation SAV a été reçue. Un technicien va l'analyser sous 24h.</p>
+            </div>
+            <button (click)="showSuccessToast.set(false)" class="text-white/65 hover:text-white shrink-0 ml-2">
+               <mat-icon class="scale-75">close</mat-icon>
+            </button>
+         </div>
+      }
+
+      <!-- ERROR TOAST -->
+      @if (showErrorToast()) {
+         <div class="fixed bottom-10 right-10 z-[2000] bg-red-600 text-white rounded-3xl p-6 shadow-2xl flex items-center gap-4 max-w-sm animate-fade-in font-sans">
+            <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white shrink-0">
+               <mat-icon class="scale-90">error_outline</mat-icon>
+            </div>
+            <div class="flex-1 min-w-0">
+               <h4 class="text-xs font-black uppercase tracking-wider leading-none">Échec Soumission</h4>
+               <p class="text-[10px] opacity-80 mt-1 font-medium font-sans">Une erreur inattendue est survenue. Veuillez réessayer.</p>
+            </div>
+            <button (click)="showErrorToast.set(false)" class="text-white/65 hover:text-white shrink-0 ml-2">
+               <mat-icon class="scale-75">close</mat-icon>
+            </button>
+         </div>
+      }
     </div>
   `,
   styles: [`
@@ -227,6 +259,8 @@ export class SavGarantiesComponent implements OnInit {
   activeRequest = signal<any>(null);
   requestType = 'repair';
   requestDesc = '';
+  showSuccessToast = signal(false);
+  showErrorToast = signal(false);
 
   constructor() {
     effect(() => {
@@ -271,10 +305,12 @@ export class SavGarantiesComponent implements OnInit {
     });
 
     if (success) {
-      alert('Votre demande de SAV a été enregistrée. Un technicien vous contactera sous 24h.');
+      this.showSuccessToast.set(true);
+      setTimeout(() => this.showSuccessToast.set(false), 6000);
       this.activeRequest.set(null);
     } else {
-      alert('Erreur lors de la soumission. Veuillez réessayer.');
+      this.showErrorToast.set(true);
+      setTimeout(() => this.showErrorToast.set(false), 5000);
     }
   }
 }

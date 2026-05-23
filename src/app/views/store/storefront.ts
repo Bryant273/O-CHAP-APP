@@ -327,6 +327,118 @@ type PanelType = 'none' | 'cart' | 'wishlist' | 'orders' | 'profile';
               </div>
             }
 
+            <!-- ENCART D'AVIS ET NOTATION S'IL Y A UN PRODUIT À NOTER -->
+            @if (latestDeliveredOrder() && firstItemToReview()) {
+               <div class="mb-12 bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-transparent border border-emerald-500/20 rounded-[2.5rem] p-8 md:p-12 shadow-sm flex flex-col md:flex-row gap-8 items-center justify-between font-sans">
+                  <div class="flex items-start gap-6 max-w-xl">
+                     <div class="w-16 h-16 rounded-2xl bg-white border border-emerald-500/20 shadow-md flex-shrink-0 flex items-center justify-center overflow-hidden">
+                        @if (firstItemToReview()?.['imageUrl']) {
+                           <img [src]="asString(firstItemToReview()?.['imageUrl'])" class="w-full h-full object-cover" referrerpolicy="no-referrer">
+                        } @else {
+                           <mat-icon class="text-emerald-500 text-3xl">star</mat-icon>
+                        }
+                     </div>
+                     <div class="space-y-2">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 text-emerald-700 rounded-full">
+                           <mat-icon class="scale-50">check_circle</mat-icon>
+                           <span class="text-[9px] font-black uppercase tracking-wider">Commande Reçue & Livrée !</span>
+                        </div>
+                        <h4 class="text-base font-bold text-navy">Votre avis compte : {{ firstItemToReview()?.['name'] || 'Produit' }}</h4>
+                        <p class="text-xs text-[#5a5e72] leading-relaxed font-medium">Félicitations pour votre achat ! Prenez quelques secondes pour noter la qualité de votre produit afin d'éclairer la communauté et valider définitivement la commande.</p>
+                     </div>
+                  </div>
+                  
+                  <div class="w-full md:w-auto flex flex-col gap-4 bg-white p-6 rounded-3xl border border-[#e4e6ea] shadow-sm max-w-sm shrink-0">
+                     <div class="text-center font-bold text-[10px] text-muted uppercase tracking-widest mb-1">Attribuer une note</div>
+                     
+                     <div class="flex items-center justify-center gap-2">
+                        @for (star of [1, 2, 3, 4, 5]; track star) {
+                           <button (click)="storefrontRating.set(star)" class="text-amber-400 hover:scale-125 transition-transform focus:outline-none">
+                              <mat-icon class="scale-125 select-none">{{ storefrontRating() >= star ? 'star' : 'star_border' }}</mat-icon>
+                           </button>
+                        }
+                     </div>
+                     
+                     <div class="relative mt-2">
+                        <textarea [ngModel]="storefrontComment()" (ngModelChange)="storefrontComment.set($event)" placeholder="Ex: Excellent produit, conforme à mes attentes..." class="w-full h-20 bg-[#fafafa] border border-[#e4e6ea] rounded-2xl p-4 text-xs font-medium placeholder-muted/50 focus:border-emerald-500 focus:bg-white outline-none transition-all resize-none"></textarea>
+                     </div>
+                     
+                     <button (click)="submitStorefrontReview()" [disabled]="!storefrontRating() || !storefrontComment().trim() || submittingStorefrontReview()" class="w-full h-12 bg-[#FF6200] hover:bg-black text-white disabled:bg-gray-200 disabled:text-gray-400 font-sans text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-md flex items-center justify-center gap-2">
+                        @if (submittingStorefrontReview()) {
+                           <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Publiant...
+                        } @else {
+                           <mat-icon class="scale-75">send</mat-icon> Publier mon avis
+                        }
+                     </button>
+                  </div>
+               </div>
+            }
+
+            <!-- MODAL FLOTTANT D'AVIS ET RATING S'IL Y A UN PRODUIT À NOTER -->
+            @if (latestDeliveredOrder() && firstItemToReview() && showReviewModal()) {
+               <div class="fixed inset-0 z-[100] flex items-end justify-center md:items-center bg-navy/30 backdrop-blur-sm p-4 animate-fade-in font-sans">
+                  <div class="relative bg-white w-full max-w-lg rounded-[2.5rem] border border-[#e4e6ea] shadow-2xl p-8 md:p-10 flex flex-col gap-6 overflow-hidden">
+                     
+                     <button (click)="showReviewModal.set(false)" class="absolute right-6 top-6 w-8 h-8 rounded-full bg-[#f0f2f5] hover:bg-[#e4e6ea] transition-all flex items-center justify-center text-navy shadow-sm border border-black/5" title="Fermer">
+                        <mat-icon class="scale-75">close</mat-icon>
+                     </button>
+                     
+                     <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
+                           <mat-icon class="scale-90">rate_review</mat-icon>
+                        </div>
+                        <div>
+                           <div class="text-[9px] font-black uppercase tracking-wider text-emerald-600">Partage d'Expérience</div>
+                           <h3 class="text-lg font-black text-navy leading-none mt-1">Évaluez votre dernier achat</h3>
+                        </div>
+                     </div>
+                     
+                     <p class="text-xs text-[#5a5e72] font-medium leading-relaxed">
+                        Vous avez récemment reçu <span class="font-bold text-navy">"{{ firstItemToReview()?.['name'] || 'votre produit' }}"</span> de notre boutique. Prenez un court instant pour noter cet achat directement depuis l'application. Vos retours guident d'autres clients.
+                     </p>
+                     
+                     <div class="flex items-center gap-4 py-4 bg-[#fafafa] px-6 rounded-3xl border border-[#e4e6ea]">
+                        <div class="w-14 h-14 rounded-2xl bg-white border border-[#e4e6ea] overflow-hidden flex-shrink-0 flex items-center justify-center">
+                           @if (firstItemToReview()?.['imageUrl']) {
+                              <img [src]="asString(firstItemToReview()?.['imageUrl'])" class="w-full h-full object-cover" referrerpolicy="no-referrer">
+                           } @else {
+                              <mat-icon class="text-amber-500">star</mat-icon>
+                           }
+                        </div>
+                        <div class="flex-1 min-w-0">
+                           <h4 class="text-xs font-black text-navy uppercase truncate tracking-tight">{{ firstItemToReview()?.['name'] }}</h4>
+                           <p class="text-[10px] font-semibold text-muted tracking-tight mt-1">Commandé le {{ (latestDeliveredOrder()?.['createdAt'] | date:'dd/MM/yyyy') || 'récemment' }}</p>
+                        </div>
+                     </div>
+                     
+                     <div class="space-y-4">
+                        <div class="flex items-center justify-center gap-3">
+                           @for (star of [1, 2, 3, 4, 5]; track star) {
+                              <button (click)="storefrontRating.set(star)" class="text-amber-400 hover:scale-125 transition-transform focus:outline-none">
+                                 <mat-icon class="scale-[1.5] select-none">{{ storefrontRating() >= star ? 'star' : 'star_border' }}</mat-icon>
+                              </button>
+                           }
+                        </div>
+                        
+                        <textarea [ngModel]="storefrontComment()" (ngModelChange)="storefrontComment.set($event)" placeholder="Racontez votre expérience... (conforme à vos attentes ? qualité globale ? efficacité ?)" class="w-full h-24 bg-[#fafafa] border border-[#e4e6ea] rounded-3xl p-5 text-xs font-medium placeholder-muted/50 focus:border-emerald-500 focus:bg-white outline-none transition-all resize-none"></textarea>
+                     </div>
+                     
+                     <div class="flex gap-4">
+                        <button (click)="showReviewModal.set(false)" class="flex-1 h-12 border border-[#e4e6ea] hover:bg-[#fafafa] text-navy font-sans text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all font-sans">
+                           Plus tard
+                        </button>
+                        <button (click)="submitStorefrontReview()" [disabled]="!storefrontRating() || !storefrontComment().trim() || submittingStorefrontReview()" class="flex-1 h-12 bg-[#FF6200] hover:bg-black text-white disabled:bg-gray-200 disabled:text-[#FF6200] font-sans text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-md flex items-center justify-center gap-2">
+                           @if (submittingStorefrontReview()) {
+                              <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Publiant...
+                           } @else {
+                              <mat-icon class="scale-75">send</mat-icon> Publier
+                           }
+                        </button>
+                     </div>
+                  </div>
+               </div>
+            }
+
             <!-- Filters Bar (Faceted Filter Trigger) -->
             <div class="flex flex-col gap-8 mb-12">
                <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-8 border-b border-[#f0f2f5]">
@@ -883,6 +995,35 @@ export class StorefrontComponent implements OnInit, OnDestroy {
   priceRange = signal<{min: number, max: number}>({min: 0, max: 2000000});
   onlyInStock = signal(false);
   minRating = signal(0);
+
+  // Product Review prompt states
+  showReviewModal = signal(true);
+  storefrontRating = signal(0);
+  storefrontComment = signal('');
+  submittingStorefrontReview = signal(false);
+
+  latestDeliveredOrder = computed(() => {
+    const list = this.dataService.orders$() as Record<string, unknown>[];
+    if (!list || list.length === 0) return null;
+    
+    // Filter completed or delivered orders that have not been reviewed yet
+    const unreviewed = list
+      .filter(o => (o['status'] === 'delivered' || o['status'] === 'completed') && !o['reviewed'])
+      .sort((a, b) => {
+        const t1 = (a['createdAt'] as { seconds?: number })?.seconds || 0;
+        const t2 = (b['createdAt'] as { seconds?: number })?.seconds || 0;
+        return t2 - t1;
+      });
+      
+    return unreviewed[0] || null;
+  });
+
+  firstItemToReview = computed(() => {
+    const order = this.latestDeliveredOrder();
+    if (!order) return null;
+    const items = (order['items'] as Record<string, unknown>[]) || [];
+    return items[0] || null;
+  });
   filtersExpanded = signal(false);
   selectedBrands = signal<string[]>([]);
   selectedRating = signal<number>(0);
@@ -900,6 +1041,7 @@ export class StorefrontComponent implements OnInit, OnDestroy {
   private unsub?: Unsubscribe;
   private unsubNotif?: Unsubscribe;
   private unsubStock?: Unsubscribe;
+  private unsubOrders?: Unsubscribe;
 
   constructor() {
     effect(() => {
@@ -908,10 +1050,14 @@ export class StorefrontComponent implements OnInit, OnDestroy {
       if (user && profile) {
         if (this.unsubNotif) this.unsubNotif();
         if (this.unsubStock) this.unsubStock();
+        if (this.unsubOrders) this.unsubOrders();
         
         this.unsubNotif = this.dataService.watchNotifications(user.uid);
         
         const role = profile['role'];
+        if (role !== 'admin' && role !== 'manager_erp' && role !== 'fournisseur' && role !== 'manager_sup' && role !== 'supplier') {
+          this.unsubOrders = this.dataService.watchUserOrders(user.uid);
+        }
         
         // Auto-redirect administrative roles to their dashboards if they land here
         if (role === 'admin' || role === 'manager_erp') {
@@ -931,6 +1077,10 @@ export class StorefrontComponent implements OnInit, OnDestroy {
         if (this.unsubStock) {
           this.unsubStock();
           this.unsubStock = undefined;
+        }
+        if (this.unsubOrders) {
+          this.unsubOrders();
+          this.unsubOrders = undefined;
         }
       }
     });
@@ -1209,6 +1359,7 @@ export class StorefrontComponent implements OnInit, OnDestroy {
     if (this.unsub) this.unsub();
     if (this.unsubNotif) this.unsubNotif();
     if (this.unsubStock) this.unsubStock();
+    if (this.unsubOrders) this.unsubOrders();
   }
 
   watchProducts() {
@@ -1218,6 +1369,36 @@ export class StorefrontComponent implements OnInit, OnDestroy {
 
   markAsRead(id: string) {
     this.dataService.markNotificationRead(id);
+  }
+
+  async submitStorefrontReview() {
+    const order = this.latestDeliveredOrder();
+    const item = this.firstItemToReview();
+    const rating = this.storefrontRating();
+    const comment = this.storefrontComment();
+    
+    if (!order || !item || !rating || !comment.trim()) return;
+    
+    this.submittingStorefrontReview.set(true);
+    try {
+      await this.dataService.submitReview({
+        productId: item['id'] as string,
+        orderId: order['id'] as string,
+        rating: rating,
+        comment: comment,
+        customerName: this.authService.user$()?.displayName || 'Client O\'CHAP'
+      });
+      await this.dataService.markOrderAsReviewed(order['id'] as string);
+      
+      // Reset rating and comment state
+      this.storefrontRating.set(0);
+      this.storefrontComment.set('');
+      this.showReviewModal.set(false);
+    } catch (e) {
+      console.error('Error submitting review from storefront:', e);
+    } finally {
+      this.submittingStorefrontReview.set(false);
+    }
   }
 
   getNotifIcon(type: string): string {

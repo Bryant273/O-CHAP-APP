@@ -124,6 +124,7 @@ export class ReviewComponent implements OnInit {
         comment: this.comment,
         customerName: auth.currentUser?.displayName || 'Client O\'CHAP'
       });
+      await this.dataService.markOrderAsReviewed(this.orderId()!);
       this.router.navigate(['/orders']);
     } catch (e) {
       console.error('Erreur publication avis', e);

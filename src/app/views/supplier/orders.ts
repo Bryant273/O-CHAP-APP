@@ -1,10 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject, signal, OnDestroy, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, OnDestroy, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { DataService, OchapOrder } from '../../services/data.service';
 import { AuthService } from '../../services/auth.service';
 import { Unsubscribe } from 'firebase/firestore';
-import { toObservable } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-supplier-orders',
@@ -175,15 +174,26 @@ import { toObservable } from '@angular/core/rxjs-interop';
                   </div>
                   
                   <div class="pt-6 border-t border-[#e4e6ea] flex flex-wrap gap-4">
-                     <button (click)="updateStatus(asString(o.id), 'confirmed')" class="flex-1 h-14 bg-emerald-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all flex items-center justify-center gap-2">
-                        <mat-icon class="scale-75">check_circle</mat-icon> Confirmer
-                     </button>
-                     <button (click)="updateStatus(asString(o.id), 'shipped')" class="flex-1 h-14 bg-blue-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all flex items-center justify-center gap-2">
-                        <mat-icon class="scale-75">local_shipping</mat-icon> Expédier
-                     </button>
-                     <button (click)="updateStatus(asString(o.id), 'delivered')" class="flex-1 h-14 bg-gray-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all flex items-center justify-center gap-2">
-                        <mat-icon class="scale-75">done_all</mat-icon> Livrée
-                     </button>
+                     @if (asString(o.status) === 'pending') {
+                        <button (click)="updateStatus(asString(o.id), 'confirmed')" class="flex-1 h-14 bg-emerald-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all flex items-center justify-center gap-2">
+                           <mat-icon class="scale-75">check_circle</mat-icon> Confirmer la Commande
+                        </button>
+                        <button (click)="updateStatus(asString(o.id), 'cancelled')" class="flex-1 h-14 bg-red-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 transition-all flex items-center justify-center gap-2">
+                           <mat-icon class="scale-75">cancel</mat-icon> Rejeter
+                        </button>
+                     } @else if (asString(o.status) === 'confirmed') {
+                        <button (click)="updateStatus(asString(o.id), 'shipped')" class="flex-1 h-14 bg-blue-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all flex items-center justify-center gap-2">
+                           <mat-icon class="scale-75">local_shipping</mat-icon> Expédier la Commande
+                        </button>
+                     } @else if (asString(o.status) === 'shipped') {
+                        <button (click)="updateStatus(asString(o.id), 'delivered')" class="flex-1 h-14 bg-gray-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all flex items-center justify-center gap-2">
+                           <mat-icon class="scale-75">done_all</mat-icon> Confirmer la Livraison
+                        </button>
+                     } @else {
+                        <div class="flex-1 text-center py-4 bg-[#f8f9fa] border border-[#e4e6ea] rounded-2xl text-xs font-bold text-[#5a5e72]">
+                           Cette commande est : <span [class]="getStatusClass(asString(o.status))" class="ml-1 px-3 py-1.5 rounded-full text-[9px] uppercase font-black tracking-wide">{{ getStatusLabel(asString(o.status)) }}</span>
+                        </div>
+                     }
                   </div>
                </div>
             </div>
@@ -210,9 +220,9 @@ export class SupplierOrders implements OnDestroy {
   selectedOrder = signal<OchapOrder | null>(null);
 
   constructor() {
-    // Watch profile changes (which reflects loading/auth state changes) reactively
-    toObservable(this.authService.profile$).subscribe(profile => {
+    effect(() => {
       const user = this.authService.user$();
+      const profile = this.authService.profile$();
       
       if (this.unsub) {
         this.unsub();

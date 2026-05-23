@@ -1,10 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject, OnDestroy, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnDestroy, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { DataService, OchapOrder } from '../../services/data.service';
 import { AuthService } from '../../services/auth.service';
 import { Unsubscribe } from 'firebase/firestore';
-import { toObservable } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-supplier-tracking',
@@ -84,9 +83,9 @@ export class SupplierTracking implements OnDestroy {
   private unsub?: Unsubscribe;
 
   constructor() {
-    // Watch profile changes reactively to sync layout / auth state
-    toObservable(this.authService.profile$).subscribe(profile => {
+    effect(() => {
       const user = this.authService.user$();
+      const profile = this.authService.profile$();
       
       if (this.unsub) {
         this.unsub();

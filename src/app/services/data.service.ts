@@ -709,6 +709,20 @@ export class DataService {
     }
   }
 
+  async markOrderAsReviewed(orderId: string) {
+    const path = `orders/${orderId}`;
+    try {
+      await updateDoc(doc(db, 'orders', orderId), {
+        reviewed: true,
+        updatedAt: serverTimestamp()
+      });
+      return true;
+    } catch (error: unknown) {
+      this.handleFirestoreError(error, OperationType.UPDATE, path);
+      return false;
+    }
+  }
+
   getReviews(productId: string, callback: (reviews: Record<string, unknown>[]) => void) {
     if (!this.isBrowser) return this.noop;
     const path = 'reviews';
