@@ -407,7 +407,7 @@ type PanelType = 'none' | 'cart' | 'wishlist' | 'orders' | 'profile';
                         </div>
                         <div class="flex-1 min-w-0">
                            <h4 class="text-xs font-black text-navy uppercase truncate tracking-tight">{{ firstItemToReview()?.['name'] }}</h4>
-                           <p class="text-[10px] font-semibold text-muted tracking-tight mt-1">Commandé le {{ (latestDeliveredOrder()?.['createdAt'] | date:'dd/MM/yyyy') || 'récemment' }}</p>
+                           <p class="text-[10px] font-semibold text-muted tracking-tight mt-1">Commandé le {{ (asDate(latestDeliveredOrder()?.['createdAt']) | date:'dd/MM/yyyy') || 'récemment' }}</p>
                         </div>
                      </div>
                      
@@ -1271,6 +1271,27 @@ export class StorefrontComponent implements OnInit, OnDestroy {
   }
 
   asString(val: unknown): string { return (val as string) || ''; }
+
+  asDate(val: unknown): Date | null {
+    if (!val) return null;
+    if (val instanceof Date) {
+      return val;
+    }
+    if (typeof val === 'object') {
+      const obj = val as Record<string, unknown>;
+      if (typeof obj['toDate'] === 'function') {
+        return (obj['toDate'] as () => Date)();
+      }
+      if (typeof obj['seconds'] === 'number') {
+        return new Date((obj['seconds'] as number) * 1000);
+      }
+    }
+    if (typeof val === 'string' || typeof val === 'number') {
+      const d = new Date(val);
+      return isNaN(d.getTime()) ? null : d;
+    }
+    return null;
+  }
 
   calculateDiscount(p: Record<string, unknown>): number {
     const retail = this.asNumber(p['retailPrice']);
