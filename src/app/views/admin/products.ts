@@ -262,7 +262,7 @@ import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
                           <button (click)="openEditModal(product)" class="w-9 h-9 rounded-xl flex items-center justify-center text-[#9699a8] hover:bg-primary hover:text-white transition-all shadow-sm">
                             <mat-icon class="scale-75">edit</mat-icon>
                           </button>
-                          <button (click)="deleteProduct(product.id)" class="w-9 h-9 rounded-xl flex items-center justify-center text-red-300 hover:bg-red-500 hover:text-white transition-all shadow-sm">
+                          <button (click)="deleteProduct(product)" class="w-9 h-9 rounded-xl flex items-center justify-center text-red-300 hover:bg-red-500 hover:text-white transition-all shadow-sm">
                             <mat-icon class="scale-75">delete_outline</mat-icon>
                           </button>
                         </div>
@@ -619,6 +619,39 @@ import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
          </div>
       }
 
+      <!-- Custom Delete Confirmation Modal -->
+      @if (productToDelete()) {
+         <div class="fixed inset-0 z-[6000] flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-dark/60 backdrop-blur-sm animate-fade-in" 
+                 (click)="productToDelete.set(null)" (keydown.escape)="productToDelete.set(null)" tabindex="0" role="button" aria-label="Annuler la suppression"></div>
+            
+            <div class="relative bg-white w-full max-w-md rounded-[2.5rem] overflow-hidden shadow-2xl p-8 flex flex-col space-y-6 animate-fade-up">
+               <div class="flex items-center gap-4 text-red-500">
+                  <div class="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center text-red-500">
+                     <mat-icon class="scale-125">warning</mat-icon>
+                  </div>
+                  <div>
+                     <h3 class="text-lg font-black text-navy tracking-tight">Confirmer la suppression</h3>
+                     <p class="text-[10px] font-bold text-muted uppercase tracking-widest mt-0.5">Cette action est irréversible</p>
+                  </div>
+               </div>
+               
+               <p class="text-xs text-navy font-medium leading-relaxed">
+                  Êtes-vous sûr de vouloir supprimer définitivement le produit <span class="font-bold text-red-600">"{{productToDelete()?.name}}"</span> ? Toutes les données associées seront définitivement effacées du catalogue.
+               </p>
+
+               <div class="flex items-center justify-end gap-3 self-end w-full">
+                  <button (click)="productToDelete.set(null)" class="h-11 px-5 rounded-xl border border-surface-2 text-navy text-[10px] font-black uppercase tracking-widest hover:bg-surface-2 transition-all">
+                     Annuler
+                  </button>
+                  <button (click)="confirmProductDeletion()" class="h-11 px-5 bg-red-500 hover:bg-red-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2">
+                     <mat-icon class="scale-75">delete_forever</mat-icon> Supprimer
+                  </button>
+               </div>
+            </div>
+         </div>
+      }
+
       <!-- Image Editor Overlay -->
       @if (croppingImage()) {
          <div class="fixed inset-0 z-[5000] flex items-center justify-center p-4">
@@ -711,6 +744,7 @@ export class AdminProducts implements OnInit, OnDestroy {
   galleryList = signal<string[]>([]);
   uploadQueue = signal<{name: string, progress: number}[]>([]);
   showLowStockOnly = signal(false);
+  productToDelete = signal<OchapProduct | null>(null);
   
   // Filtering & Sorting
   searchQuery = '';
@@ -1072,9 +1106,15 @@ export class AdminProducts implements OnInit, OnDestroy {
      }
   }
 
-  async deleteProduct(id: string) {
-     if (confirm('Voulez-vous vraiment supprimer cet article définitivement ?')) {
-        await this.dataService.deleteProduct(id);
+  deleteProduct(p: OchapProduct) {
+     this.productToDelete.set(p);
+  }
+
+  async confirmProductDeletion() {
+     const p = this.productToDelete();
+     if (p) {
+        await this.dataService.deleteProduct(p.id);
+        this.productToDelete.set(null);
      }
   }
 
