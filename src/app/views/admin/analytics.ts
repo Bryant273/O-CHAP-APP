@@ -188,12 +188,12 @@ import { DataService } from '../../services/data.service';
 export class AdminAnalytics {
   public dataService = inject(DataService);
 
-  aiReport = signal<any>(null);
+  aiReport = signal<AIAnalyticsReport | null>(null);
   isAIUpdating = signal(false);
 
   async refreshAIInsights() {
     this.isAIUpdating.set(true);
-    const report = await this.dataService.getAdvancedAnalytics();
+    const report = await this.dataService.getAdvancedAnalytics() as AIAnalyticsReport;
     this.aiReport.set(report);
     this.isAIUpdating.set(false);
   }
@@ -214,4 +214,11 @@ export class AdminAnalytics {
   formatAmount(val: number | unknown): string {
     return this.dataService.formatAmount(val);
   }
+}
+
+interface AIAnalyticsReport {
+  globalHealth: string;
+  profitAnalysis: string;
+  seasonalInsights: string;
+  topPerformingBrands: string[];
 }

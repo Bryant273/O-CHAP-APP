@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component, signal, computed, OnInit, OnDestroy
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
-import { RouterLink } from '@angular/router';
 import { auth, db } from '../../services/firebase';
 import { onSnapshot, collection, query, where, Unsubscribe, QuerySnapshot, DocumentData, updateDoc, doc, serverTimestamp, addDoc, deleteDoc } from 'firebase/firestore';
 import { OchapProduct } from '../../services/data.service';
@@ -12,7 +11,7 @@ import { animate, stagger } from 'motion';
 @Component({
   selector: 'app-inventory',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatIconModule, RouterLink, ImageCropperComponent],
+  imports: [CommonModule, FormsModule, MatIconModule, ImageCropperComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="space-y-8 animate-fade-in px-4 py-8">
@@ -174,7 +173,7 @@ import { animate, stagger } from 'motion';
       <!-- MODAL ÉDITION PRODUIT -->
       @if (showAddPanel()) {
         <div class="fixed inset-0 z-[1000] flex justify-end">
-          <div class="absolute inset-0 bg-[#0D1B2A]/60 backdrop-blur-md animate-fade-in" (click)="showAddPanel.set(false)"></div>
+          <div class="absolute inset-0 bg-[#0D1B2A]/60 backdrop-blur-md animate-fade-in" (click)="showAddPanel.set(false)" (keydown.escape)="showAddPanel.set(false)" role="button" tabindex="0" aria-label="Fermer le panneau d'ajout"></div>
           
           <div class="relative w-full max-w-2xl bg-white h-full shadow-2xl animate-slide-left flex flex-col overflow-hidden rounded-l-[3rem] border-l border-[#e4e6ea]">
             <div class="flex items-center justify-between p-10 border-b border-[#f0f2f5] bg-white shrink-0">
@@ -194,17 +193,17 @@ import { animate, stagger } from 'motion';
                <div class="space-y-8 bg-white p-10 rounded-[3rem] border border-[#f0f2f5] shadow-sm animate-field">
                   <div class="grid grid-cols-2 gap-8">
                     <div class="col-span-full space-y-2.5 animate-field">
-                      <label class="text-[10px] font-black text-muted uppercase tracking-[0.2em] ml-2">Désignation Commerciale</label>
-                      <input type="text" [(ngModel)]="currentProd.name" placeholder="Ex: Réfrigérateur Combiné LG 400L" class="w-full h-14 bg-gray-50/50 border border-[#e4e6ea] rounded-2xl px-6 text-sm font-bold focus:bg-white focus:border-primary outline-none transition-all">
+                      <label for="invProdName" class="text-[10px] font-black text-muted uppercase tracking-[0.2em] ml-2">Désignation Commerciale</label>
+                      <input id="invProdName" type="text" [(ngModel)]="currentProd.name" placeholder="Ex: Réfrigérateur Combiné LG 400L" class="w-full h-14 bg-gray-50/50 border border-[#e4e6ea] rounded-2xl px-6 text-sm font-bold focus:bg-white focus:border-primary outline-none transition-all">
                     </div>
                     
                     <div class="space-y-2.5 animate-field">
-                      <label class="text-[10px] font-black text-muted uppercase tracking-[0.2em] ml-2">Marque Producteur</label>
-                      <input type="text" [(ngModel)]="currentProd.brand" placeholder="Samsung, LG, Whirlpool..." class="w-full h-14 bg-gray-50/50 border border-[#e4e6ea] rounded-2xl px-6 text-sm font-bold focus:bg-white focus:border-primary outline-none transition-all">
+                      <label for="invProdBrand" class="text-[10px] font-black text-muted uppercase tracking-[0.2em] ml-2">Marque Producteur</label>
+                      <input id="invProdBrand" type="text" [(ngModel)]="currentProd.brand" placeholder="Samsung, LG, Whirlpool..." class="w-full h-14 bg-gray-50/50 border border-[#e4e6ea] rounded-2xl px-6 text-sm font-bold focus:bg-white focus:border-primary outline-none transition-all">
                     </div>
                     <div class="space-y-2.5 animate-field">
                       <div class="flex justify-between items-center ml-2">
-                        <label class="text-[10px] font-black text-muted uppercase tracking-[0.2em]">Réf. Interne (SKU)</label>
+                        <label for="invProdSku" class="text-[10px] font-black text-muted uppercase tracking-[0.2em]">Réf. Interne (SKU)</label>
                         @if (currentProd.supplierRef && !isSkuValid()) {
                           <span class="text-[9px] font-bold text-red-500 uppercase">Format : OCH-XXXX-X</span>
                         } @else {
@@ -222,12 +221,12 @@ import { animate, stagger } from 'motion';
                   
                   <div class="grid grid-cols-2 gap-8">
                      <div class="space-y-2.5 animate-field">
-                       <label class="text-[10px] font-black text-muted uppercase tracking-[0.2em] ml-2">Prix Public (CFA)</label>
-                       <input type="number" [(ngModel)]="currentProd.price" class="w-full h-14 bg-emerald-50/30 border border-emerald-100 rounded-2xl px-6 text-lg font-black focus:bg-white focus:border-emerald-500 outline-none transition-all text-emerald-600 font-price">
+                       <label for="invProdPrice" class="text-[10px] font-black text-muted uppercase tracking-[0.2em] ml-2">Prix Public (CFA)</label>
+                       <input id="invProdPrice" type="number" [(ngModel)]="currentProd.price" class="w-full h-14 bg-emerald-50/30 border border-emerald-100 rounded-2xl px-6 text-lg font-black focus:bg-white focus:border-emerald-500 outline-none transition-all text-emerald-600 font-price">
                      </div>
                      <div class="space-y-2.5 animate-field">
-                       <label class="text-[10px] font-black text-muted uppercase tracking-[0.2em] ml-2">Catégorie</label>
-                       <select [(ngModel)]="currentProd.category" class="w-full h-14 bg-gray-50/50 border border-[#e4e6ea] rounded-2xl px-6 text-sm font-bold focus:bg-white focus:border-primary outline-none transition-all cursor-pointer">
+                       <label for="invProdCategory" class="text-[10px] font-black text-muted uppercase tracking-[0.2em] ml-2">Catégorie</label>
+                       <select id="invProdCategory" [(ngModel)]="currentProd.category" class="w-full h-14 bg-gray-50/50 border border-[#e4e6ea] rounded-2xl px-6 text-sm font-bold focus:bg-white focus:border-primary outline-none transition-all cursor-pointer">
                           <option value="frigo">Réfrigérateurs</option>
                           <option value="congel">Congélateurs</option>
                           <option value="tv">Téléviseurs</option>
@@ -243,12 +242,12 @@ import { animate, stagger } from 'motion';
 
                   <div class="grid grid-cols-2 gap-8">
                      <div class="space-y-2.5 animate-field">
-                       <label class="text-[10px] font-black text-muted uppercase tracking-[0.2em] ml-2">Stock Disponible</label>
-                       <input type="number" [(ngModel)]="currentProd.stock" class="w-full h-14 bg-gray-50/50 border border-[#e4e6ea] rounded-2xl px-6 text-base font-black outline-none transition-all focus:bg-white">
+                       <label for="invProdStock" class="text-[10px] font-black text-muted uppercase tracking-[0.2em] ml-2">Stock Disponible</label>
+                       <input id="invProdStock" type="number" [(ngModel)]="currentProd.stock" class="w-full h-14 bg-gray-50/50 border border-[#e4e6ea] rounded-2xl px-6 text-base font-black outline-none transition-all focus:bg-white">
                      </div>
                      <div class="space-y-2.5 animate-field">
-                       <label class="text-[10px] font-black text-muted uppercase tracking-[0.2em] ml-2">Seuil de Réappro.</label>
-                       <input type="number" [(ngModel)]="currentProd.threshold" class="w-full h-14 bg-orange-50/30 border border-orange-100 rounded-2xl px-6 text-base font-black outline-none transition-all focus:bg-white text-orange-600">
+                       <label for="invProdThreshold" class="text-[10px] font-black text-muted uppercase tracking-[0.2em] ml-2">Seuil de Réappro.</label>
+                       <input id="invProdThreshold" type="number" [(ngModel)]="currentProd.threshold" class="w-full h-14 bg-orange-50/30 border border-orange-100 rounded-2xl px-6 text-base font-black outline-none transition-all focus:bg-white text-orange-600">
                      </div>
                   </div>
                </div>
@@ -269,7 +268,11 @@ import { animate, stagger } from 'motion';
                        (dragover)="$event.preventDefault(); isDragging.set(true)"
                        (dragleave)="isDragging.set(false)"
                        (drop)="onFileDropped($event)"
-                       (click)="fileInput.click()">
+                       (click)="fileInput.click()"
+                       (keydown.enter)="fileInput.click()"
+                       tabindex="0"
+                       role="button"
+                       aria-label="Zone de dépôt ou sélection d'images">
                        
                        @if (currentProd.imageUrl) {
                           <div class="w-full h-full p-8 flex items-center justify-center relative">
@@ -323,7 +326,7 @@ import { animate, stagger } from 'motion';
                        <div class="flex flex-wrap gap-4">
                           @for (img of galleryList(); track img; let i = $index) {
                              <div class="w-24 h-24 rounded-3xl bg-gray-50 border border-[#f0f2f5] relative group overflow-hidden shadow-sm hover:shadow-md transition-all">
-                                <img [src]="img" class="w-full h-full object-cover">
+                                <img [src]="img" class="w-full h-full object-cover" [alt]="'Image de la galerie ' + (i + 1)">
                                 <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
                                    <div class="flex gap-1.5">
                                       <button (click)="openCropper(img, i)" class="w-8 h-8 rounded-full bg-white text-navy flex items-center justify-center hover:scale-110 active:scale-95 shadow-lg"><mat-icon class="scale-50">crop</mat-icon></button>
@@ -341,8 +344,8 @@ import { animate, stagger } from 'motion';
                <!-- TECHNICAL SPECS -->
                <div class="space-y-8 bg-white p-10 rounded-[3rem] border border-[#f0f2f5] shadow-sm animate-field">
                   <div class="space-y-2.5 animate-field">
-                    <label class="text-[10px] font-black text-muted uppercase tracking-[0.2em] ml-2">Description Commerciale</label>
-                    <textarea [(ngModel)]="currentProd.description" rows="6" placeholder="Décrivez les fonctionnalités clés, garanties et avantages..." class="w-full bg-gray-50/50 border border-[#e4e6ea] rounded-[2.5rem] p-8 text-xs font-medium focus:bg-white focus:border-primary outline-none transition-all resize-none leading-relaxed"></textarea>
+                    <label for="invProdDesc" class="text-[10px] font-black text-muted uppercase tracking-[0.2em] ml-2">Description Commerciale</label>
+                    <textarea id="invProdDesc" [(ngModel)]="currentProd.description" rows="6" placeholder="Décrivez les fonctionnalités clés, garanties et avantages..." class="w-full bg-gray-50/50 border border-[#e4e6ea] rounded-[2.5rem] p-8 text-xs font-medium focus:bg-white focus:border-primary outline-none transition-all resize-none leading-relaxed"></textarea>
                   </div>
                </div>
             </div>
@@ -365,7 +368,7 @@ import { animate, stagger } from 'motion';
       <!-- CROPPER OVERLAY COMMAND CENTER -->
       @if (croppingImage()) {
          <div class="fixed inset-0 z-[10000] flex items-center justify-center p-6 md:p-12">
-            <div class="absolute inset-0 bg-dark/95 backdrop-blur-3xl animate-fade-in" (click)="closeCropper()"></div>
+            <div class="absolute inset-0 bg-dark/95 backdrop-blur-3xl animate-fade-in" (click)="closeCropper()" (keydown.escape)="closeCropper()" role="button" tabindex="0" aria-label="Fermer le studio de recadrage"></div>
             <div class="relative bg-white w-full max-w-3xl rounded-[3.5rem] overflow-hidden shadow-2xl flex flex-col h-[85vh] animate-slide-left boarder border-white/20">
                <div class="p-10 border-b border-[#f0f2f5] flex items-center justify-between shrink-0">
                   <div>

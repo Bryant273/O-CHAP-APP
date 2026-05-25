@@ -96,8 +96,12 @@ interface Address {
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       @for (addr of userAddresses(); track addr.id) {
                         <div (click)="selectAddress(addr)"
+                             (keydown.enter)="selectAddress(addr)"
+                             tabindex="0"
+                             role="button"
                              [class]="selectedAddress()?.id === addr.id ? 'border-2 border-[#FF6200] bg-orange-50/20' : 'border border-[#e4e6ea] hover:border-[#FF6200]/40'"
-                             class="p-5 rounded-2xl cursor-pointer transition-all flex flex-col justify-between relative group">
+                             class="p-5 rounded-2xl cursor-pointer transition-all flex flex-col justify-between relative group"
+                             [aria-label]="'Sélectionner l’adresse ' + addr.label">
                           <div>
                             <div class="flex items-center gap-2 mb-2">
                               <span class="w-2 h-2 rounded-full" [class]="selectedAddress()?.id === addr.id ? 'bg-[#FF6200]' : 'bg-muted'"></span>

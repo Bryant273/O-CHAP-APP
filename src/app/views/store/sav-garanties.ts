@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../services/auth.service';
-import { DataService } from '../../services/data.service';
+import { DataService, OchapOrder, OchapOrderItem } from '../../services/data.service';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -155,7 +155,7 @@ import { FormsModule } from '@angular/forms';
       <!-- Return Request Modal -->
       @if (activeRequest(); as req) {
          <div class="fixed inset-0 z-[1000] flex items-center justify-center p-6">
-            <div class="absolute inset-0 bg-dark/60 backdrop-blur-sm" (click)="activeRequest.set(null)"></div>
+            <div class="absolute inset-0 bg-dark/60 backdrop-blur-sm" (click)="activeRequest.set(null)" (keydown.escape)="activeRequest.set(null)" role="button" tabindex="0" aria-label="Fermer le dialogue"></div>
             <div class="relative bg-white w-full max-w-xl rounded-[3rem] shadow-2xl border border-surface-2 overflow-hidden animate-fade-up-short">
                <div class="p-10 border-b border-surface-2 bg-surface-3">
                   <h3 class="text-2xl font-display font-black text-dark tracking-tight mb-2">Formulaire de <span class="text-primary italic">Réclamation.</span></h3>
@@ -175,8 +175,8 @@ import { FormsModule } from '@angular/forms';
 
                   <div class="space-y-4">
                      <div class="space-y-2">
-                        <label class="text-[10px] font-black text-dark uppercase ml-1">Type de requête</label>
-                        <select [(ngModel)]="requestType" class="w-full h-14 bg-surface border border-surface-2 rounded-2xl px-6 text-xs font-bold outline-none focus:border-primary transition-all appearance-none cursor-pointer">
+                        <label for="storeReqType" class="text-[10px] font-black text-dark uppercase ml-1">Type de requête</label>
+                        <select id="storeReqType" [(ngModel)]="requestType" class="w-full h-14 bg-surface border border-surface-2 rounded-2xl px-6 text-xs font-bold outline-none focus:border-primary transition-all appearance-none cursor-pointer">
                            <option value="repair">Réparation sous garantie</option>
                            <option value="return">Retour & Remboursement (14 jours)</option>
                            <option value="technical">Diagnostic technique</option>
@@ -185,8 +185,8 @@ import { FormsModule } from '@angular/forms';
                      </div>
 
                      <div class="space-y-2">
-                        <label class="text-[10px] font-black text-dark uppercase ml-1">Description détaillée du problème</label>
-                        <textarea [(ngModel)]="requestDesc" placeholder="Soyez le plus précis possible pour accélérer le traitement..." 
+                        <label for="storeReqDesc" class="text-[10px] font-black text-dark uppercase ml-1">Description détaillée du problème</label>
+                        <textarea id="storeReqDesc" [(ngModel)]="requestDesc" placeholder="Soyez le plus précis possible pour accélérer le traitement..." 
                                   class="w-full h-40 bg-surface border border-surface-2 rounded-3xl p-6 text-xs font-bold outline-none focus:border-primary transition-all resize-none"></textarea>
                      </div>
                   </div>
@@ -222,10 +222,10 @@ export class SavGarantiesComponent implements OnInit {
 
   eligibleOrders = computed(() => {
     // Only orders within let's say 2 years for warranty, or 14 days for return
-    return this.dataService.orders$().filter(o => o.status !== 'cancelled');
+    return (this.dataService.orders$() as OchapOrder[]).filter(o => o.status !== 'cancelled');
   });
 
-  activeRequest = signal<{orderId: string, item: any} | null>(null);
+  activeRequest = signal<{ orderId: string; item: OchapOrderItem } | null>(null);
   requestType = 'repair';
   requestDesc = '';
 
@@ -244,15 +244,17 @@ export class SavGarantiesComponent implements OnInit {
      }
   }
 
-  formatDate(timestamp: any): string {
+  formatDate(timestamp: unknown): string {
     if (!timestamp) return '...';
     try {
-      const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+      const date = timestamp && typeof timestamp === 'object' && 'toDate' in timestamp
+        ? (timestamp as { toDate: () => Date }).toDate()
+        : new Date(timestamp as string | number | Date);
       return new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
     } catch { return '...'; }
   }
 
-  initRepairRequest(order: any, item: any) {
+  initRepairRequest(order: OchapOrder, item: OchapOrderItem) {
     this.activeRequest.set({ orderId: order.id, item });
     this.requestDesc = '';
   }

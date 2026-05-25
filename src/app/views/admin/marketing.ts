@@ -73,13 +73,13 @@ import { DataService } from '../../services/data.service';
 export class AdminMarketing {
   private dataService = inject(DataService);
   
-  campaigns = signal<any[]>([]);
+  campaigns = signal<Campaign[]>([]);
   isLoading = signal(false);
 
   async generateCampaigns() {
     this.isLoading.set(true);
     try {
-      const results = await this.dataService.runMarketingAutomation();
+      const results = await this.dataService.runMarketingAutomation() as Campaign[];
       this.campaigns.set(results);
     } catch (err) {
       console.error(err);
@@ -103,4 +103,11 @@ export class AdminMarketing {
       default: return 'bg-amber-50 text-amber-600';
     }
   }
+}
+
+interface Campaign {
+  type: string;
+  title: string;
+  content: string;
+  audience: string;
 }

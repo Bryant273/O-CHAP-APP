@@ -333,7 +333,7 @@ type PanelType = 'none' | 'cart' | 'wishlist' | 'orders' | 'profile';
                   <div class="flex items-start gap-6 max-w-xl">
                      <div class="w-16 h-16 rounded-2xl bg-white border border-emerald-500/20 shadow-md flex-shrink-0 flex items-center justify-center overflow-hidden">
                         @if (firstItemToReview()?.['imageUrl']) {
-                           <img [src]="asString(firstItemToReview()?.['imageUrl'])" class="w-full h-full object-cover" referrerpolicy="no-referrer">
+                           <img [src]="asString(firstItemToReview()?.['imageUrl'])" class="w-full h-full object-cover" referrerpolicy="no-referrer" [alt]="asString(firstItemToReview()?.['name'] || 'Produit')">
                         } @else {
                            <mat-icon class="text-emerald-500 text-3xl">star</mat-icon>
                         }
@@ -400,7 +400,7 @@ type PanelType = 'none' | 'cart' | 'wishlist' | 'orders' | 'profile';
                      <div class="flex items-center gap-4 py-4 bg-[#fafafa] px-6 rounded-3xl border border-[#e4e6ea]">
                         <div class="w-14 h-14 rounded-2xl bg-white border border-[#e4e6ea] overflow-hidden flex-shrink-0 flex items-center justify-center">
                            @if (firstItemToReview()?.['imageUrl']) {
-                              <img [src]="asString(firstItemToReview()?.['imageUrl'])" class="w-full h-full object-cover" referrerpolicy="no-referrer">
+                              <img [src]="asString(firstItemToReview()?.['imageUrl'])" class="w-full h-full object-cover" referrerpolicy="no-referrer" [alt]="asString(firstItemToReview()?.['name'] || 'Produit')">
                            } @else {
                               <mat-icon class="text-amber-500">star</mat-icon>
                            }
@@ -486,12 +486,12 @@ type PanelType = 'none' | 'cart' | 'wishlist' | 'orders' | 'profile';
                         <div class="space-y-4">
                            <div class="grid grid-cols-2 gap-4">
                               <div class="space-y-1">
-                                 <label class="text-[9px] font-black text-muted uppercase tracking-tighter ml-1">Minimum</label>
-                                 <input type="number" [(ngModel)]="priceRange().min" (input)="updatePrice(priceRange().min, priceRange().max)" class="w-full bg-[#f8f9fa] border border-[#e4e6ea] rounded-xl h-11 px-4 text-xs font-bold outline-none focus:bg-white focus:border-primary transition-all">
+                                 <label for="priceMinInput" class="text-[9px] font-black text-muted uppercase tracking-tighter ml-1">Minimum</label>
+                                 <input id="priceMinInput" type="number" [(ngModel)]="priceRange().min" (input)="updatePrice(priceRange().min, priceRange().max)" class="w-full bg-[#f8f9fa] border border-[#e4e6ea] rounded-xl h-11 px-4 text-xs font-bold outline-none focus:bg-white focus:border-primary transition-all">
                               </div>
                               <div class="space-y-1">
-                                 <label class="text-[9px] font-black text-muted uppercase tracking-tighter ml-1">Maximum</label>
-                                 <input type="number" [(ngModel)]="priceRange().max" (input)="updatePrice(priceRange().min, priceRange().max)" class="w-full bg-[#f8f9fa] border border-[#e4e6ea] rounded-xl h-11 px-4 text-xs font-bold outline-none focus:bg-white focus:border-primary transition-all">
+                                 <label for="priceMaxInput" class="text-[9px] font-black text-muted uppercase tracking-tighter ml-1">Maximum</label>
+                                 <input id="priceMaxInput" type="number" [(ngModel)]="priceRange().max" (input)="updatePrice(priceRange().min, priceRange().max)" class="w-full bg-[#f8f9fa] border border-[#e4e6ea] rounded-xl h-11 px-4 text-xs font-bold outline-none focus:bg-white focus:border-primary transition-all">
                               </div>
                            </div>
                            <input type="range" [min]="0" [max]="2000000" [step]="50000" [(ngModel)]="priceRange().max" (input)="updatePrice(priceRange().min, priceRange().max)" class="w-full accent-primary">
