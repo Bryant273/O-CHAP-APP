@@ -23,11 +23,8 @@ import {
   deleteDoc
 } from 'firebase/firestore';
 import { auth } from './firebase';
-import { GoogleGenAI } from '@google/genai';
 import * as XLSX from 'xlsx';
 import { AuthService } from './auth.service';
-
-declare const GEMINI_API_KEY: string;
 
 export enum OperationType {
   CREATE = 'create',
@@ -170,7 +167,6 @@ export class DataService {
   public suppliers$ = signal<OchapUser[]>([]);
   public clients$ = signal<OchapUser[]>([]);
 
-  private ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
   private authService = inject(AuthService);
 
   public currentUser$ = computed(() => this.authService.profile$());
@@ -814,13 +810,16 @@ export class DataService {
 
   async generateDescription(productName: string, category: string): Promise<string> {
     try {
-      const response = await this.ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: `En tant qu'expert marketing pour la marketplace O'CHAP, rédige une description captivante et professionnelle pour un produit nommé "${productName}" dans la catégorie "${category}". La description doit être concise, mettre en avant les bénéfices et inciter à l'achat. Réponse en français pur.`,
+      const res = await fetch('/api/ai/describe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productName, category })
       });
-      return response.text || "";
+      if (!res.ok) throw new Error('API request failed');
+      const data = await res.json();
+      return data.text || "";
     } catch (error) {
-      console.error('Gemini Error:', error);
+      console.error('Describe API Error:', error);
       return "Erreur lors de la génération de la description.";
     }
   }
@@ -844,21 +843,16 @@ export class DataService {
     }));
 
     try {
-      const response = await this.ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: `Analyse cet inventaire pour la boutique O'CHAP. 
-        Produits: ${JSON.stringify(productSummary)}
-        Dernières commandes: ${JSON.stringify(orderSummary)}
-        Directives: 
-        1. Identifie les produits à risque de rupture (en dessous du seuil).
-        2. Suggère des réapprovisionnements prioritaires.
-        3. Identifie les produits qui ne tournent pas assez.
-        4. Donne 3 conseils stratégiques courts pour augmenter les ventes.
-        Réponds sous forme de rapport Markdown structuré en français.`,
+      const res = await fetch('/api/ai/analyze-inventory', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productSummary, orderSummary })
       });
-      return response.text || "";
+      if (!res.ok) throw new Error('API request failed');
+      const data = await res.json();
+      return data.text || "";
     } catch (error) {
-      console.error('Gemini Analysis Error:', error);
+      console.error('Inventory API Error:', error);
       return "Impossible d'effectuer l'analyse intelligente pour le moment.";
     }
   }
@@ -889,25 +883,18 @@ export class DataService {
       const productsInShortage = this.products().filter(p => ((p.stock as number) || 0) < ((p.threshold as number) || 5));
       const latestPromos = this.products().filter(p => p['isPromo']);
 
-      const prompt = `
-        Agis en tant qu'Expert Marketing pour O'CHAP Afrique.
-        Génère 3 idées de campagnes marketing automatisées.
-        Contexte : Nous avons ${productsInShortage.length} produits en stock faible et ${latestPromos.length} produits en promotion.
-        L'audience est à Abidjan et Libreville.
-        Le ton doit être professionnel, premium et dynamique.
-        
-        Retourne un tableau JSON d'objets : { title: string, subject: string, message: string, channel: "Email" | "SMS" | "Push" }
-      `;
-
-      const result = await this.ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: prompt
+      const res = await fetch('/api/ai/marketing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          shortageCount: productsInShortage.length,
+          promoCount: latestPromos.length
+        })
       });
-      const text = result.text || "";
-      const cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
-      return JSON.parse(cleaned);
+      if (!res.ok) throw new Error('API request failed');
+      return await res.json();
     } catch (e) {
-      console.error('Marketing AI Error:', e);
+      console.error('Marketing API Error:', e);
       return [];
     }
   }
@@ -916,30 +903,26 @@ export class DataService {
     try {
       const products = this.products();
       const orders = this.orders().slice(0, 50);
-      
-      const prompt = `
-        Analyse les données business pour O'CHAP Afrique (Abidjan/Libreville).
-        Données : 
-        - Produits: ${JSON.stringify(products.slice(0, 10).map(p => ({ n: p.name, c: p.category, b: p.brand, p: p.price, m: p.profitMargin })))}
-        - Commandes: ${orders.length} commandes récentes.
-        
-        Génère un rapport analytique structuré en JSON avec les champs suivants :
-        - globalHealth: "excellent" | "stable" | "critical"
-        - profitAnalysis: string (analyse des marges)
-        - topPerformingBrands: string[]
-        - seasonalInsights: string (conseils pour la saison actuelle en Afrique)
-        - stockAlerts: string[]
-      `;
+      const optimizedProducts = products.slice(0, 10).map(p => ({
+        n: p.name,
+        c: p.category,
+        b: p.brand,
+        p: p.price,
+        m: p.profitMargin
+      }));
 
-      const result = await this.ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: prompt
+      const res = await fetch('/api/ai/analytics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          products: optimizedProducts,
+          ordersCount: orders.length
+        })
       });
-      const text = result.text || "";
-      const cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
-      return JSON.parse(cleaned);
+      if (!res.ok) throw new Error('API request failed');
+      return await res.json();
     } catch (e) {
-      console.error('Analytics AI Error:', e);
+      console.error('Analytics API Error:', e);
       return { globalHealth: 'stable', profitAnalysis: 'Analyse indisponible.', topPerformingBrands: [], seasonalInsights: '', stockAlerts: [] };
     }
   }

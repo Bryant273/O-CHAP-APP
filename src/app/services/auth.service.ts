@@ -74,21 +74,23 @@ export class AuthService {
   }
 
   constructor() {
-    onAuthStateChanged(auth, async (user: User | null) => {
-      this.user.set(user);
-      this.isAuthenticated.set(!!user);
-      
-      if (this.profileUnsub) {
-        this.profileUnsub();
-        this.profileUnsub = null;
-      }
+    if (typeof window !== 'undefined') {
+      onAuthStateChanged(auth, async (user: User | null) => {
+        this.user.set(user);
+        this.isAuthenticated.set(!!user);
+        
+        if (this.profileUnsub) {
+          this.profileUnsub();
+          this.profileUnsub = null;
+        }
 
-      if (user) {
-        this.watchProfile(user.uid);
-      } else {
-        this.profile.set(null);
-      }
-    });
+        if (user) {
+          this.watchProfile(user.uid);
+        } else {
+          this.profile.set(null);
+        }
+      });
+    }
   }
 
   private watchProfile(uid: string) {
