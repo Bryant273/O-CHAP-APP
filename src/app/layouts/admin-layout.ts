@@ -47,7 +47,7 @@ import { CommonModule } from '@angular/common';
             @if (openSections()['global'] && !sidebarCollapsed()) {
               <div class="pl-9 space-y-1 animate-fade-in flex flex-col">
                 <a routerLink="/admin/dashboard" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Dashboard</a>
-                @if (authService.isAdmin()) {
+                @if (authService.isSuperAdmin() || authService.isManagerErp() || authService.isAuditeur()) {
                   <a routerLink="/admin/analytics" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Analytiques</a>
                 }
               </div>
@@ -55,90 +55,104 @@ import { CommonModule } from '@angular/common';
           </div>
 
           <!-- OPÉRATIONS -->
-          <div class="space-y-1">
-            <button (click)="toggleSection('ops')" 
-                    [title]="sidebarCollapsed() ? 'Opérations' : ''"
-                    class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-white/50 hover:bg-white/5 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest border border-transparent"
-                    [class.justify-center]="sidebarCollapsed()">
-              <div class="flex items-center gap-3">
-                <mat-icon class="scale-75">settings_input_component</mat-icon> 
-                @if (!sidebarCollapsed()) { <span class="animate-fade-in">Opérations</span> }
-              </div>
-              @if (!sidebarCollapsed()) {
-                <mat-icon class="scale-50 transition-transform" [class.rotate-180]="openSections()['ops']">expand_more</mat-icon>
+          @if (authService.isSuperAdmin() || authService.isManagerErp() || authService.isLivreur() || authService.isAuditeur()) {
+            <div class="space-y-1">
+              <button (click)="toggleSection('ops')" 
+                      [title]="sidebarCollapsed() ? 'Opérations' : ''"
+                      class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-white/50 hover:bg-white/5 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest border border-transparent"
+                      [class.justify-center]="sidebarCollapsed()">
+                <div class="flex items-center gap-3">
+                  <mat-icon class="scale-75">settings_input_component</mat-icon> 
+                  @if (!sidebarCollapsed()) { <span class="animate-fade-in">Opérations</span> }
+                </div>
+                @if (!sidebarCollapsed()) {
+                  <mat-icon class="scale-50 transition-transform" [class.rotate-180]="openSections()['ops']">expand_more</mat-icon>
+                }
+              </button>
+              @if (openSections()['ops'] && !sidebarCollapsed()) {
+                <div class="pl-9 space-y-1 animate-fade-in flex flex-col">
+                  <a routerLink="/admin/orders" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Commandes</a>
+                  <a routerLink="/admin/dispatch" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Dispatch</a>
+                  <a routerLink="/admin/zones" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Livraisons & Zones</a>
+                </div>
               }
-            </button>
-            @if (openSections()['ops'] && !sidebarCollapsed()) {
-              <div class="pl-9 space-y-1 animate-fade-in flex flex-col">
-                <a routerLink="/admin/orders" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Commandes</a>
-                <a routerLink="/admin/dispatch" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Dispatch</a>
-                <a routerLink="/admin/zones" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Livraisons & Zones</a>
-              </div>
-            }
-          </div>
+            </div>
+          }
 
           <!-- PARTENAIRES -->
-          <div class="space-y-1">
-            <button (click)="toggleSection('partners')" 
-                    [title]="sidebarCollapsed() ? 'Partenaires' : ''"
-                    class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-white/50 hover:bg-white/5 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest border border-transparent"
-                    [class.justify-center]="sidebarCollapsed()">
-              <div class="flex items-center gap-3">
-                <mat-icon class="scale-75">business_center</mat-icon> 
-                @if (!sidebarCollapsed()) { <span class="animate-fade-in">Partenaires</span> }
-              </div>
-              @if (!sidebarCollapsed()) {
-                <mat-icon class="scale-50 transition-transform" [class.rotate-180]="openSections()['partners']">expand_more</mat-icon>
+          @if (authService.isSuperAdmin() || authService.isManagerSup() || authService.isManagerErp() || authService.isAuditeur()) {
+            <div class="space-y-1">
+              <button (click)="toggleSection('partners')" 
+                      [title]="sidebarCollapsed() ? 'Partenaires' : ''"
+                      class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-white/50 hover:bg-white/5 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest border border-transparent"
+                      [class.justify-center]="sidebarCollapsed()">
+                <div class="flex items-center gap-3">
+                  <mat-icon class="scale-75">business_center</mat-icon> 
+                  @if (!sidebarCollapsed()) { <span class="animate-fade-in">Partenaires</span> }
+                </div>
+                @if (!sidebarCollapsed()) {
+                  <mat-icon class="scale-50 transition-transform" [class.rotate-180]="openSections()['partners']">expand_more</mat-icon>
+                }
+              </button>
+              @if (openSections()['partners'] && !sidebarCollapsed()) {
+                <div class="pl-9 space-y-1 animate-fade-in flex flex-col">
+                  @if (authService.isSuperAdmin() || authService.isManagerSup() || authService.isAuditeur()) {
+                    <a routerLink="/admin/suppliers" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Fournisseurs</a>
+                  }
+                  @if (authService.isSuperAdmin() || authService.isManagerErp() || authService.isAuditeur()) {
+                    <a routerLink="/admin/customers" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Clients</a>
+                  }
+                </div>
               }
-            </button>
-            @if (openSections()['partners'] && !sidebarCollapsed()) {
-              <div class="pl-9 space-y-1 animate-fade-in flex flex-col">
-                <a routerLink="/admin/suppliers" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Fournisseurs</a>
-                <a routerLink="/admin/customers" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Clients</a>
-              </div>
-            }
-          </div>
+            </div>
+          }
 
           <!-- CATALOGUE -->
-          <div class="space-y-1">
-            <button (click)="toggleSection('catalog')" 
-                    [title]="sidebarCollapsed() ? 'Catalogue' : ''"
-                    class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-white/50 hover:bg-white/5 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest border border-transparent"
-                    [class.justify-center]="sidebarCollapsed()">
-              <div class="flex items-center gap-3">
-                <mat-icon class="scale-75 text-primary">category</mat-icon> 
-                @if (!sidebarCollapsed()) { <span class="animate-fade-in">Catalogue</span> }
-              </div>
-              @if (!sidebarCollapsed()) {
-                <mat-icon class="scale-50 transition-transform" [class.rotate-180]="openSections()['catalog']">expand_more</mat-icon>
+          @if (authService.isSuperAdmin() || authService.isManagerErp() || authService.isManagerSup() || authService.isAuditeur()) {
+            <div class="space-y-1">
+              <button (click)="toggleSection('catalog')" 
+                      [title]="sidebarCollapsed() ? 'Catalogue' : ''"
+                      class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-white/50 hover:bg-white/5 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest border border-transparent"
+                      [class.justify-center]="sidebarCollapsed()">
+                <div class="flex items-center gap-3">
+                  <mat-icon class="scale-75 text-primary">category</mat-icon> 
+                  @if (!sidebarCollapsed()) { <span class="animate-fade-in">Catalogue</span> }
+                </div>
+                @if (!sidebarCollapsed()) {
+                  <mat-icon class="scale-50 transition-transform" [class.rotate-180]="openSections()['catalog']">expand_more</mat-icon>
+                }
+              </button>
+              @if (openSections()['catalog'] && !sidebarCollapsed()) {
+                <div class="pl-9 space-y-1 animate-fade-in flex flex-col">
+                  <a routerLink="/admin/products" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Produits</a>
+                  @if (authService.isSuperAdmin() || authService.isManagerErp() || authService.isAuditeur()) {
+                    <a routerLink="/admin/promo" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Promotions</a>
+                    <a routerLink="/admin/marketing" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Marketing IA</a>
+                  }
+                </div>
               }
-            </button>
-            @if (openSections()['catalog'] && !sidebarCollapsed()) {
-              <div class="pl-9 space-y-1 animate-fade-in flex flex-col">
-                <a routerLink="/admin/products" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Produits</a>
-                <a routerLink="/admin/promo" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Promotions</a>
-                <a routerLink="/admin/marketing" routerLinkActive="text-primary font-black scale-105" class="text-[11px] py-1.5 text-white/30 hover:text-white transition-all font-bold origin-left">Marketing IA</a>
-              </div>
-            }
-          </div>
+            </div>
+          }
 
           <!-- INVENTAIRE (TOP LEVEL) -->
-          <div class="space-y-1">
-            <a routerLink="/admin/inventory" routerLinkActive="bg-white/10 text-white shadow-lg" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/50 hover:bg-white/5 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest border border-transparent group"
-               [class.justify-center]="sidebarCollapsed()"
-               [title]="sidebarCollapsed() ? 'Inventaire Central' : ''">
-               <mat-icon class="scale-75 text-emerald-400 group-hover:scale-110 transition-transform">warehouse</mat-icon>
-               @if (!sidebarCollapsed()) {
-                 <div class="flex flex-col min-w-0">
-                    <span class="animate-fade-in">Inventaire Central</span>
-                    <span class="text-[8px] text-white/20 font-bold tracking-tighter">Flux Logistique</span>
-                 </div>
-               }
-            </a>
-          </div>
+          @if (authService.isSuperAdmin() || authService.isManagerErp() || authService.isManagerSup() || authService.isAuditeur()) {
+            <div class="space-y-1">
+              <a routerLink="/admin/inventory" routerLinkActive="bg-white/10 text-white shadow-lg" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/50 hover:bg-white/5 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest border border-transparent group"
+                 [class.justify-center]="sidebarCollapsed()"
+                 [title]="sidebarCollapsed() ? 'Inventaire Central' : ''">
+                 <mat-icon class="scale-75 text-emerald-400 group-hover:scale-110 transition-transform">warehouse</mat-icon>
+                 @if (!sidebarCollapsed()) {
+                   <div class="flex flex-col min-w-0">
+                      <span class="animate-fade-in">Inventaire Central</span>
+                      <span class="text-[8px] text-white/20 font-bold tracking-tighter">Flux Logistique</span>
+                   </div>
+                 }
+              </a>
+            </div>
+          }
 
           <!-- FINANCE -->
-          @if (authService.isAdmin() || authService.isAuditeur()) {
+          @if (authService.isSuperAdmin() || authService.isManagerErp() || authService.isAuditeur()) {
             <div class="space-y-1">
               <button (click)="toggleSection('finance')" 
                       [title]="sidebarCollapsed() ? 'Finance' : ''"
@@ -184,7 +198,7 @@ import { CommonModule } from '@angular/common';
           </div>
 
           <!-- ADMIN -->
-          @if (authService.isAdmin()) {
+          @if (authService.isSuperAdmin()) {
             <div class="space-y-1">
               <button (click)="toggleSection('admin')" 
                       [title]="sidebarCollapsed() ? 'Admin' : ''"
@@ -283,14 +297,14 @@ export class AdminLayoutComponent implements OnDestroy {
   constructor() {
     effect(() => {
       const user = this.authService.user$();
-      const isAdmin = this.authService.isAdmin();
+      const isStaff = this.authService.isStaff();
       
       // Nettoyage des abonnements précédents
       this.unsubs.forEach(unsub => unsub());
       this.unsubs = [];
-
-      if (user && isAdmin) {
-        console.log('Admin detected: Starting global ERP data sync...');
+ 
+      if (user && isStaff) {
+        console.log('Staff detected: Starting global ERP data sync...');
         this.unsubs.push(this.dataService.watchAllOrders());
         this.unsubs.push(this.dataService.watchAllProducts());
         this.unsubs.push(this.dataService.watchAllUsers());

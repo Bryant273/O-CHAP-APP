@@ -18,7 +18,7 @@ export const adminGuard: CanActivateFn = () => {
       return true;
     }
 
-    if (role === 'admin' || role === 'manager_erp' || role === 'master_admin') {
+    if (role === 'admin' || role === 'manager_erp' || role === 'manager_sup' || role === 'livreur' || role === 'auditeur' || role === 'master_admin') {
       return true;
     }
     // If authenticated but not authorized, redirect to home

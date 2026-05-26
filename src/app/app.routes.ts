@@ -92,67 +92,97 @@ export const routes: Routes = [
         path: 'analytics',
         loadComponent: () => import('./views/admin/analytics').then(m => m.AdminAnalytics),
         canActivate: [roleGuard],
-        data: { roles: ['admin', 'manager_erp'] }
+        data: { roles: ['admin', 'manager_erp', 'auditeur'] }
       },
       {
         path: 'orders',
-        loadComponent: () => import('./views/admin/orders').then(m => m.AdminOrders)
+        loadComponent: () => import('./views/admin/orders').then(m => m.AdminOrders),
+        canActivate: [roleGuard],
+        data: { roles: ['admin', 'manager_erp', 'livreur', 'auditeur'] }
       },
       {
         path: 'dispatch',
-        loadComponent: () => import('./views/admin/dispatch').then(m => m.AdminDispatch)
+        loadComponent: () => import('./views/admin/dispatch').then(m => m.AdminDispatch),
+        canActivate: [roleGuard],
+        data: { roles: ['admin', 'manager_erp', 'livreur', 'auditeur'] }
       },
       {
         path: 'zones',
-        loadComponent: () => import('./views/admin/zones').then(m => m.AdminZones)
+        loadComponent: () => import('./views/admin/zones').then(m => m.AdminZones),
+        canActivate: [roleGuard],
+        data: { roles: ['admin', 'manager_erp', 'livreur', 'auditeur'] }
       },
       {
         path: 'suppliers',
-        loadComponent: () => import('./views/admin/suppliers').then(m => m.AdminSuppliers)
+        loadComponent: () => import('./views/admin/suppliers').then(m => m.AdminSuppliers),
+        canActivate: [roleGuard],
+        data: { roles: ['admin', 'manager_sup', 'auditeur'] }
       },
       {
         path: 'customers',
-        loadComponent: () => import('./views/admin/customers').then(m => m.AdminCustomers)
+        loadComponent: () => import('./views/admin/customers').then(m => m.AdminCustomers),
+        canActivate: [roleGuard],
+        data: { roles: ['admin', 'manager_erp', 'auditeur'] }
       },
       {
         path: 'products',
-        loadComponent: () => import('./views/admin/products').then(m => m.AdminProducts)
+        loadComponent: () => import('./views/admin/products').then(m => m.AdminProducts),
+        canActivate: [roleGuard],
+        data: { roles: ['admin', 'manager_erp', 'manager_sup', 'auditeur'] }
       },
       {
         path: 'inventory',
-        loadComponent: () => import('./views/inventory/inventory').then(m => m.InventoryComponent)
+        loadComponent: () => import('./views/inventory/inventory').then(m => m.InventoryComponent),
+        canActivate: [roleGuard],
+        data: { roles: ['admin', 'manager_erp', 'manager_sup', 'auditeur'] }
       },
       {
         path: 'promo',
-        loadComponent: () => import('./views/admin/promo').then(m => m.AdminPromo)
+        loadComponent: () => import('./views/admin/promo').then(m => m.AdminPromo),
+        canActivate: [roleGuard],
+        data: { roles: ['admin', 'manager_erp', 'auditeur'] }
       },
       {
         path: 'marketing',
-        loadComponent: () => import('./views/admin/marketing').then(m => m.AdminMarketing)
+        loadComponent: () => import('./views/admin/marketing').then(m => m.AdminMarketing),
+        canActivate: [roleGuard],
+        data: { roles: ['admin', 'manager_erp', 'auditeur'] }
       },
       {
         path: 'billing',
-        loadComponent: () => import('./views/admin/billing').then(m => m.AdminBilling)
+        loadComponent: () => import('./views/admin/billing').then(m => m.AdminBilling),
+        canActivate: [roleGuard],
+        data: { roles: ['admin', 'manager_erp', 'auditeur'] }
       },
       {
         path: 'reports',
-        loadComponent: () => import('./views/admin/reports').then(m => m.AdminReports)
+        loadComponent: () => import('./views/admin/reports').then(m => m.AdminReports),
+        canActivate: [roleGuard],
+        data: { roles: ['admin', 'manager_erp', 'auditeur'] }
       },
       {
         path: 'support',
-        loadComponent: () => import('./views/admin/support').then(m => m.AdminSupport)
+        loadComponent: () => import('./views/admin/support').then(m => m.AdminSupport),
+        canActivate: [roleGuard],
+        data: { roles: ['admin', 'manager_erp', 'auditeur'] }
       },
       {
         path: 'notifications',
-        loadComponent: () => import('./views/admin/notifications_admin').then(m => m.AdminNotifications)
+        loadComponent: () => import('./views/admin/notifications_admin').then(m => m.AdminNotifications),
+        canActivate: [roleGuard],
+        data: { roles: ['admin', 'manager_erp', 'manager_sup', 'livreur', 'auditeur'] }
       },
       {
         path: 'users',
-        loadComponent: () => import('./views/admin/users').then(m => m.AdminUsers)
+        loadComponent: () => import('./views/admin/users').then(m => m.AdminUsers),
+        canActivate: [roleGuard],
+        data: { roles: ['admin'] }
       },
       {
         path: 'settings',
-        loadComponent: () => import('./views/admin/settings').then(m => m.AdminSettings)
+        loadComponent: () => import('./views/admin/settings').then(m => m.AdminSettings),
+        canActivate: [roleGuard],
+        data: { roles: ['admin'] }
       },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]

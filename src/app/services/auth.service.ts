@@ -25,6 +25,15 @@ export class AuthService {
   public profile$ = this.profile.asReadonly();
   public isAuthenticated = signal(false);
 
+  public isSuperAdmin = computed(() => {
+    const u = this.user();
+    const p = this.profile();
+    if (!u) return false;
+    const email = u.email?.toLowerCase();
+    if (email === 'acherie812@gmail.com') return true;
+    return p?.['role'] === 'admin';
+  });
+
   public isAdmin = computed(() => {
     const u = this.user();
     const p = this.profile();
@@ -32,6 +41,11 @@ export class AuthService {
     const email = u.email?.toLowerCase();
     if (email === 'acherie812@gmail.com') return true;
     return p?.['role'] === 'admin' || p?.['role'] === 'manager_erp';
+  });
+
+  public isManagerErp = computed(() => {
+    const p = this.profile();
+    return p?.['role'] === 'manager_erp';
   });
 
   public isManagerSup = computed(() => {

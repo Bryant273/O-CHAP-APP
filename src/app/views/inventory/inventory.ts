@@ -1,10 +1,10 @@
-import { ChangeDetectionStrategy, Component, signal, computed, OnInit, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal, computed, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { auth, db } from '../../services/firebase';
 import { onSnapshot, collection, query, where, Unsubscribe, QuerySnapshot, DocumentData, updateDoc, doc, serverTimestamp, addDoc, deleteDoc } from 'firebase/firestore';
-import { OchapProduct } from '../../services/data.service';
+import { OchapProduct, DataService } from '../../services/data.service';
 import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
 import { animate, stagger } from 'motion';
 
@@ -418,6 +418,7 @@ import { animate, stagger } from 'motion';
   `]
 })
 export class InventoryComponent implements OnInit, OnDestroy {
+  private dataService = inject(DataService);
   products = signal<OchapProduct[]>([]);
   filterCat = signal('all');
   searchQuery = '';
@@ -661,6 +662,10 @@ export class InventoryComponent implements OnInit, OnDestroy {
 
       if (this.editing()) {
         await updateDoc(doc(db, 'products', this.currentProd.id), prodData);
+        // Post-update: check for stock warning
+        if (prodData.stock <= prodData.threshold) {
+          await this.dataService.checkAndTriggerStockNotification(this.currentProd.id, prodData.stock, prodData.threshold);
+        }
       } else {
         await addDoc(collection(db, 'products'), {
           ...prodData,
@@ -691,6 +696,10 @@ export class InventoryComponent implements OnInit, OnDestroy {
         threshold: newThreshold,
         updatedAt: serverTimestamp()
       });
+      // Post-update: trigger stock alert check using the centralized alert system
+      if (newStock <= newThreshold) {
+        await this.dataService.checkAndTriggerStockNotification(productId, newStock, newThreshold);
+      }
     } catch (e) { console.error(e); }
   }
 

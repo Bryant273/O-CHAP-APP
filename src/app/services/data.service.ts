@@ -450,7 +450,7 @@ export class DataService {
         }
       });
 
-      // 4. Send notifications to Suppliers
+      // 4. Send notifications to Suppliers & check for stock alert triggers
       for (const orderId of createdOrderIds) {
         try {
           const orderSnap = await getDoc(doc(db, 'orders', orderId));
@@ -464,6 +464,24 @@ export class DataService {
                 `Vous avez reçu une nouvelle commande #${orderId.slice(-8).toUpperCase()} de ${oData['items']?.length || 0} article(s).`, 
                 'order'
               );
+            }
+
+            // Check stock level for every item in this order
+            const items = oData['items'] || [];
+            for (const item of items) {
+              const productId = item.id;
+              if (productId) {
+                const pRef = doc(db, 'products', productId);
+                const pDoc = await getDoc(pRef);
+                if (pDoc.exists()) {
+                  const pData = pDoc.data() as OchapProduct;
+                  const currentStock = pData.stock || 0;
+                  const currentThreshold = pData.threshold || 5;
+                  if (currentStock <= currentThreshold) {
+                    await this.checkAndTriggerStockNotification(productId, currentStock, currentThreshold);
+                  }
+                }
+              }
             }
           }
         } catch (e) {
@@ -488,7 +506,7 @@ export class DataService {
     return products.filter(p => (p.stock || 0) <= (p.threshold || 5)).length;
   });
 
-  async addNotification(recipientId: string, title: string, message: string, type: 'order' | 'stock' | 'system' = 'system') {
+  async addNotification(recipientId: string, title: string, message: string, type = 'system', productId?: string) {
     try {
       await addDoc(collection(db, 'notifications'), {
         recipientId,
@@ -496,10 +514,48 @@ export class DataService {
         message,
         type,
         read: false,
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp(),
+        productId: productId || null
       });
     } catch (e) {
       console.error('Error adding notification:', e);
+    }
+  }
+
+  // Real-time stock level monitoring alerts and email simulation
+  async checkAndTriggerStockNotification(productId: string, newStock: number, threshold = 5) {
+    try {
+      const pRef = doc(db, 'products', productId);
+      const pDoc = await getDoc(pRef);
+      if (!pDoc.exists()) return;
+      const pData = pDoc.data() as OchapProduct;
+      const supplierId = pData.supplierId;
+      if (!supplierId) return;
+
+      const title = newStock === 0 ? 'Rupture de Stock !' : 'Alerte Stock Faible';
+      const message = newStock === 0 
+        ? `Le produit ${pData.name} est épuisé (0 en stock). Veuillez réapprovisionner pour Abidjan.`
+        : `Le produit ${pData.name} est sous le seuil critique (Stock restant: ${newStock}, Seuil: ${threshold}).`;
+
+      // Deduplicate unread stock alerts for the same product to prevent spam
+      const q = query(
+        collection(db, 'notifications'),
+        where('recipientId', '==', supplierId),
+        where('productId', '==', productId),
+        where('type', '==', 'stock'),
+        where('read', '==', false),
+        limit(1)
+      );
+      const snap = await getDocs(q);
+      
+      if (snap.empty) {
+        await this.addNotification(supplierId, title, message, 'stock', productId);
+        
+        // Simulate immediate email notification
+        console.log(`[Email Sentinel O'CHAP] Alerte de stock envoyée à l'adresse e-mail associée au fournisseur ${supplierId}. Sujet: ${title}. Message: ${message}`);
+      }
+    } catch (err) {
+      console.error('Error in checkAndTriggerStockNotification:', err);
     }
   }
 
@@ -530,11 +586,10 @@ export class DataService {
   }
 
   monitorStockLevels() {
-    // This could also be a cloud function, but here we run it client-side for immediate feedback
     const products = this.products$() as OchapProduct[];
     products.forEach(p => {
       if (p.stock <= (p.threshold || 5)) {
-        // Implementation logic for "Low Stock" alerts
+        this.checkAndTriggerStockNotification(p.id, p.stock, p.threshold || 5);
       }
     });
   }
@@ -572,6 +627,12 @@ export class DataService {
         ...updates,
         updatedAt: serverTimestamp()
       });
+
+      // Post-update: check if stock or threshold was modified and could trigger an alert
+      if (updates.stock !== undefined) {
+        const threshold = updates.threshold !== undefined ? updates.threshold : 5;
+        await this.checkAndTriggerStockNotification(id, Number(updates.stock), Number(threshold));
+      }
       return true;
     } catch (error: unknown) {
       this.handleFirestoreError(error, OperationType.UPDATE, path);
@@ -612,23 +673,12 @@ export class DataService {
         updatedAt: serverTimestamp()
       });
 
-      // Quick check for notification
+      // Fetch and check for stock alerts using our centralized alert system
       const pDoc = await getDoc(pRef);
       const pData = pDoc.data() as OchapProduct;
-      if (newStock <= (pData.threshold || 5) && newStock > 0 && pData.supplierId) {
-        await this.addNotification(
-          pData.supplierId,
-          'Alerte Stock Faible',
-          `Le produit ${pData.name} est presque épuisé (Stock: ${newStock})`,
-          'stock'
-        );
-      } else if (newStock === 0 && pData.supplierId) {
-        await this.addNotification(
-          pData.supplierId,
-          'Rupture de Stock !',
-          `Le produit ${pData.name} est épuisé.`,
-          'stock'
-        );
+      const threshold = pData.threshold || 5;
+      if (newStock <= threshold) {
+        await this.checkAndTriggerStockNotification(productId, newStock, threshold);
       }
     } catch (error: unknown) {
       this.handleFirestoreError(error, OperationType.UPDATE, path);
