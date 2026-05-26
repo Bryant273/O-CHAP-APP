@@ -204,7 +204,16 @@ export class DataService {
       }
     };
     console.error('Firestore Error:', JSON.stringify(errInfo));
-    throw new Error(JSON.stringify(errInfo));
+    
+    // Only throw a hard exception for mutations (creating, updating, deleting)
+    // so that form submission handlers can catch and report them.
+    // For reads/lists/watchers, do not throw globally as it can crash the Angular bootstrap process.
+    if (operation === OperationType.CREATE || 
+        operation === OperationType.UPDATE || 
+        operation === OperationType.DELETE || 
+        operation === OperationType.WRITE) {
+      throw new Error(JSON.stringify(errInfo));
+    }
   }
 
   // --- ADMIN WATCHERS ---
@@ -495,6 +504,7 @@ export class DataService {
   }
 
   watchNotifications(recipientId: string) {
+    if (!this.isBrowser) return this.noop;
     if (!recipientId) return this.noop;
     const q = query(
       collection(db, 'notifications'),

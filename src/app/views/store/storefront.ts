@@ -757,7 +757,7 @@ type PanelType = 'none' | 'cart' | 'wishlist' | 'orders' | 'profile';
                 </div>
                 <div>
                   <h3 class="text-xl font-display font-bold text-dark tracking-tight">Politique de Retour</h3>
-                  <p class="text-[10px] font-black uppercase text-muted tracking-widest">O'CHAP Afrique — Abidjan & Libreville</p>
+                  <p class="text-[10px] font-black uppercase text-muted tracking-widest">O'CHAP Côte d'Ivoire — Service Premium Abidjan</p>
                 </div>
               </div>
               <button (click)="showReturnsPolicy.set(false)" class="w-10 h-10 rounded-full hover:bg-surface-2 transition-all flex items-center justify-center text-muted">
@@ -794,7 +794,7 @@ type PanelType = 'none' | 'cart' | 'wishlist' | 'orders' | 'profile';
               <section>
                 <h4 class="text-xs font-black uppercase tracking-widest text-primary mb-3">Échange & Remboursement</h4>
                 <p class="text-[13px] leading-relaxed text-ink/80 font-medium font-sans">
-                  Après inspection de l'article dans nos centres O'CHAP logistiques d'Abidjan ou Libreville, le remboursement sera effectué sous 48h via le mode de paiement initial ou sous forme de bon d'achat O'CHAP.
+                  Après inspection de l'article dans nos centres O'CHAP logistiques d'Abidjan, le remboursement sera effectué sous 48h via le mode de paiement initial ou sous forme de bon d'achat O'CHAP.
                 </p>
               </section>
             </div>

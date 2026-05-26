@@ -80,16 +80,16 @@ app.post('/api/ai/marketing', async (req, res) => {
   if (!ai) {
     return res.json([
       { title: "Campagne Réapprovisionnement", subject: "Stocks bas chez O'CHAP", message: "Profitez de nos nouveaux arrivages avant rupture de stock !", channel: "Email" },
-      { title: "Offre Flash d'Afrique", subject: "Bons plans du jour", message: "Profitez de remises exclusives allant jusqu'à 25% à Libreville et Abidjan !", channel: "Push" },
+      { title: "Offre Flash de Côte d'Ivoire", subject: "Bons plans du jour", message: "Profitez de remises exclusives allant jusqu'à 25% à Abidjan !", channel: "Push" },
       { title: "Fidélité O'CHAP", subject: "Une surprise exclusive", message: "Merci de faire confiance à O'CHAP pour votre électroménager.", channel: "SMS" }
     ]);
   }
   try {
     const prompt = `
-      Agis en tant qu'Expert Marketing pour O'CHAP Afrique.
+      Agis en tant qu'Expert Marketing pour O'CHAP Côte d'Ivoire.
       Génère 3 idées de campagnes marketing automatisées.
       Contexte : Nous avons ${shortageCount} produits en stock faible et ${promoCount} produits en promotion.
-      L'audience est à Abidjan et Libreville.
+      L'audience est à Abidjan et partout en Côte d'Ivoire.
       Le ton doit être professionnel, premium et dynamique.
       
       Retourne un tableau JSON d'objets : { title: string, subject: string, message: string, channel: "Email" | "SMS" | "Push" }
@@ -121,7 +121,7 @@ app.post('/api/ai/analytics', async (req, res) => {
   }
   try {
     const prompt = `
-      Analyse les données business pour O'CHAP Afrique (Abidjan/Libreville).
+      Analyse les données business pour O'CHAP Côte d'Ivoire (Abidjan).
       Données : 
       - Produits: ${JSON.stringify(products)}
       - Commandes: ${ordersCount} commandes récentes.
@@ -130,7 +130,7 @@ app.post('/api/ai/analytics', async (req, res) => {
       - globalHealth: "excellent" | "stable" | "critical"
       - profitAnalysis: string (analyse des marges)
       - topPerformingBrands: string[]
-      - seasonalInsights: string (conseils pour la saison actuelle en Afrique)
+      - seasonalInsights: string (conseils pour la saison actuelle en Afrique de l'Ouest)
       - stockAlerts: string[]
     `;
     const response = await ai.models.generateContent({

@@ -1,83 +1,126 @@
-# O'CHAP — Hub Intelligent d'Électroménager et Logistique
+# O'CHAP — Hub Intelligent d'Électroménager et Logistique (Côte d'Ivoire)
 
-Bienvenue sur le portail d'administration de la plateforme **O'CHAP**, la marketplace logistique et commerciale haut de gamme d'Afrique de l'Ouest et Centrale (Abidjan & Libreville), spécialisée dans le secteur de l'électroménager premium.
+Bienvenue sur le portail d'administration et d'exploitation de la plateforme **O'CHAP**, la marketplace logistique et commerciale premium de Côte d'Ivoire (Abidjan), spécialisée dans le secteur de l'électroménager de luxe et professionnel.
 
-Cette application est un système de gestion complet de bout en bout qui relie de manière fluide les administrateurs, les fournisseurs régionaux et les clients, en combinant des alertes de stock en temps réel avec des outils décisionnels propulsés par l'Intelligence Artificielle (Gemini API).
+Cette application est un système ERP et e-commerce complet de bout en bout qui relie de manière fluide les administrateurs de la centrale, les fournisseurs de matériel électroménager et les clients ivoiriens. Elle combine des alertes de stock en temps réel avec des outils décisionnels avancés propulsés par l'Intelligence Artificielle de Google (Gemini API).
 
 ---
 
 ## 🚀 Fonctionnalités Clés
 
-### 📦 Gestion Complète de l'Inventaire (Abidjan / Libreville)
-- **Suivi multicentrique** : Contrôle des niveaux de stock par zone géographique afin de prévenir les ruptures ou le surstockage.
-- **Seuils d'alerte configurables** : Définition de niveaux minimaux pour déclencher automatiquement des actions de réapprovisionnement.
-- **Calcul intelligent des marges** : Visualisation globale des taux de profitabilité des ventes par produit et catalogue.
+### 📦 Gestion Centralisée de l'Inventaire (Abidjan)
+- **Suivi d'entrepôt localisé** : Contrôle rigoureux et en temps réel des niveaux de stock basés à Abidjan afin de prévenir les ruptures et d'automatiser le réapprovisionnement.
+- **Seuils d'alarme configurables** : Personnalisation de seuils critiques de stock par article pour alerter instantanément les gestionnaires.
+- **Calculateur de rentabilité** : Visualisation globale et par produit des marges et des bénéfices générés pour optimiser la politique tarifaire.
 
-### 💼 Relations Clients & Fournisseurs (CRM/SRM)
-- **Double espace unifié** : Stockage enrichi des profils incluant des informations spécifiques telles que le solde des comptes partenaires, l'historique d'achat et le statut de fidélité.
-- **Gestion des rôles (Rbac)** : Droits hiérarchisés séparant les Super-Admins, Administrateurs de zone, Fournisseurs et Clients finaux.
+### 💼 CRM/SRM & Authentification Sécurisée
+- **Double espace utilisateur** : Stockage enrichi des profils incluant l'historique d'achat, les adresses de livraison à Abidjan et le statut de fidélité.
+- **Contrôle d'accès basé sur les rôles (RBAC)** : Permissions hiérarchisées protégeant les interfaces d'administration, de gestion de stock pour les fournisseurs et de commande pour les clients (rôles : `admin`, `manager_erp`, `fournisseur`, `livreur`, `client`).
 
-### 📊 Suivi Logistique et Commandes
-- **Gestion des états de commande** : Progression en temps réel de "Reçu" à "Livré", avec comptabilisation instantanée du chiffre d'affaires.
-- **Export Excel intégré** : Génération de tableaux de bord financiers et d'inventaire complets en un clic pour les audits physiques.
+### 📊 Suivi Logistique et Suivi des Commandes
+- **Workflow des commandes** : Transition transparente des transactions (Reçu, Préparé, Transit, Livré) avec mise à jour automatisée de la comptabilité interne et des niveaux de stock.
+- **Export de rapports financiers** : Génération de tableaux de bord financiers et opérationnels pour simplifier les inventaires physiques de fin de mois.
 
-### 🧠 Modules IA Intégrés (Gemini v3)
-Tous les traitements avec l'API Gemini sont sécurisés et proxyfiés sur un serveur Express backend :
-1. **Générateur Marketing de Description** : Crée instantanément des fiches produits optimisées, adaptées au marché d'Abidjan et Libreville en un clic.
-2. **Analyseur de Performance d'Inventaire** : Analyse les tendances de vente croisées avec les niveaux de stock actuels pour émettre des recommandations structurées en Markdown.
-3. **Moteur d'Idées de Campagne** : Génère des structures de campagnes multi-canaux (SMS, push, emailing) basées sur la situation actuelle du stock.
-4. **Tableau Analytics Avancé** : Synthétise la santé globale de l'entreprise (`excellent`, `stable`, `critical`), l'analyse des marges, les marques les plus porteuses et les tendances saisonnières africaines.
+### 🧠 Décisions Stratégiques Assistées par l'IA (Gemini v3)
+Tous les appels à l'intelligence artificielle sont sécurisés et proxyfiés au niveau du serveur Express backend pour ne jamais exposer d'informations sensibles au navigateur :
+1. **Générateur Marketing de Description** : Conçoit instantanément des fiches descriptives percutantes et adaptées aux spécificités et exigences du marché d'Abidjan.
+2. **Analyseur de Performance d'Inventaire** : Analyse les tendances de ventes consolidées avec les niveaux de stock actuels pour émettre des recommandations d'achats stratégiques.
+3. **Moteur d'Idées de Campagne** : Alerte sur les invendus et propose des idées de campagnes d'activation multicanaux (SMS, push, email).
+4. **Tableau Analytics Avancé** : Synthétise instantanément l'indice de santé de l'activité (`excellent`, `stable`, `critical`), détaille l'efficacité des marges, met en avant les marques les plus porteuses et formule des conseils saisonniers spécifiques à la Côte d'Ivoire.
 
 ---
 
 ## 📂 Structure du Projet
 
-L'architecture suit scrupuleusement les exigences des applications Angular hybrides modernes (Zoneless, SSR / Hydration, Express Middleware).
+L'architecture du projet respecte les normes de développement de pointe d'Angular v21 (Zoneless, Rendu SSR Hybride, Express Middleware) :
 
-```
-├── angular.json                     # Configuration de la CLI Angular et du compilateur dev-server
-├── package.json                     # Dépendances et scripts de démarrage (Ng v21, Firebase, Tailwind v4)
-├── tsconfig.json                    # Configuration générale de TypeScript
-├── tsconfig.app.json                # Options de compilation TypeScript spécifiques à l'application
-├── firebase-applet-config.json       # Identifiants de connexion et de base de données Firestore
-├── firestore.rules                  # Regles de sécurité Firestore pour l'isolation des données
+```text
+├── angular.json                     # Configuration de la CLI Angular et du build package
+├── package.json                     # Dépendances et scripts NPM (Angular 21+, Firebase, Tailwind v4)
+├── tsconfig.json                    # Configuration globale du compilateur TypeScript
+├── firebase-applet-config.json       # Identifiants de connexion à l'infrastructure Firestore
+├── firestore.rules                  # Règles de sécurité Firestore de production
 ├── src/
-│   ├── main.ts                      # Point d'entrée principal pour le bootstrap côté navigateur (SPA)
-│   ├── main.server.ts               # Point d'entrée pour le bootstrap côté serveur (SSR avec BootstrapContext)
-│   ├── server.ts                    # Serveur Express Node.js - Proxy local sécurisé pour Gemini API
-│   ├── styles.css                   # Feuilles de style globales et configuration de thèmes Tailwind v4
-│   ├── globals.d.ts                 # Déclarations des types globaux
-│   ├── index.html                   # Squelette web HTML principal contenant la balise hôte <app-root>
+│   ├── main.ts                      # Point d'entrée principal pour l'exécution côté client (Navigateur)
+│   ├── main.server.ts               # Point d'entrée pour l'exécution côté serveur (SSR avec BootstrapContext)
+│   ├── server.ts                    # Serveur d'API Express et intégration du rendu SSR (Port 3000)
+│   ├── styles.css                   # Styles globaux et variables de thème esthétiques Tailwind CSS v4
+│   ├── globals.d.ts                 # Déclarations globales de types
+│   ├── index.html                   # Squelette HTML principal
 │   └── app/
-│       ├── app.ts                   # Composant racine Angular ordonnant les routes et la mise en page
-│       ├── app.html                 # Template principal (structure d'entête globale et espace router-outlet)
-│       ├── app.css                  # Styles spécifiques de haut niveau
-│       ├── app.config.ts            # Configuration des providers côté client (Zoneless, Routing, Hydration)
-│       ├── app.config.server.ts     # Configuration des providers côté serveur (SSR)
-│       ├── app.routes.ts            # Définition des routes et de la navigation interne
+│       ├── app.ts                   # Composant racine de l'application
+│       ├── app.html                 # Gabarit HTML principal (barre de navigation, router-outlet)
+│       ├── app.config.ts            # Configuration des modules et services sur le client (Zoneless, Router)
+│       ├── app.config.server.ts     # Configuration de la couche de rendu sur le serveur
+│       ├── app.routes.ts            # Définition des écrans de l'application et sécurisation (guards)
 │       └── services/
-│           ├── auth.service.ts      # Gestion de l'état d'authentification utilisateur via Firebase Auth
-│           ├── data.service.ts      # Gestion des collections Firestore (Real-time snapshots en CSR, no-ops en SSR)
-│           └── firebase.ts          # Initialisation et configuration d'accès robuste de l'app Firebase
+│           ├── auth.service.ts      # Gestion de session et d'identité via Firebase Authentication
+│           ├── data.service.ts      # Gestion des collections et flux temps réel Firestore
+│           └── firebase.ts          # Module d'initialisation de Firebase avec correctifs SSR
 ```
 
 ---
 
-## 🔧 Technologies & Stack
+## 🌐 Exposition de l'API Backend
 
-- **Framework Front-end** : [Angular v21](https://angular.dev/) (Zoneless avec l'usage exclusif de Signals pour la réactivité, Control Flow `@if/@for`, Architecture Standalone).
-- **Moteur CSS** : [Tailwind CSS v4](https://tailwindcss.com/) (Syntaxe d'import moderne `@import "tailwindcss";`, gestion de thèmes typographiques native).
-- **Backend d'authentification et Stockage** : Firebase Firestore et Firebase Authentication (avec le mode d'interrogation Long-polling activé pour éliminer les déconnexions intempestives en sandboxing).
-- **Serveur API et Rendu SSR** : Express.js servant le rendu côté serveur (SSR) de manière transparente sur le port `3000` et encapsulant les clés privées (Gemini API Secret Key).
+Pour garantir une sécurité maximale (Zero Trust côté client), toutes les requêtes demandant une clé secrète transitent par le serveur Express s'exécutant sur le port **3000**.
+
+### Points d'Accès d'API Sécurisés (`/api/*`)
+
+1. **Génération de campagnes marketing** :
+   - **Route** : `POST /api/ai/marketing`
+   - **Corps de requête** :
+     ```json
+     {
+       "shortageCount": 2,
+       "promoCount": 5
+     }
+     ```
+   - **Réponse attendue** : Un tableau JSON contenant les objets de campagnes structurés :
+     ```json
+     [
+       {
+         "title": "Campagne...",
+         "subject": "...",
+         "message": "...",
+         "channel": "Email"
+       }
+     ]
+     ```
+
+2. **Génération d'analyses décisionnelles** :
+   - **Route** : `POST /api/ai/analytics`
+   - **Corps de requête** :
+     ```json
+     {
+       "products": [...],
+       "ordersCount": 12
+     }
+     ```
+   - **Réponse attendue** : Un rapport analytique structuré en JSON :
+     ```json
+     {
+       "globalHealth": "stable",
+       "profitAnalysis": "...",
+       "topPerformingBrands": ["Samsung", "LG"],
+       "seasonalInsights": "...",
+       "stockAlerts": [...]
+     }
+     ```
 
 ---
 
-## 🛠️ Configuration de l'environnement
+## ⚙️ Configuration Restreinte des Clés et Secrets
 
-Pour exécuter toutes les fonctionnalités intelligentes (recommandations d'inventaire, d'analytics et génération automatique de textes commerciaux) :
+### Variables d'Environnement (`.env.example`)
+La clé d'API Gemini n'est jamais exposée sur le réseau public ou injectée dans les fichiers statiques du navigateur.
 
-1. Déclarez votre variable dans le fichier d'environnement ou configurez-la dans les secrets de l'interface Google AI Studio :
-   ```env
-   GEMINI_API_KEY=votre_cle_gemini_active
-   ```
-2. Si la clé est absente, l'application s'initialisera automatiquement dans un mode **Démo sécurisé** pour préserver la stabilité globale de l'expérience et continuer de simuler parfaitement le comportement.
+```env
+# Clé d'API secrète de Google Gemini (gérée côté serveur de manière sécurisée)
+GEMINI_API_KEY=AIzaSy********************************
+
+# Identifiants de connexion Firebase (gérés de manière transparente)
+FIREBASE_CONFIG_PATH=firebase-applet-config.json
+```
+
+*Remarque : Si aucune clé `GEMINI_API_KEY` n'est configurée, l'API Express bascule automatiquement et de manière transparente sur un mode de démonstration robuste. Cela garantit que la plateforme reste entièrement fonctionnelle et opérationnelle pour les démonstrations de flux sans risque d'erreur ou d'arrêt.*

@@ -47,7 +47,7 @@ import { MatIconModule } from '@angular/material/icon';
               </div>
               <div>
                 <h3 class="text-sm font-black text-white uppercase tracking-wider mb-1">Livraison Rapide</h3>
-                <p class="text-[11px] text-muted font-bold">Partout au Gabon et en Côte d'Ivoire en 48h chrono.</p>
+                <p class="text-[11px] text-muted font-bold">Partout à Abidjan et dans toute la Côte d'Ivoire en 48h chrono.</p>
               </div>
             </div>
             
@@ -57,7 +57,7 @@ import { MatIconModule } from '@angular/material/icon';
               </div>
               <div>
                 <h3 class="text-sm font-black text-white uppercase tracking-wider mb-1">Support Local</h3>
-                <p class="text-[11px] text-muted font-bold">Une équipe basée à Libreville et Abidjan à votre écoute 24/7.</p>
+                <p class="text-[11px] text-muted font-bold">Une équipe à Abidjan à votre écoute 24/7 pour un service de proximité.</p>
               </div>
             </div>
           </div>

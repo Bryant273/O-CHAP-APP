@@ -69,7 +69,7 @@ import { FormsModule } from '@angular/forms';
                           </div>
                           <div>
                              <p class="text-xs font-bold text-white mb-1">Garantie Afrique</p>
-                             <p class="text-[10px] opacity-60 leading-relaxed font-medium">Réseau de techniciens agréés à Abidjan, Libreville et Lomé.</p>
+                             <p class="text-[10px] opacity-60 leading-relaxed font-medium">Réseau de techniciens agréés à Abidjan et dans toute la Côte d'Ivoire.</p>
                           </div>
                        </div>
                     </div>
