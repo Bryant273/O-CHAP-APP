@@ -8,23 +8,60 @@ import express from 'express';
 import {join} from 'node:path';
 import { GoogleGenAI, Type } from '@google/genai';
 
+// Guard against early window/DOM access during Server-Side Rendering (SSR)
+if (typeof global !== 'undefined') {
+  const safeGlobal = global as unknown as Record<string, unknown>;
+  if (!safeGlobal['window']) {
+    Object.defineProperty(safeGlobal, 'window', {
+      get() {
+        console.error("[SSR Guard Error] CRITICAL: Attempted to access 'window' during server-side bootstrap/rendering! Ensure all browser APIs are guarded with 'typeof window !== \"undefined\"'.");
+        return undefined;
+      },
+      configurable: true
+    });
+  }
+  if (!safeGlobal['document']) {
+    Object.defineProperty(safeGlobal, 'document', {
+      get() {
+        console.error("[SSR Guard Error] CRITICAL: Attempted to access 'document' during server-side bootstrap/rendering! DOM rendering is not supported on the server.");
+        return undefined;
+      },
+      configurable: true
+    });
+  }
+}
+
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
 const app = express();
 const angularApp = new AngularNodeAppEngine({ allowedHosts: ['*'] });
 
-// Lazy initialized Gemini client to prevent app crash on startup if key is missing/delayed
+// Safety middleware to verify SSR environment consistency and prevent DOM leak warnings
+app.use((req, res, next) => {
+  if (typeof window !== 'undefined') {
+    console.error("[SSR Middleware Alert] 'window' is defined in Node process context. Ensure no scripts contaminate process-wide scope.");
+  }
+  next();
+});
+
+// Lazy initialized Gemini client with Type-Checking and Fallback checks to prevent startup crash
 let aiClient: GoogleGenAI | null = null;
 function getAi() {
-  if (!aiClient) {
-    const apiKey = process.env['GEMINI_API_KEY'];
-    if (!apiKey) {
-      console.warn('GEMINI_API_KEY environment variable is not defined. AI endpoints will operate in demo mode.');
-      return null;
+  try {
+    if (!aiClient) {
+      const apiKey = process.env['GEMINI_API_KEY'];
+      if (!apiKey || typeof apiKey !== 'string' || apiKey.trim() === '') {
+        console.warn("[O'CHAP Server / AI Config] Warning: GEMINI_API_KEY environment variable is not defined or is an empty string. AI endpoints will run in demo/offline mode.");
+        return null;
+      }
+      aiClient = new GoogleGenAI({ apiKey });
+      console.log("[O'CHAP Server / AI Config] GoogleGenAI client successfully initialized.");
     }
-    aiClient = new GoogleGenAI({ apiKey });
+    return aiClient;
+  } catch (error) {
+    console.error("[O'CHAP Server / AI Config] Exception during Gemini SDK initialization:", error);
+    return null;
   }
-  return aiClient;
 }
 
 // REST API Endpoints with JSON payload parsing
