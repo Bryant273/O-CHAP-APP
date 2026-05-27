@@ -166,7 +166,6 @@ import { Unsubscribe } from 'firebase/firestore';
 
                 <div class="col-span-2">
                   <h4 class="text-[10px] font-black text-[#5a5e72] uppercase tracking-widest block mb-4 ml-1">Visuel du produit</h4>
-                  
                   <div class="flex items-start gap-4">
                     <input type="file" #fileInput (change)="onFileSelected($event)" accept="image/png, image/jpeg, image/jpg" class="hidden">
                     <button type="button" class="w-32 h-32 rounded-[2rem] bg-[#fcfcfd] border-2 border-dashed border-[#e4e6ea] flex flex-col items-center justify-center overflow-hidden shrink-0 group relative cursor-pointer hover:border-primary transition-all p-0" (click)="fileInput.click()">
@@ -181,14 +180,51 @@ import { Unsubscribe } from 'firebase/firestore';
                       }
                     </button>
 
-                    <div class="flex-1 space-y-4">
+                    <div class="flex-1 space-y-3">
                       <div class="relative">
                         <mat-icon class="absolute left-4 top-1/2 -translate-y-1/2 scale-75 text-[#9699a8]">link</mat-icon>
                         <input id="p-imgurl" type="text" [(ngModel)]="form.imageUrl" name="imageUrl" aria-label="URL de l'image"
                                class="w-full h-11 bg-[#fcfcfd] border border-[#e4e6ea] rounded-xl pl-11 pr-4 text-[10px] font-medium focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none transition-all" placeholder="URL ou image importée">
                       </div>
+                      
+                      <!-- Image Compression Controls -->
+                      <div class="space-y-2">
+                         <div class="h-11 bg-slate-50 border border-slate-100 rounded-xl px-4 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                               <input type="checkbox" id="auto-compress-chk" 
+                                      [checked]="autoCompress()" 
+                                      (change)="autoCompress.set(!autoCompress())" 
+                                      class="accent-primary rounded cursor-pointer w-4 h-4">
+                               <label for="auto-compress-chk" class="text-[9px] font-black uppercase text-[#0D1B2A] tracking-wider cursor-pointer select-none">Compression automatique</label>
+                            </div>
+                            
+                            @if (originalSizeKB() > 0) {
+                               <div class="text-[9px] font-black text-slate-500 flex items-center gap-2 uppercase">
+                                  <span>{{ originalSizeKB() }} KB</span>
+                                  @if (compressedSizeKB() > 0) {
+                                     <mat-icon class="scale-50 text-emerald-500">arrow_forward</mat-icon>
+                                     <span class="text-emerald-600 font-bold">{{ compressedSizeKB() }} KB</span>
+                                  }
+                               </div>
+                            }
+                         </div>
+
+                         @if (form.imageUrl && form.imageUrl.startsWith('data:image') && !autoCompress()) {
+                            <button type="button" (click)="triggerManualCompression()" [disabled]="isCompressing()"
+                                    class="w-full h-9 bg-orange-50 text-[#FF6200] border border-orange-100 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-orange-100 transition-all cursor-pointer">
+                               @if (isCompressing()) {
+                                  <div class="w-3.5 h-3.5 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+                                  <span>Compression...</span>
+                               } @else {
+                                  <mat-icon class="scale-75">photo_size_select_large</mat-icon>
+                                  <span>Compresser l'image maintenant</span>
+                               }
+                            </button>
+                         }
+                      </div>
+
                       <p class="text-[9px] text-[#9699a8] font-medium px-1 leading-relaxed italic">
-                        Glissez-déposez ou cliquez sur le cadre pour importer vos photos (PNG, JPG). L'image est stockée localement pour un affichage instantané.
+                        Glissez-déposez ou cliquez sur le cadre pour importer vos photos (PNG, JPG). Le compresseur réduit la taille pour le stockage Firebase.
                       </p>
                     </div>
                   </div>
@@ -296,15 +332,95 @@ export class SupplierProducts implements OnInit, OnDestroy {
     this.showModal.set(false);
   }
 
+  autoCompress = signal<boolean>(true);
+  isCompressing = signal<boolean>(false);
+  originalSizeKB = signal<number>(0);
+  compressedSizeKB = signal<number>(0);
+
+  compressImage(base64Str: string): Promise<string> {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = base64Str;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(base64Str);
+          return;
+        }
+
+        const MAX_WIDTH = 800;
+        const MAX_HEIGHT = 800;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.6));
+      };
+      img.onerror = () => {
+        resolve(base64Str);
+      };
+    });
+  }
+
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (file) {
+      this.originalSizeKB.set(Math.round(file.size / 1024));
       const reader = new FileReader();
-      reader.onload = (e: ProgressEvent<FileReader>) => {
-        this.form.imageUrl = e.target?.result as string;
+      reader.onload = async (e: ProgressEvent<FileReader>) => {
+        const rawBase64 = e.target?.result as string;
+        if (this.autoCompress()) {
+          this.isCompressing.set(true);
+          try {
+            const compressed = await this.compressImage(rawBase64);
+            this.form.imageUrl = compressed;
+            const head = 'data:image/jpeg;base64,'.length;
+            const sizeInBytes = (compressed.length - head) * 0.75;
+            this.compressedSizeKB.set(Math.round(sizeInBytes / 1024));
+          } catch (err) {
+            console.error('Compression error:', err);
+            this.form.imageUrl = rawBase64;
+          } finally {
+            this.isCompressing.set(false);
+          }
+        } else {
+          this.form.imageUrl = rawBase64;
+          this.compressedSizeKB.set(0);
+        }
       };
       reader.readAsDataURL(file);
+    }
+  }
+
+  async triggerManualCompression() {
+    if (!this.form.imageUrl || !this.form.imageUrl.startsWith('data:image')) return;
+    this.isCompressing.set(true);
+    try {
+      const compressed = await this.compressImage(this.form.imageUrl);
+      this.form.imageUrl = compressed;
+      const head = 'data:image/jpeg;base64,'.length;
+      const sizeInBytes = (compressed.length - head) * 0.75;
+      this.compressedSizeKB.set(Math.round(sizeInBytes / 1024));
+    } catch (err) {
+       console.error('Manual Compression error:', err);
+    } finally {
+       this.isCompressing.set(false);
     }
   }
 

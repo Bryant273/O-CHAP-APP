@@ -129,6 +129,25 @@ export interface OchapZone {
   [key: string]: unknown;
 }
 
+export interface OchapSavRequest {
+  id: string;
+  orderId: string;
+  productId: string;
+  productName: string;
+  type: string;
+  description: string;
+  status: string;
+  customerUid: string;
+  createdAt: unknown;
+  updatedAt?: unknown;
+  aiAnalysis?: {
+    severity: string;
+    summary: string;
+    probableCauses: string[];
+    recommendations: string[];
+  };
+}
+
 export interface OchapNotification {
   id: string;
   type: string;
@@ -150,6 +169,7 @@ export class DataService {
   private zones = signal<OchapZone[]>([]);
   private notifications = signal<OchapNotification[]>([]);
   private categories = signal<{id: string, name: string}[]>([]);
+  private savRequests = signal<OchapSavRequest[]>([]);
   
   public products$ = this.products.asReadonly();
   public orders$ = this.orders.asReadonly();
@@ -157,6 +177,7 @@ export class DataService {
   public zones$ = this.zones.asReadonly();
   public notifications$ = this.notifications.asReadonly();
   public categories$ = this.categories.asReadonly();
+  public savRequests$ = this.savRequests.asReadonly();
 
   public formatAmount(val: number | string | unknown): string {
     const n = Math.round(Number(val) || 0);
@@ -996,6 +1017,39 @@ export class DataService {
       return true;
     } catch (e) {
       console.error('SAV Error:', e);
+      return false;
+    }
+  }
+
+  watchAllSavRequests() {
+    if (!this.isBrowser) return this.noop;
+    const path = 'sav_requests';
+    return onSnapshot(collection(db, path), (snapshot) => {
+      const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as OchapSavRequest));
+      docs.sort((a, b) => {
+        const dateA = (a.createdAt as { toDate?: () => Date; seconds?: number })?.toDate?.()?.getTime() || 
+                      ((a.createdAt as { seconds?: number })?.seconds ? (a.createdAt as { seconds: number }).seconds * 1000 : 0) || 
+                      (typeof a.createdAt === 'string' || typeof a.createdAt === 'number' || a.createdAt instanceof Date ? new Date(a.createdAt as string | number | Date).getTime() : 0);
+        const dateB = (b.createdAt as { toDate?: () => Date; seconds?: number })?.toDate?.()?.getTime() || 
+                      ((b.createdAt as { seconds?: number })?.seconds ? (b.createdAt as { seconds: number }).seconds * 1000 : 0) || 
+                      (typeof b.createdAt === 'string' || typeof b.createdAt === 'number' || b.createdAt instanceof Date ? new Date(b.createdAt as string | number | Date).getTime() : 0);
+        return dateB - dateA;
+      });
+      this.savRequests.set(docs);
+    }, (error) => this.handleFirestoreError(error, OperationType.LIST, path));
+  }
+
+  async updateSavRequestStatus(requestId: string, status: string) {
+    const path = `sav_requests/${requestId}`;
+    try {
+      const reqRef = doc(db, 'sav_requests', requestId);
+      await updateDoc(reqRef, {
+        status: status,
+        updatedAt: serverTimestamp()
+      });
+      return true;
+    } catch (error: unknown) {
+      this.handleFirestoreError(error, OperationType.UPDATE, path);
       return false;
     }
   }

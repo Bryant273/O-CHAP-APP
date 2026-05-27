@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject, signal, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../services/auth.service';
+import { DataService } from '../../services/data.service';
 import { FormsModule } from '@angular/forms';
 
 interface Address {
@@ -94,6 +95,12 @@ interface Address {
                   [class.border-primary]="activeTab() === 'billing'"
                   class="py-4 px-2 border-b-2 border-transparent text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap cursor-pointer">
             Coordonnées
+          </button>
+          <button (click)="activeTab.set('sav')" 
+                  [class.text-primary]="activeTab() === 'sav'"
+                  [class.border-primary]="activeTab() === 'sav'"
+                  class="py-4 px-2 border-b-2 border-transparent text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap cursor-pointer">
+            Mes Réclamations
           </button>
         </div>
 
@@ -312,6 +319,110 @@ interface Address {
               }
             </div>
           }
+
+          @if (activeTab() === 'sav') {
+            <div class="space-y-6">
+              <div class="bg-white border border-surface-2 rounded-3xl p-8">
+                <div class="flex items-center justify-between mb-8">
+                  <div>
+                    <h3 class="text-[10px] font-black uppercase text-muted tracking-widest">Mes Demandes de SAV</h3>
+                    <p class="text-[10px] text-muted font-normal mt-1">Suivez l'état de vos réclamations et diagnostics techniques O'CHAP en temps réel.</p>
+                  </div>
+                  <button routerLink="/sav-garanties" class="bg-dark text-white hover:bg-primary px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-lg shadow-dark/10 transition-all cursor-pointer">
+                    <mat-icon class="scale-50">add_circle_outline</mat-icon> Nouvelle demande
+                  </button>
+                </div>
+
+                <div class="space-y-6">
+                  @for (req of mySavRequests(); track req.id) {
+                    <div class="p-6 border border-surface-2 rounded-2xl hover:border-primary/20 hover:shadow-xl hover:shadow-black/[0.01] transition-all bg-surface-1">
+                      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-surface-2/60">
+                        <div class="flex items-center gap-3">
+                          <div class="w-10 h-10 rounded-xl bg-white border border-surface-2 flex items-center justify-center text-dark font-mono text-[9px] font-black shadow-sm uppercase font-display">#{{ req.id.slice(-6).toUpperCase() }}</div>
+                          <div>
+                            <h4 class="text-xs font-black text-dark uppercase">{{ req.productName }}</h4>
+                            <p class="text-[9px] font-bold text-muted mt-0.5">Type : <span class="uppercase text-primary">{{ req.type }}</span> • Demandée le {{ formatDate(req.createdAt) }}</p>
+                          </div>
+                        </div>
+                        <div>
+                          @if (req.status === 'resolved') {
+                            <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[8px] font-black uppercase tracking-widest border border-emerald-100">
+                              ● RÉSOLU
+                            </span>
+                          } @else {
+                            <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-50 text-amber-600 text-[8px] font-black uppercase tracking-widest border border-amber-100 animate-pulse">
+                              ● EN COURS
+                            </span>
+                          }
+                        </div>
+                      </div>
+
+                      <div class="py-4">
+                        <p class="text-[11px] text-[#0D1B2A] font-semibold italic leading-relaxed">
+                          "{{ req.description }}"
+                        </p>
+                      </div>
+
+                      @if (req.aiAnalysis) {
+                        <div class="mt-2 p-5 bg-white rounded-xl border border-surface-2/60 space-y-4">
+                          <div class="flex items-center gap-2">
+                            <mat-icon class="text-primary scale-75">psychology</mat-icon>
+                            <span class="text-[9px] font-black text-dark uppercase tracking-widest">Analyse Intelligente O'CHAP</span>
+                            <span class="ml-auto text-[8px] font-black px-2 py-0.5 rounded-md uppercase"
+                                  [class.bg-red-50]="req.aiAnalysis.severity === 'Critique' || req.aiAnalysis.severity === 'Haute'"
+                                  [class.text-red-600]="req.aiAnalysis.severity === 'Critique' || req.aiAnalysis.severity === 'Haute'"
+                                  [class.bg-orange-50]="req.aiAnalysis.severity === 'Moyenne'"
+                                  [class.text-orange-600]="req.aiAnalysis.severity === 'Moyenne'"
+                                  [class.bg-emerald-50]="req.aiAnalysis.severity === 'Faible'"
+                                  [class.text-emerald-600]="req.aiAnalysis.severity === 'Faible'">
+                              Gravité : {{ req.aiAnalysis.severity }}
+                            </span>
+                          </div>
+
+                          <div class="space-y-3">
+                            <div>
+                              <p class="text-[9px] font-black uppercase text-muted tracking-wider">Résumé technique :</p>
+                              <p class="text-[10px] font-semibold text-dark mt-0.5">{{ req.aiAnalysis.summary }}</p>
+                            </div>
+
+                            @if (req.aiAnalysis.probableCauses && req.aiAnalysis.probableCauses.length > 0) {
+                              <div>
+                                <p class="text-[9px] font-black uppercase text-muted tracking-wider">Causes Probables estimées :</p>
+                                <ul class="list-disc pl-4 text-[10px] text-dark/70 font-medium mt-1 space-y-0.5">
+                                  @for (cause of req.aiAnalysis.probableCauses; track cause) {
+                                    <li>{{ cause }}</li>
+                                  }
+                                </ul>
+                              </div>
+                            }
+
+                            @if (req.aiAnalysis.recommendations && req.aiAnalysis.recommendations.length > 0) {
+                              <div class="p-3 bg-slate-50 rounded-lg border border-slate-100">
+                                <p class="text-[9px] font-black uppercase text-amber-600 tracking-wider flex items-center gap-1">
+                                  <mat-icon class="scale-[0.6]">warning</mat-icon> Recommandations de sécurité & Auto-dépannage :
+                                </p>
+                                <ul class="list-disc pl-4 text-[10px] text-dark/70 font-medium mt-1.5 space-y-1">
+                                  @for (rec of req.aiAnalysis.recommendations; track rec) {
+                                    <li>{{ rec }}</li>
+                                  }
+                                </ul>
+                              </div>
+                            }
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  } @empty {
+                    <div class="py-16 text-center border-2 border-dashed border-surface-2 rounded-2xl bg-surface-1">
+                      <mat-icon class="scale-125 text-muted mb-3">contact_support</mat-icon>
+                      <h4 class="text-xs font-black text-[#0d1b2a] uppercase tracking-wide">Aucun ticket de réclamation</h4>
+                      <p class="text-[10px] text-muted mt-1 leading-normal">Vous n'avez pas soumis de réclamation de garantie ou d'assistance pour le moment.</p>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          }
         </div>
 
         <div class="mt-12 flex justify-end gap-4">
@@ -331,10 +442,12 @@ interface Address {
     .animate-fade-up { animation: fade-up 0.5s ease-out; }
   `]
 })
-export class ProfileComponent {
+export class ProfileComponent implements OnInit, OnDestroy {
   public authService = inject(AuthService);
+  private dataService = inject(DataService);
   private router = inject(Router);
   activeTab = signal<string>('general');
+  private unsubSavRequests?: () => void;
 
   // Address signals
   addresses = computed<Address[]>(() => {
@@ -342,11 +455,37 @@ export class ProfileComponent {
     return (p?.['addresses'] as Address[]) || [];
   });
 
+  mySavRequests = computed(() => {
+    const user = this.authService.user$();
+    if (!user) return [];
+    return this.dataService.savRequests$().filter(r => r.customerUid === user.uid);
+  });
+
   showAddForm = signal(false);
   newAddressLabel = '';
   newAddressStreet = '';
   newAddressCity = '';
   newAddressPhone = '';
+
+  ngOnInit() {
+    this.unsubSavRequests = this.dataService.watchAllSavRequests();
+  }
+
+  ngOnDestroy() {
+    if (this.unsubSavRequests) {
+      this.unsubSavRequests();
+    }
+  }
+
+  formatDate(timestamp: unknown): string {
+    if (!timestamp) return '...';
+    try {
+      const date = timestamp && typeof timestamp === 'object' && 'toDate' in timestamp
+        ? (timestamp as { toDate: () => Date }).toDate()
+        : new Date(timestamp as string | number | Date);
+      return new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(date);
+    } catch { return '...'; }
+  }
 
   async addAddress() {
     if (!this.newAddressLabel || !this.newAddressStreet || !this.newAddressCity) {

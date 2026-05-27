@@ -5,11 +5,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../services/auth.service';
 import { DataService, OchapOrder, OchapOrderItem } from '../../services/data.service';
 import { FormsModule } from '@angular/forms';
+import { SavFaqComponent } from '../after-sales/sav-faq';
 
 @Component({
   selector: 'app-sav-garanties',
   standalone: true,
-  imports: [CommonModule, RouterLink, MatIconModule, FormsModule],
+  imports: [CommonModule, RouterLink, MatIconModule, FormsModule, SavFaqComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="min-h-screen bg-surface font-sans pb-20">
@@ -76,7 +77,9 @@ import { FormsModule } from '@angular/forms';
                  </div>
               </div>
 
-              <div class="bg-white rounded-[2rem] border border-surface-2 p-8 shadow-sm">
+              <app-sav-faq></app-sav-faq>
+
+               <div class="bg-white rounded-[2rem] border border-surface-2 p-8 shadow-sm">
                  <h4 class="text-[10px] font-black uppercase text-muted tracking-widest mb-4">Besoin d'aide immédiate?</h4>
                  <p class="text-xs font-medium text-dark/70 mb-6 leading-relaxed">Nos conseillers SAV sont disponibles par téléphone 7j/7 pour vous guider dans votre diagnostic.</p>
                  <a href="tel:+22501020304" class="inline-flex items-center gap-3 text-primary text-xs font-black uppercase tracking-widest hover:opacity-70 transition-opacity">

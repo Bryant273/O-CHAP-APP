@@ -5,11 +5,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../services/auth.service';
 import { DataService, OchapOrder, OchapOrderItem } from '../../services/data.service';
 import { FormsModule } from '@angular/forms';
+import { SavFaqComponent } from './sav-faq';
 
 @Component({
   selector: 'app-sav-garanties',
   standalone: true,
-  imports: [CommonModule, RouterLink, MatIconModule, FormsModule],
+  imports: [CommonModule, RouterLink, MatIconModule, FormsModule, SavFaqComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="min-h-screen bg-surface font-sans pb-20">
@@ -76,33 +77,7 @@ import { FormsModule } from '@angular/forms';
                  </div>
               </div>
 
-<!-- FAQ Garanties Component -->
-               <div class="bg-white rounded-[2rem] border border-surface-2 p-8 shadow-sm space-y-6 mb-8 animate-fade-up">
-                  <div>
-                     <h3 class="text-lg font-black text-dark tracking-tight">Questions Fréquentes</h3>
-                     <p class="text-[9px] font-bold text-muted uppercase tracking-widest mt-1">Tout savoir sur vos garanties O'CHAP</p>
-                  </div>
-
-                  <div class="space-y-3">
-                     @for (item of faqs(); track item.question; let i = $index) {
-                        <div class="border-b border-surface-2 last:border-b-0 pb-3 last:pb-0">
-                           <button (click)="toggleFaq(i)" class="w-full flex items-center justify-between py-2 text-left text-xs font-bold text-dark hover:text-primary transition-all duration-300">
-                              <span class="pr-4 leading-tight font-sans hover:text-primary">{{ item.question }}</span>
-                              <mat-icon class="text-muted transition-transform duration-300 pointer-events-none" [class.rotate-180]="expandedFaq() === i">expand_more</mat-icon>
-                           </button>
-                           
-                           <div class="grid transition-all duration-300 ease-in-out" 
-                                [style.grid-template-rows]="expandedFaq() === i ? '1fr' : '0fr'">
-                              <div class="overflow-hidden">
-                                 <p class="text-[10px] text-muted leading-relaxed font-semibold mt-2 pb-2">
-                                    {{ item.answer }}
-                                 </p>
-                              </div>
-                           </div>
-                        </div>
-                     }
-                  </div>
-               </div>
+               <app-sav-faq></app-sav-faq>
 
                <div class="bg-white rounded-[2rem] border border-surface-2 p-8 shadow-sm">
                   <h4 class="text-[10px] font-black uppercase text-muted tracking-widest mb-4">Besoin d'aide immédiate?</h4>
@@ -180,56 +155,147 @@ import { FormsModule } from '@angular/forms';
         </div>
       </main>
 
-      <!-- Return Request Modal -->
-      @if (activeRequest(); as req) {
-         <div class="fixed inset-0 z-[1000] flex items-center justify-center p-6">
-            <div class="absolute inset-0 bg-dark/60 backdrop-blur-sm" (click)="activeRequest.set(null)" (keydown.escape)="activeRequest.set(null)" role="button" tabindex="0" aria-label="Fermer le dialogue"></div>
-            <div class="relative bg-white w-full max-w-xl rounded-[3rem] shadow-2xl border border-surface-2 overflow-hidden animate-fade-up-short">
-               <div class="p-10 border-b border-surface-2 bg-surface-3">
-                  <h3 class="text-2xl font-display font-black text-dark tracking-tight mb-2">Formulaire de <span class="text-primary italic">Réclamation.</span></h3>
-                  <p class="text-[10px] font-black text-muted uppercase tracking-widest">Notre équipe technique analysera votre demande sous 24h.</p>
-               </div>
-               
-               <div class="p-10 space-y-8">
-                  <div class="flex items-center gap-6 p-4 bg-surface rounded-3xl border border-surface-2">
-                     <div class="w-16 h-16 rounded-2xl overflow-hidden shadow-sm shrink-0">
-                        <img [src]="req.item.imageUrl" alt="" class="w-full h-full object-cover">
-                     </div>
-                     <div>
-                        <h4 class="text-xs font-black text-dark uppercase">{{ req.item.name }}</h4>
-                        <p class="text-[10px] font-bold text-muted mt-1 uppercase tracking-widest">Commande #{{ req.orderId.slice(-8) }}</p>
-                     </div>
-                  </div>
+       <!-- Return Request Modal -->
+       @if (activeRequest(); as req) {
+          <div class="fixed inset-0 z-[1000] flex items-center justify-center p-6">
+             <div class="absolute inset-0 bg-dark/60 backdrop-blur-sm" (click)="closeModal()" (keydown.escape)="closeModal()" role="button" tabindex="0" aria-label="Fermer le dialogue"></div>
+             <div class="relative bg-white w-full max-w-xl rounded-[3rem] shadow-2xl border border-surface-2 overflow-hidden animate-fade-up-short">
+                <div class="p-10 border-b border-surface-2 bg-surface-3">
+                   <h3 class="text-2xl font-display font-black text-dark tracking-tight mb-2">Formulaire de <span class="text-primary italic">Réclamation.</span></h3>
+                   <p class="text-[10px] font-black text-muted uppercase tracking-widest">Analyse prédictive intelligente O'CHAP par Gemini</p>
+                </div>
+                
+                @if (isAnalyzing()) {
+                   <!-- Analyzing State Display -->
+                   <div class="p-12 flex flex-col items-center justify-center text-center space-y-6">
+                      <div class="relative w-20 h-20">
+                         <div class="absolute inset-0 rounded-full border-4 border-primary/20 animate-pulse"></div>
+                         <div class="absolute inset-x-0 top-0 h-20 w-20 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+                         <div class="absolute inset-0 flex items-center justify-center text-primary">
+                            <mat-icon class="scale-125 animate-bounce">psychology</mat-icon>
+                         </div>
+                      </div>
+                      <div>
+                         <h4 class="text-sm font-black text-dark uppercase tracking-wide">Analyse intelligente en cours...</h4>
+                         <p class="text-[11px] text-muted font-medium max-w-xs mx-auto mt-2 leading-relaxed">
+                            Gemini diagnostique votre description SAV et formule des recommandations de dépannage personnalisées.
+                         </p>
+                      </div>
+                   </div>
+                } @else if (analysisResult(); as analysis) {
+                   <!-- AI Result Display -->
+                   <div class="p-10 space-y-6 max-h-[400px] overflow-y-auto no-scrollbar">
+                      <div class="p-5 bg-primary/5 rounded-3xl border border-primary/10 space-y-4">
+                         <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                               <mat-icon class="scale-75">psychology</mat-icon>
+                            </div>
+                            <div>
+                               <h4 class="text-xs font-black text-dark uppercase tracking-widest">Diagnostic Assistant IA</h4>
+                               <p class="text-[9px] text-muted font-bold mt-0.5">Analyse préliminaire instantanée</p>
+                            </div>
+                            <span class="ml-auto text-[8px] font-black px-3 py-1 rounded-full uppercase border"
+                                  [class.bg-red-50]="analysis.severity === 'Critique' || analysis.severity === 'Haute'"
+                                  [class.text-red-600]="analysis.severity === 'Critique' || analysis.severity === 'Haute'"
+                                  [class.border-red-100]="analysis.severity === 'Critique' || analysis.severity === 'Haute'"
+                                  [class.bg-orange-50]="analysis.severity === 'Moyenne'"
+                                  [class.text-orange-600]="analysis.severity === 'Moyenne'"
+                                  [class.border-orange-100]="analysis.severity === 'Moyenne'"
+                                  [class.bg-emerald-50]="analysis.severity === 'Faible'"
+                                  [class.text-emerald-600]="analysis.severity === 'Faible'"
+                                  [class.border-emerald-100]="analysis.severity === 'Faible'">
+                               {{ analysis.severity }}
+                            </span>
+                         </div>
 
-                  <div class="space-y-4">
-                     <div class="space-y-2">
-                        <label for="requestTypeSelect" class="text-[10px] font-black text-dark uppercase ml-1">Type de requête</label>
-                        <select id="requestTypeSelect" [(ngModel)]="requestType" class="w-full h-14 bg-surface border border-surface-2 rounded-2xl px-6 text-xs font-bold outline-none focus:border-primary transition-all appearance-none cursor-pointer">
-                           <option value="repair">Réparation sous garantie</option>
-                           <option value="return">Retour & Remboursement (14 jours)</option>
-                           <option value="technical">Diagnostic technique</option>
-                           <option value="missing">Éléments manquants</option>
-                        </select>
-                     </div>
+                         <div class="pt-2 space-y-3.5 border-t border-primary/10">
+                            <div>
+                               <p class="text-[9px] font-black uppercase text-muted tracking-wide">Nature estimée de la panne :</p>
+                               <p class="text-[11px] font-bold text-dark mt-1 italic leading-relaxed">"{{ analysis.summary }}"</p>
+                            </div>
 
-                     <div class="space-y-2">
-                        <label for="requestDescText" class="text-[10px] font-black text-dark uppercase ml-1">Description détaillée du problème</label>
-                        <textarea id="requestDescText" [(ngModel)]="requestDesc" placeholder="Soyez le plus précis possible pour accélérer le traitement..." 
-                                  class="w-full h-40 bg-surface border border-surface-2 rounded-3xl p-6 text-xs font-bold outline-none focus:border-primary transition-all resize-none"></textarea>
-                     </div>
-                  </div>
-               </div>
+                            @if (analysis.probableCauses && analysis.probableCauses.length > 0) {
+                               <div>
+                                  <p class="text-[9px] font-black uppercase text-muted tracking-wide">Causes probables :</p>
+                                  <ul class="list-disc pl-4 text-[10px] text-dark/80 font-semibold mt-1 space-y-1">
+                                     @for (cause of analysis.probableCauses; track cause) {
+                                        <li>{{ cause }}</li>
+                                     }
+                                  </ul>
+                               </div>
+                            }
 
-               <div class="p-10 border-t border-surface-2 bg-surface-3 flex gap-4">
-                  <button (click)="activeRequest.set(null)" class="flex-1 h-14 border-2 border-surface-2 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all">Annuler</button>
-                  <button (click)="submitRequest()" [disabled]="!requestDesc"
-                          class="flex-[2] h-14 bg-primary text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/20 hover:bg-navy transition-all active:scale-95 disabled:opacity-50">
-                     Soumettre la demande
-                  </button>
-               </div>
-            </div>
-         </div>
-      }
+                            @if (analysis.recommendations && analysis.recommendations.length > 0) {
+                               <div class="p-4 bg-white rounded-2xl border border-primary/10">
+                                  <p class="text-[9px] font-black uppercase text-amber-600 tracking-wider flex items-center gap-1">
+                                     <mat-icon class="scale-50">gavel</mat-icon> Conseils de Sécurité & d'Auto-Dépannage :
+                                  </p>
+                                  <ul class="list-disc pl-4 text-[10px] text-dark/70 font-semibold mt-1.5 space-y-1">
+                                     @for (rec of analysis.recommendations; track rec) {
+                                        <li>{{ rec }}</li>
+                                     }
+                                  </ul>
+                               </div>
+                            }
+                         </div>
+                      </div>
+
+                      <p class="text-[10px] text-muted text-center font-bold px-2">
+                         Souhaitez-vous tout de même soumettre officiellement le ticket à nos techniciens de support SAV ?
+                      </p>
+                   </div>
+
+                   <div class="p-10 border-t border-surface-2 bg-surface-3 flex gap-4">
+                      <button (click)="analysisResult.set(null)" class="flex-1 h-14 border-2 border-surface-2 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all">Retour</button>
+                      <button (click)="finalizeSubmit()"
+                              class="flex-[2] h-14 bg-primary text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/20 hover:bg-navy transition-all active:scale-95">
+                         Confirmer & Soumettre
+                      </button>
+                   </div>
+                } @else {
+                   <!-- Standard Input Form -->
+                   <div class="p-10 space-y-8">
+                      <div class="flex items-center gap-6 p-4 bg-surface rounded-3xl border border-surface-2">
+                         <div class="w-16 h-16 rounded-2xl overflow-hidden shadow-sm shrink-0">
+                            <img [src]="req.item.imageUrl" alt="" class="w-full h-full object-cover">
+                         </div>
+                         <div>
+                            <h4 class="text-xs font-black text-dark uppercase">{{ req.item.name }}</h4>
+                            <p class="text-[10px] font-bold text-muted mt-1 uppercase tracking-widest">Commande #{{ req.orderId.slice(-8) }}</p>
+                         </div>
+                      </div>
+
+                      <div class="space-y-4">
+                         <div class="space-y-2">
+                            <label for="requestTypeSelect" class="text-[10px] font-black text-dark uppercase ml-1">Type de requête</label>
+                            <select id="requestTypeSelect" [(ngModel)]="requestType" class="w-full h-14 bg-surface border border-surface-2 rounded-2xl px-6 text-xs font-bold outline-none focus:border-primary transition-all appearance-none cursor-pointer">
+                               <option value="repair">Réparation sous garantie</option>
+                               <option value="return">Retour & Remboursement (14 jours)</option>
+                               <option value="technical">Diagnostic technique</option>
+                               <option value="missing">Éléments manquants</option>
+                            </select>
+                         </div>
+
+                         <div class="space-y-2">
+                            <label for="requestDescText" class="text-[10px] font-black text-dark uppercase ml-1">Description détaillée du problème</label>
+                            <textarea id="requestDescText" [(ngModel)]="requestDesc" placeholder="Soyez le plus précis possible pour accélérer le traitement..." 
+                                      class="w-full h-40 bg-surface border border-surface-2 rounded-3xl p-6 text-xs font-bold outline-none focus:border-primary transition-all resize-none"></textarea>
+                         </div>
+                      </div>
+                   </div>
+
+                   <div class="p-10 border-t border-surface-2 bg-surface-3 flex gap-4">
+                      <button (click)="closeModal()" class="flex-1 h-14 border-2 border-surface-2 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all">Annuler</button>
+                      <button (click)="startAnalysis()" [disabled]="!requestDesc"
+                              class="flex-[2] h-14 bg-dark text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl hover:bg-primary transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2">
+                         <mat-icon class="scale-75">psychology</mat-icon>
+                         Analyser et Poursuivre
+                      </button>
+                   </div>
+                }
+             </div>
+          </div>
+       }
 
       <!-- SUCCESS TOAST -->
       @if (showSuccessToast()) {
@@ -284,40 +350,20 @@ export class SavGarantiesComponent implements OnInit {
     return (this.dataService.orders$() as OchapOrder[]).filter(o => o.status !== 'cancelled');
   });
 
-  activeRequest = signal<{ orderId: string; item: OchapOrderItem } | null>(null);
+   activeRequest = signal<{ orderId: string; item: OchapOrderItem } | null>(null);
   requestType = 'repair';
   requestDesc = '';
   showSuccessToast = signal(false);
   showErrorToast = signal(false);
 
-  expandedFaq = signal<number | null>(null);
-  
-  faqs = signal([
-    {
-      question: "Quelle est la durée de la garantie ?",
-      answer: "La garantie constructeur O'CHAP est de 24 mois (2 ans) minimum sur tous nos produits neufs commandés sur notre boutique."
-    },
-    {
-      question: "Que couvre exactement la garantie ?",
-      answer: "La garantie couvre les pannes d'origine électrique, électronique ou mécanique, ainsi que les pièces de rechange et la main-d'œuvre nécessaires certifiées par nos techniciens."
-    },
-    {
-      question: "Comment se passe l'intervention SAV à Abidjan ?",
-      answer: "Pour le gros électroménager, un technicien O'CHAP se déplace directement à votre domicile sous 72h ouvrées sans frais de transport pour effectuer le diagnostic."
-    },
-    {
-      question: "Puis-je retourner un appareil qui ne me convient pas ?",
-      answer: "Oui, vous disposez de 14 jours d'essai à compter du jour de la réception pour retourner un article dans son emballage d'origine scellé et obtenir un remboursement intégral."
-    },
-    {
-      question: "Quelles sont les exclusions de garantie ?",
-      answer: "Sont exclus les dommages dus aux surtensions électriques (nous conseillons un régulateur), une mauvaise utilisation, ou une intervention technique d'un tiers non agréé."
-    }
-  ]);
-
-  toggleFaq(idx: number) {
-    this.expandedFaq.update(current => current === idx ? null : idx);
-  }
+  // Gemini AI Analysis signals
+  isAnalyzing = signal(false);
+  analysisResult = signal<{
+    severity: string;
+    summary: string;
+    probableCauses: string[];
+    recommendations: string[];
+  } | null>(null);
 
   constructor() {
     effect(() => {
@@ -347,9 +393,50 @@ export class SavGarantiesComponent implements OnInit {
   initRepairRequest(order: OchapOrder, item: OchapOrderItem) {
     this.activeRequest.set({ orderId: order.id, item });
     this.requestDesc = '';
+    this.analysisResult.set(null);
+    this.isAnalyzing.set(false);
   }
 
-  async submitRequest() {
+  async startAnalysis() {
+    if (!this.requestDesc) return;
+    this.isAnalyzing.set(true);
+    this.analysisResult.set(null);
+    try {
+      const req = this.activeRequest();
+      const res = await fetch('/api/ai/analyze-issue', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          description: this.requestDesc,
+          requestType: this.requestType,
+          productName: req?.item.name
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        this.analysisResult.set(data);
+      } else {
+        throw new Error('Analysis request failed');
+      }
+    } catch (e) {
+      console.error('Gemini API Technical Analysis Error:', e);
+      this.analysisResult.set({
+        severity: 'Moyenne',
+        summary: 'Problème technique Standard détecté.',
+        probableCauses: ['Dysfonctionnement matériel standard', 'Défaut de liaison interne'],
+        recommendations: [
+          'Veuillez débrancher puis rebrancher l\'appareil.',
+          'Conservez l\'appareil dans un endroit sec avant l\'intervention.'
+        ]
+      });
+    } finally {
+      this.isAnalyzing.set(false);
+    }
+  }
+
+  async finalizeSubmit() {
     const req = this.activeRequest();
     if (!req) return;
 
@@ -360,16 +447,24 @@ export class SavGarantiesComponent implements OnInit {
       type: this.requestType,
       description: this.requestDesc,
       status: 'pending',
-      customerUid: this.authService.user$()?.uid
+      customerUid: this.authService.user$()?.uid,
+      aiAnalysis: this.analysisResult()
     });
 
     if (success) {
       this.showSuccessToast.set(true);
       setTimeout(() => this.showSuccessToast.set(false), 6000);
-      this.activeRequest.set(null);
+      this.closeModal();
     } else {
       this.showErrorToast.set(true);
       setTimeout(() => this.showErrorToast.set(false), 5000);
     }
+  }
+
+  closeModal() {
+    this.activeRequest.set(null);
+    this.isAnalyzing.set(false);
+    this.analysisResult.set(null);
+    this.requestDesc = '';
   }
 }

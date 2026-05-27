@@ -6,7 +6,7 @@ import {
 } from '@angular/ssr/node';
 import express from 'express';
 import {join} from 'node:path';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, Type } from '@google/genai';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -104,6 +104,62 @@ app.post('/api/ai/marketing', async (req, res) => {
   } catch (error) {
     console.error('Gemini Marketing Error:', error);
     return res.status(500).json({ error: 'Failed to run marketing automation' });
+  }
+});
+
+app.post('/api/ai/analyze-issue', async (req, res) => {
+  const { description, requestType, productName } = req.body;
+  const ai = getAi();
+  if (!ai) {
+    return res.json({
+      severity: 'Moyenne',
+      summary: `Problème technique estimé sur l'appareil ${productName || 'O\'CHAP'}.`,
+      probableCauses: [
+        'Surcharge électrique ou court-circuit',
+        'Composant d\'alimentation fragilisé'
+      ],
+      recommendations: [
+        'Débrancher immédiatement l\'appareil par mesure de sécurité.',
+        'Tester sur une autre prise munie d\'un régulateur de tension.'
+      ]
+    });
+  }
+  try {
+    const prompt = `
+      Agis en tant que technicien SAV expert de la marketplace O'CHAP Côte d'Ivoire.
+      Analyse ce problème technique signalé par l'utilisateur de l'appareil "${productName || 'Electroménager'}" (Type de réclamation : "${requestType || 'SAV'}").
+      
+      Signalement de l'utilisateur : "${description || 'Panne technique non détaillée'}"
+      
+      Génère un retour d'analyse au format JSON contenant :
+      - severity: "Faible" | "Moyenne" | "Haute" | "Critique"
+      - summary: court résumé du problème technique (en français, max 12 mots)
+      - probableCauses: tableau de 2-3 causes probables du problème
+      - recommendations: tableau de 2-3 conseils d'auto-dépannage ou consignes de sécurité immédiates de 1ère urgence.
+    `;
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.5-flash',
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            severity: { type: Type.STRING },
+            summary: { type: Type.STRING },
+            probableCauses: { type: Type.ARRAY, items: { type: Type.STRING } },
+            recommendations: { type: Type.ARRAY, items: { type: Type.STRING } }
+          },
+          required: ["severity", "summary", "probableCauses", "recommendations"]
+        }
+      }
+    });
+    const text = response.text || '';
+    const cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    return res.json(JSON.parse(cleaned));
+  } catch (error) {
+    console.error('Gemini Analyze Issue Error:', error);
+    return res.status(500).json({ error: 'Failed to analyze issue' });
   }
 });
 
