@@ -5,48 +5,34 @@ import { isPlatformBrowser } from '@angular/common';
   providedIn: 'root'
 })
 export class SsrGuard {
-  private readonly platformId = inject(PLATFORM_ID);
-  private readonly isBrowserPlatform = isPlatformBrowser(this.platformId);
+  private platformId = inject(PLATFORM_ID);
 
   /**
-   * Check whether the application is currently executing inside the browser environment.
+   * Vérifie si l'application s'exécute actuellement dans le navigateur.
+   * @returns true si dans le navigateur, false si sur le serveur (SSR)
    */
   isBrowser(): boolean {
-    return this.isBrowserPlatform;
+    return isPlatformBrowser(this.platformId);
   }
 
   /**
-   * Safeguarded getter for 'window'. Returns undefined on the server, and the real window object on the browser.
+   * Exécute une fonction uniquement si l’application s'exécute dans le navigateur (côté client).
+   * Utile pour encapsuler les accès à des objets spécifiques au client comme `window`, `document`, ou `localStorage`.
+   * 
+   * @param fn La fonction à exécuter sur le client
+   * @returns Le résultat de la fonction, ou `undefined` si exécuté côté serveur
+   * 
+   * @example
+   * const width = this.ssrGuard.run(() => window.innerWidth);
    */
-  get window(): Window | undefined {
-    if (this.isBrowserPlatform) {
-      return window;
-    }
-    return undefined;
-  }
-
-  /**
-   * Safeguarded getter for 'document'. Returns undefined on the server, and the real document object on the browser.
-   */
-  get document(): Document | undefined {
-    if (this.isBrowserPlatform) {
-      return document;
-    }
-    return undefined;
-  }
-
-  /**
-   * Safely execute a callback function only if running on the client (browser).
-   */
-  run<T>(callback: () => T): T | undefined {
-    if (this.isBrowserPlatform) {
+  run<T>(fn: () => T): T | undefined {
+    if (this.isBrowser()) {
       try {
-        return callback();
-      } catch (e) {
-        console.error('[SsrGuard] Error executing browser-only callback:', e);
+        return fn();
+      } catch (err) {
+        console.error('[SsrGuard] Erreur lors de l\'exécution côté client :', err);
       }
     }
     return undefined;
   }
 }
-

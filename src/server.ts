@@ -19,7 +19,7 @@ if (typeof global !== 'undefined') {
       get() {
         const stack = new Error().stack || '';
         const lowerStack = stack.toLowerCase();
-        if (lowerStack.includes('src/app') || lowerStack.includes('applet/src')) {
+        if ((lowerStack.includes('src/app') || lowerStack.includes('applet/src/app')) && !lowerStack.includes('server.ts') && !lowerStack.includes('node_modules')) {
           console.error(`[SSR DOM SAFETY VIOLATION] CRITICAL: Component code in 'src/app' attempted to access 'window' during server-side rendering/bootstrap! Stack trace:\n${stack}`);
         }
         return globalWindowVal;
@@ -36,7 +36,7 @@ if (typeof global !== 'undefined') {
       get() {
         const stack = new Error().stack || '';
         const lowerStack = stack.toLowerCase();
-        if (lowerStack.includes('src/app') || lowerStack.includes('applet/src')) {
+        if ((lowerStack.includes('src/app') || lowerStack.includes('applet/src/app')) && !lowerStack.includes('server.ts') && !lowerStack.includes('node_modules')) {
           console.error(`[SSR DOM SAFETY VIOLATION] CRITICAL: Component code in 'src/app' attempted to access 'document' during server-side rendering/bootstrap! Stack trace:\n${stack}`);
         }
         return globalDocVal;

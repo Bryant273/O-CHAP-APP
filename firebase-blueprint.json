@@ -1,129 +1,55 @@
 {
   "entities": {
     "User": {
-      "title": "Utilisateur App",
-      "description": "Profil utilisateur centralisé avec rôles et permissions",
+      "title": "User Profile",
+      "description": "User profile document containing authentication metadata",
       "type": "object",
       "properties": {
         "uid": { "type": "string" },
-        "email": { "type": "string", "format": "email" },
-        "displayName": { "type": "string" },
-        "photoURL": { "type": "string" },
-        "role": { "type": "string", "enum": ["client", "supplier", "admin"] },
-        "emailVerified": { "type": "boolean" },
-        "createdAt": { "type": "string", "format": "date-time" },
-        "updatedAt": { "type": "string", "format": "date-time" }
+        "email": { "type": "string" },
+        "displayName": { "type": "string" }
       },
-      "required": ["uid", "email", "role"]
-    },
-    "Supplier": {
-      "title": "Fournisseur Partenaire",
-      "description": "Marchand partenaire vendant des produits sur la plateforme",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "ownerUid": { "type": "string" },
-        "name": { "type": "string" },
-        "description": { "type": "string" },
-        "logoUrl": { "type": "string" },
-        "rating": { "type": "number" },
-        "status": { "type": "string", "enum": ["active", "suspended", "pending"] },
-        "category": { "type": "string" },
-        "email": { "type": "string", "format": "email" },
-        "phone": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "ownerUid", "name", "status"]
-    },
-    "Product": {
-      "title": "Produit Catalogue",
-      "description": "Article mis en vente par un fournisseur",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "supplierId": { "type": "string" },
-        "name": { "type": "string" },
-        "description": { "type": "string" },
-        "price": { "type": "number" },
-        "stockLevel": { "type": "number" },
-        "category": { "type": "string" },
-        "imageUrl": { "type": "string" },
-        "isActive": { "type": "boolean" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "supplierId", "name", "price", "stockLevel"]
+      "required": ["uid"]
     },
     "Order": {
-      "title": "Commande Transactionnelle",
-      "description": "Transaction entre un client, un ou plusieurs produits, et la plateforme",
+      "title": "Order",
+      "description": "Purchased order documentation with status tracking and review state",
       "type": "object",
       "properties": {
-        "id": { "type": "string" },
         "customerUid": { "type": "string" },
-        "items": { "type": "array" },
-        "totalAmount": { "type": "number" },
-        "status": { "type": "string", "enum": ["pending", "confirmed", "dispatched", "delivered", "cancelled"] },
-        "deliveryZoneId": { "type": "string" },
-        "deliveryAddress": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "preparing", "ready", "shipped", "transit", "delivered", "completed", "cancelled", "return_requested", "returned"] },
+        "reviewed": { "type": "boolean" },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["id", "customerUid", "items", "totalAmount", "status"]
+      "required": ["customerUid", "status"]
     },
-    "DeliveryZone": {
-      "title": "Zone de Livraison",
-      "description": "Périmètre géographique de livraison Ivoirienne",
+    "Review": {
+      "title": "Review",
+      "description": "Completed user feedback with numeric rating and custom comments",
       "type": "object",
       "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string" },
-        "activeDrivers": { "type": "number" },
-        "status": { "type": "string", "enum": ["open", "congested", "closed"] },
-        "coordinates": { "type": "array" }
+        "customerUid": { "type": "string" },
+        "orderId": { "type": "string" },
+        "rating": { "type": "number" },
+        "comment": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["id", "name", "status"]
-    },
-    "Notification": {
-      "title": "Notification Système",
-      "description": "Alerte ou message destiné à un utilisateur spécifique",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "type": { "type": "string" },
-        "title": { "type": "string" },
-        "message": { "type": "string" },
-        "recipientId": { "type": "string" },
-        "read": { "type": "boolean" },
-        "createdAt": { "type": "string", "format": "date-time" },
-        "productId": { "type": "string" }
-      },
-      "required": ["id", "type", "title", "message", "recipientId", "read"]
+      "required": ["customerUid", "orderId", "rating"]
     }
   },
   "firestore": {
     "/users/{userId}": {
       "schema": "User",
-      "description": "Données profil des utilisateurs"
-    },
-    "/suppliers/{supplierId}": {
-      "schema": "Supplier",
-      "description": "Données des marchands partenaires"
-    },
-    "/products/{productId}": {
-      "schema": "Product",
-      "description": "Catalogue global des produits"
+      "description": "Individual user preferences and account states"
     },
     "/orders/{orderId}": {
       "schema": "Order",
-      "description": "Historique et suivi des commandes"
+      "description": "Active purchase transactions and order statuses"
     },
-    "/zones/{zoneId}": {
-      "schema": "DeliveryZone",
-      "description": "Configuration des zones logistiques"
-    },
-    "/notifications/{notificationId}": {
-      "schema": "Notification",
-      "description": "Système de notifications individuelles"
+    "/reviews/{reviewId}": {
+      "schema": "Review",
+      "description": "Customer-submitted ratings and reviews for products/orders"
     }
   }
 }

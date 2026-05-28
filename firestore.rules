@@ -1,236 +1,62 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // 0. Global Safety Net
+    
+    // Par défaut, interdire tout accès en lecture et écriture
     match /{document=**} {
       allow read, write: if false;
     }
-
-    // -------------------------------------------------------------------------
-    // GLOBAL HELPERS
-    // -------------------------------------------------------------------------
-    function isSignedIn() { return request.auth != null; }
-    function isEmailVerified() { return isSignedIn() && request.auth.token.email_verified == true; }
-    function authUid() { return request.auth.uid; }
-    function authEmail() { return request.auth.token.email.toLowerCase(); }
-    function incoming() { return request.resource.data; }
-    function existing() { return resource.data; }
-
-    function isValidId(id) { 
-      return id is string && id.size() > 0 && id.size() <= 256; 
-    }
-
-    // RBAC: Check roles from trusted user document
-    function getUserRole() {
-      let userPath = /databases/$(database)/documents/users/$(authUid());
-      // exists() is very cheap and prevents crashes on get().data
-      return exists(userPath) ? get(userPath).data.get('role', 'client') : 'client';
-    }
     
-    function isPrincipalAdmin() {
-      return isSignedIn() && authEmail() == 'acherie812@gmail.com';
-    }
-    
-    function isAdmin() { 
-      return isPrincipalAdmin() || (
-        isSignedIn() && (exists(/databases/$(database)/documents/users/$(authUid())) && get(/databases/$(database)/documents/users/$(authUid())).data.get('role', 'client') == 'admin')
-      );
-    }
-    
-    function isSupplier() { 
-      return isSignedIn() && (
-        getUserRole() == 'supplier' || getUserRole() == 'fournisseur'
-      );
-    }
-    
-    function isClient() { 
-      return isSignedIn() && (
-        getUserRole() == 'client' || getUserRole() == 'customer'
-      );
-    }
-
-    // -------------------------------------------------------------------------
-    // VALIDATION BLUEPRINTS
-    // -------------------------------------------------------------------------
-
-    function isValidUser(data) {
-      return (request.method == 'create' ? data.keys().hasAll(['uid', 'email', 'role']) : true) &&
-             (!data.keys().hasAny(['uid']) || data.uid == authUid()) &&
-             (!data.keys().hasAny(['email']) || (data.email is string && data.email.size() <= 200)) &&
-             (!data.keys().hasAny(['role']) || data.role in ['client', 'supplier', 'admin', 'fournisseur', 'livreur', 'auditeur']) &&
-             (!data.keys().hasAny(['createdAt']) || data.createdAt is string || data.createdAt is timestamp || data.createdAt == request.time) &&
-             (!data.keys().hasAny(['updatedAt']) || data.updatedAt is timestamp || data.updatedAt == request.time) &&
-             (!data.keys().hasAny(['addresses']) || data.addresses is list) &&
-             (!data.keys().hasAny(['businessName']) || (data.businessName is string && data.businessName.size() <= 200)) &&
-             (!data.keys().hasAny(['deleted']) || data.deleted is bool);
-    }
-
-    function isValidSupplier(data) {
-      return (request.method == 'create' ? data.keys().hasAll(['id', 'ownerUid', 'name', 'status']) : true) &&
-             (!data.keys().hasAny(['id']) || isValidId(data.id)) &&
-             (!data.keys().hasAny(['ownerUid']) || data.ownerUid == authUid()) &&
-             (!data.keys().hasAny(['name']) || (data.name is string && data.name.size() > 0 && data.name.size() <= 100)) &&
-             (!data.keys().hasAny(['status']) || data.status in ['active', 'suspended', 'pending']) &&
-             (!data.keys().hasAny(['createdAt']) || data.createdAt is string || data.createdAt is timestamp || data.createdAt == request.time);
-    }
-
-    function isValidProduct(data) {
-      return (request.method == 'create' ? data.keys().hasAll(['id', 'supplierId', 'name', 'price']) : true) &&
-             (!data.keys().hasAny(['id']) || isValidId(data.id)) &&
-             (!data.keys().hasAny(['supplierId']) || isValidId(data.supplierId)) &&
-             (!data.keys().hasAny(['name']) || (data.name is string && data.name.size() > 0 && data.name.size() <= 200)) &&
-             (!data.keys().hasAny(['price']) || (data.price is number && data.price >= 0)) &&
-             (!data.keys().hasAny(['stock']) || data.stock is number) &&
-             (!data.keys().hasAny(['createdAt']) || data.createdAt is string || data.createdAt is timestamp || data.createdAt == request.time);
-    }
-
-    function isValidOrder(data) {
-      return (request.method == 'create' ? data.keys().hasAll(['id', 'items', 'status']) : true) &&
-             (!data.keys().hasAny(['id']) || isValidId(data.id)) &&
-             (!data.keys().hasAny(['items']) || data.items is list) && 
-             (!data.keys().hasAny(['status']) || data.status in ['pending', 'confirmed', 'preparing', 'ready', 'shipped', 'transit', 'delivered', 'completed', 'cancelled', 'return_requested', 'returned']) &&
-             (!data.keys().hasAny(['customerUid']) || data.customerUid is string);
-    }
-
-    function isValidNotification(data) {
-      return (request.method == 'create' ? data.keys().hasAll(['type', 'title', 'message', 'recipientId', 'read']) : true) &&
-             (!data.keys().hasAny(['recipientId']) || (data.recipientId is string && data.recipientId.size() > 0)) &&
-             (!data.keys().hasAny(['read']) || data.read is bool) &&
-             (!data.keys().hasAny(['createdAt']) || data.createdAt is string || data.createdAt is timestamp || data.createdAt == request.time);
-    }
-
-    // -------------------------------------------------------------------------
-    // COLLECTIONS
-    // -------------------------------------------------------------------------
-
-    // USERS COLLECTION
-    match /users/{userId} {
-      allow get: if isValidId(userId) && (
-        (isSignedIn() && (authUid() == userId || isPrincipalAdmin() || isAdmin())) ||
-        (resource == null) ||
-        (resource.data.get('role', 'client') in ['supplier', 'fournisseur'])
-      );
-      allow list: if isPrincipalAdmin() || isAdmin();
-      allow create: if isValidId(userId) && isSignedIn() && authUid() == userId && isValidUser(incoming());
-      allow update: if isValidId(userId) && isSignedIn() && (
-        (authUid() == userId && 
-         isValidUser(incoming()) && 
-         incoming().get('role', 'client') == existing().get('role', 'client') &&
-         incoming().diff(existing()).affectedKeys().hasOnly([
-           'displayName', 'photoURL', 'updatedAt', 'address', 'phoneNumber', 'city', 
-           'addresses', 'businessName', 'deleted', 'email'
-         ])) ||
-        ((isPrincipalAdmin() || isAdmin()) && 
-         incoming().diff(existing()).affectedKeys().hasOnly(['role', 'updatedAt']))
-      );
-      allow delete: if isValidId(userId) && (isPrincipalAdmin() || isAdmin());
-    }
-
-    // SUPPLIERS COLLECTION
-    match /suppliers/{supplierId} {
-      allow get: if isValidId(supplierId);
-      allow list: if true;
-      allow create: if isValidId(supplierId) && (isSupplier() || isPrincipalAdmin()) && isValidSupplier(incoming());
-      allow update: if isValidId(supplierId) && (isPrincipalAdmin() || isAdmin() || (isSupplier() && existing().ownerUid == authUid())) &&
-                     isValidSupplier(incoming()) &&
-                     incoming().ownerUid == existing().ownerUid &&
-                     incoming().diff(existing()).affectedKeys().hasOnly(['name', 'description', 'logoUrl', 'phone', 'category', 'status']);
-      allow delete: if isValidId(supplierId) && (isPrincipalAdmin() || isAdmin());
-    }
-
-    // PRODUCTS COLLECTION
+    // Règles pour les produits (products)
+    // Permet la lecture à tous les utilisateurs authentifiés
+    // Permet l'écriture uniquement aux administrateurs ou fournisseurs spécifiques
     match /products/{productId} {
-      allow get: if isValidId(productId);
-      allow list: if true; // Public catalog
-      allow create: if isValidId(productId) && (isPrincipalAdmin() || isAdmin() || isSupplier()) && isValidProduct(incoming()) && (incoming().get('id', productId) == productId);
-      allow update: if isValidId(productId) && (
-        isPrincipalAdmin() || 
-        isAdmin() || 
-        (isSupplier() && (
-          existing().get('supplierId', '') == authUid() || 
-          (existing().keys().hasAll(['supplierId']) && exists(/databases/$(database)/documents/suppliers/$(existing().supplierId)) && get(/databases/$(database)/documents/suppliers/$(existing().supplierId)).data.ownerUid == authUid())
-        )) ||
-        // Action: Stock reduction by buyer on checkout
-        (isSignedIn() && 
-         incoming().diff(existing()).affectedKeys().hasOnly(['stock', 'updatedAt']) &&
-         incoming().stock is number &&
-         incoming().stock >= 0 &&
-         incoming().stock < existing().stock)
-      ) &&
-      isValidProduct(incoming()) &&
-      incoming().get('supplierId', '') == existing().get('supplierId', '') &&
-      (
-        incoming().diff(existing()).affectedKeys().hasOnly(['stock', 'updatedAt']) ||
-        incoming().diff(existing()).affectedKeys().hasOnly([
-          'name', 'description', 'price', 'retailPrice', 'stock', 'unit', 'brand', 
-          'imageUrl', 'galleryUrls', 'category', 'technicalSpecs', 'supplierName',
-          'supplierId', 'isActive', 'updatedAt', 'rating', 'reviewCount', 'threshold'
-        ])
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && (
+        request.auth.token.admin == true || 
+        (request.auth.token.supplier == true && resource.data.supplierId == request.auth.uid)
       );
-      allow delete: if isValidId(productId) && (isPrincipalAdmin() || isAdmin() || (isSupplier() && existing().get('supplierId', '') == authUid()));
     }
-
-    // ORDERS COLLECTION
-    match /orders/{orderId} {
-      allow get: if isValidId(orderId) && isSignedIn() && (existing().customerUid == authUid() || existing().get('supplierId', '') == authUid() || isPrincipalAdmin() || isAdmin());
-      allow list: if isSignedIn() && (
-        resource.data.customerUid == authUid() || 
-        resource.data.get('supplierId', '') == authUid() || 
-        isPrincipalAdmin()
-      );
-      allow create: if isValidId(orderId) && isSignedIn() && isValidOrder(incoming()) && (incoming().get('id', orderId) == orderId) && (incoming().customerUid == authUid());
-      allow update: if isValidId(orderId) && isSignedIn() && 
-                     isValidOrder(incoming()) &&
-                     (
-                       isPrincipalAdmin() || 
-                       isAdmin() || 
-                       (existing().get('supplierId', '') == authUid() && 
-                        incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt'])) ||
-                       (existing().customerUid == authUid() && 
-                        existing().status == 'pending' && 
-                        incoming().status == 'cancelled' && 
-                        incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']))
-                     );
-      allow delete: if isValidId(orderId) && (isPrincipalAdmin() || isAdmin());
-    }
-
-    // REVIEWS COLLECTION
-    match /reviews/{reviewId} {
-      allow get: if isValidId(reviewId);
-      allow list: if true;
-      allow create: if isValidId(reviewId) && isSignedIn() && incoming().customerId == authUid();
-      allow delete: if isValidId(reviewId) && (isPrincipalAdmin() || isAdmin() || (isSignedIn() && existing().customerId == authUid()));
-    }
-
-    // ZONES COLLECTION
-    match /zones/{zoneId} {
-      allow get: if isValidId(zoneId);
-      allow list: if true;
-      allow write: if isValidId(zoneId) && (isPrincipalAdmin() || isAdmin());
-    }
-
-    // NOTIFICATIONS COLLECTION
-    match /notifications/{notificationId} {
-      allow get: if isValidId(notificationId) && isSignedIn() && (resource.data.recipientId == request.auth.uid || isPrincipalAdmin() || isAdmin());
-      allow list: if isSignedIn() && (resource.data.recipientId == request.auth.uid || isPrincipalAdmin());
-      allow create: if isValidId(notificationId) && isSignedIn() && isValidNotification(incoming());
-      allow update: if isValidId(notificationId) && isSignedIn() && 
-                    isValidNotification(incoming()) &&
-                    existing().recipientId == request.auth.uid &&
-                    incoming().recipientId == existing().recipientId &&
-                    incoming().diff(existing()).affectedKeys().hasOnly(['read']);
-      allow delete: if isValidId(notificationId) && (isPrincipalAdmin() || isAdmin() || (isSignedIn() && existing().recipientId == request.auth.uid));
-    }
-
-    // SYSTEM COLLECTION
-    match /system/{docId} {
-      allow read: if true;
-    }
-
-    // CATEGORIES COLLECTION
+    
+    // Règles pour les catégories (categories)
+    // Lecture autorisée aux utilisateurs authentifiés
+    // Écriture réservée aux administrateurs
     match /categories/{categoryId} {
-      allow read: if true;
-      allow write: if isPrincipalAdmin() || isAdmin();
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.token.admin == true;
+    }
+    
+    // Règles pour les notifications (notifications)
+    // Lecture autorisée aux utilisateurs authentifiés s'ils sont destinataires ou si globale
+    // Écriture réservée aux administrateurs ou système authentifié
+    match /notifications/{notificationId} {
+      allow read: if request.auth != null && (
+        resource.data.userId == request.auth.uid || 
+        resource.data.target == 'all' ||
+        request.auth.token.admin == true
+      );
+      allow write: if request.auth != null && request.auth.token.admin == true;
+    }
+    
+    // Règles pour les profils utilisateurs (users)
+    // Un utilisateur ne peut lire/écrire que son propre document
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Règles pour les commandes (orders)
+    // Un utilisateur ou fournisseur ne peut lire/écrire que ses propres commandes
+    match /orders/{orderId} {
+      allow read: if request.auth != null && (
+        resource.data.customerId == request.auth.uid || 
+        resource.data.supplierId == request.auth.uid ||
+        request.auth.token.admin == true
+      );
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && (
+        resource.data.customerId == request.auth.uid || 
+        request.auth.token.admin == true
+      );
     }
   }
 }
