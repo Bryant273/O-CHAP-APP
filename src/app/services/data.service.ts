@@ -387,7 +387,8 @@ export class DataService {
         // Collect product data to group by supplier
         const itemWithSupplierDetails: (OchapOrderItem & { supplierId: string, supplierName: string })[] = [];
 
-        // 1. Process each item: check stock, decrement, and fetch supplier data
+        // 1. Retrieve all products (Reads)
+        const productDocs: { item: OchapOrderItem; productRef: ReturnType<typeof doc>; productData: OchapProduct; currentStock: number }[] = [];
         for (const item of orderData.items) {
           const productRef = doc(db, 'products', item.id);
           const productDoc = await transaction.get(productRef);
@@ -402,7 +403,17 @@ export class DataService {
           if (currentStock < item.quantity) {
             throw new Error(`Stock insuffisant pour ${item.name}. Disponible: ${currentStock}`);
           }
-          
+
+          productDocs.push({
+            item,
+            productRef,
+            productData,
+            currentStock
+          });
+        }
+
+        // 2. Perform updates and build details (Writes)
+        for (const { item, productRef, productData, currentStock } of productDocs) {
           // Decrement stock
           transaction.update(productRef, {
             stock: currentStock - item.quantity,
@@ -758,7 +769,11 @@ export class DataService {
 
     try {
       await runTransaction(db, async (transaction: Transaction) => {
-        // 1. Create review
+        // 1. Update product aggregation - get first (READ)
+        const productRef = doc(db, 'products', reviewData.productId);
+        const productDoc = await transaction.get(productRef);
+
+        // 2. Create review (WRITE)
         const reviewRef = doc(collection(db, 'reviews'));
         transaction.set(reviewRef, {
           ...reviewData,
@@ -766,9 +781,7 @@ export class DataService {
           createdAt: serverTimestamp()
         });
 
-        // 2. Update product aggregation
-        const productRef = doc(db, 'products', reviewData.productId);
-        const productDoc = await transaction.get(productRef);
+        // 3. Update the product totals (WRITE)
         if (productDoc.exists()) {
           const data = productDoc.data() as Record<string, unknown>;
           const currentCount = (data['reviewCount'] as number) || 0;
