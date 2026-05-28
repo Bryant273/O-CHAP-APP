@@ -1,4 +1,5 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { 
   signInWithPopup, 
   GoogleAuthProvider, 
@@ -87,8 +88,11 @@ export class AuthService {
     }
   }
 
+  private platformId = inject(PLATFORM_ID);
+  private isBrowserPlatform = isPlatformBrowser(this.platformId);
+
   constructor() {
-    if (typeof window !== 'undefined') {
+    if (this.isBrowserPlatform) {
       onAuthStateChanged(auth, async (user: User | null) => {
         this.user.set(user);
         this.isAuthenticated.set(!!user);

@@ -1,4 +1,5 @@
-import { Injectable, signal, computed, inject } from '@angular/core';
+import { Injectable, signal, computed, inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { 
   db 
 } from './firebase';
@@ -238,7 +239,8 @@ export class DataService {
   }
 
   // --- ADMIN WATCHERS ---
-  private isBrowser = typeof window !== 'undefined';
+  private platformId = inject(PLATFORM_ID);
+  private isBrowser = isPlatformBrowser(this.platformId);
   private noop = () => { /* no-op for SSR */ };
 
   watchAllOrders() {

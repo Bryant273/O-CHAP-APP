@@ -440,24 +440,52 @@ import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
                            <div>
                               <label for="prodPrice" class="text-[10px] font-black text-muted uppercase tracking-widest mb-2 block">Prix de Vente Market (FCFA) *</label>
                               <div class="relative">
-                                 <input id="prodPrice" type="number" [(ngModel)]="formData.price" class="w-full h-12 bg-surface-2 rounded-xl px-4 text-lg font-black font-price border-2 border-transparent focus:border-primary focus:bg-white outline-none">
+                                 <input id="prodPrice" type="number" min="0" (keypress)="preventNegative($event)" (input)="onFieldInput('price')" [(ngModel)]="formData.price" 
+                                        [class.border-red-500]="formData.price < 0" [class.focus:border-red-500]="formData.price < 0"
+                                        class="w-full h-12 bg-surface-2 rounded-xl px-4 text-lg font-black font-price border-2 border-transparent focus:border-primary focus:bg-white outline-none">
                                  <span class="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-muted">FCFA</span>
                               </div>
+                              @if (formData.price < 0) {
+                                 <p class="text-[10px] text-red-500 font-bold mt-1 flex items-center gap-1 animate-fade-in">
+                                    <mat-icon class="scale-50 !h-4 !w-4">warning</mat-icon> Le prix de vente ne doit pas être négatif.
+                                 </p>
+                              }
                            </div>
                            <div>
                               <label for="prodRetail" class="text-[10px] font-black text-muted uppercase tracking-widest mb-2 block">Prix au Détail (Promo Ref)</label>
                               <div class="relative">
-                                 <input id="prodRetail" type="number" [(ngModel)]="formData.retailPrice" class="w-full h-12 bg-surface-2 rounded-xl px-4 text-lg font-black font-price border-2 border-transparent focus:border-primary focus:bg-white outline-none">
+                                 <input id="prodRetail" type="number" min="0" (keypress)="preventNegative($event)" (input)="onFieldInput('retailPrice')" [(ngModel)]="formData.retailPrice" 
+                                        [class.border-red-500]="formData.retailPrice < 0" [class.focus:border-red-500]="formData.retailPrice < 0"
+                                        class="w-full h-12 bg-surface-2 rounded-xl px-4 text-lg font-black font-price border-2 border-transparent focus:border-primary focus:bg-white outline-none">
                                  <span class="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-muted">FCFA</span>
                               </div>
+                              @if (formData.retailPrice < 0) {
+                                 <p class="text-[10px] text-red-500 font-bold mt-1 flex items-center gap-1 animate-fade-in">
+                                    <mat-icon class="scale-50 !h-4 !w-4">warning</mat-icon> Le prix de détail ne doit pas être négatif.
+                                 </p>
+                              }
                            </div>
                            <div>
                               <label for="prodStock" class="text-[10px] font-black text-muted uppercase tracking-widest mb-2 block">Stock Disponible</label>
-                              <input id="prodStock" type="number" [(ngModel)]="formData.stock" class="w-full h-12 bg-surface-2 rounded-xl px-4 text-sm font-bold border-2 border-transparent focus:border-primary focus:bg-white outline-none">
+                              <input id="prodStock" type="number" min="0" (keypress)="preventNegative($event)" (input)="onFieldInput('stock')" [(ngModel)]="formData.stock" 
+                                     [class.border-red-500]="formData.stock < 0" [class.focus:border-red-500]="formData.stock < 0"
+                                     class="w-full h-12 bg-surface-2 rounded-xl px-4 text-sm font-bold border-2 border-transparent focus:border-primary focus:bg-white outline-none">
+                              @if (formData.stock < 0) {
+                                 <p class="text-[10px] text-red-500 font-bold mt-1 flex items-center gap-1 animate-fade-in">
+                                    <mat-icon class="scale-50 !h-4 !w-4">warning</mat-icon> Le stock disponible ne doit pas être négatif.
+                                 </p>
+                              }
                            </div>
                            <div>
                               <label for="prodThreshold" class="text-[10px] font-black text-muted uppercase tracking-widest mb-2 block">Seuil d'Alerte</label>
-                              <input id="prodThreshold" type="number" [(ngModel)]="formData.threshold" class="w-full h-12 bg-surface-2 rounded-xl px-4 text-sm font-bold border-2 border-transparent focus:border-primary focus:bg-white outline-none">
+                              <input id="prodThreshold" type="number" min="0" (keypress)="preventNegative($event)" (input)="onFieldInput('threshold')" [(ngModel)]="formData.threshold" 
+                                     [class.border-red-500]="formData.threshold < 0" [class.focus:border-red-500]="formData.threshold < 0"
+                                     class="w-full h-12 bg-surface-2 rounded-xl px-4 text-sm font-bold border-2 border-transparent focus:border-primary focus:bg-white outline-none">
+                              @if (formData.threshold < 0) {
+                                 <p class="text-[10px] text-red-500 font-bold mt-1 flex items-center gap-1 animate-fade-in">
+                                    <mat-icon class="scale-50 !h-4 !w-4">warning</mat-icon> Le seuil d'alerte ne doit pas être négatif.
+                                 </p>
+                              }
                            </div>
                            <div>
                               <label for="prodUnit" class="text-[10px] font-black text-muted uppercase tracking-widest mb-2 block">Unité de mesure</label>
@@ -606,9 +634,9 @@ import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
                      <button (click)="closeModal()" class="h-12 px-6 rounded-xl text-muted text-[11px] font-bold uppercase tracking-widest hover:bg-surface-2">Annuler</button>
                      
                      @if (currentStep() < 4) {
-                        <button (click)="nextStep()" class="h-12 px-8 bg-navy text-white rounded-xl text-[11px] font-bold uppercase tracking-[0.2em] shadow-xl shadow-navy/20 active:scale-95">Continuer</button>
+                        <button (click)="nextStep()" [disabled]="currentStep() === 2 && hasNegativeValues()" class="h-12 px-8 bg-navy text-white rounded-xl text-[11px] font-bold uppercase tracking-[0.2em] shadow-xl shadow-navy/20 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed">Continuer</button>
                      } @else {
-                        <button (click)="saveProduct()" [disabled]="saving()" class="h-12 px-8 bg-primary text-white rounded-xl text-[11px] font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/30 active:scale-95 flex items-center gap-2">
+                        <button (click)="saveProduct()" [disabled]="saving() || hasNegativeValues()" class="h-12 px-8 bg-primary text-white rounded-xl text-[11px] font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/30 active:scale-95 flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed">
                            @if (saving()) { <mat-icon class="animate-spin scale-75">refresh</mat-icon> }
                            {{ isEditing() ? "Appliquer Changements" : "Publier l'Article" }}
                         </button>
@@ -1057,6 +1085,29 @@ export class AdminProducts implements OnInit, OnDestroy {
     this.showModal.set(false);
   }
 
+  preventNegative(event: KeyboardEvent) {
+    if (event.key === '-' || event.key === 'e' || event.key === 'E' || event.key === '+') {
+      event.preventDefault();
+    }
+  }
+
+  onFieldInput(field: 'price' | 'retailPrice' | 'stock' | 'threshold') {
+    if (this.formData[field] !== null && this.formData[field] !== undefined) {
+      if (this.formData[field] < 0) {
+        this.formData[field] = 0;
+      }
+    }
+  }
+
+  hasNegativeValues(): boolean {
+    return (
+      (this.formData.price || 0) < 0 ||
+      (this.formData.retailPrice || 0) < 0 ||
+      (this.formData.stock || 0) < 0 ||
+      (this.formData.threshold || 0) < 0
+    );
+  }
+
   nextStep() {
     this.currentStep.update(s => s + 1);
   }
@@ -1083,6 +1134,10 @@ export class AdminProducts implements OnInit, OnDestroy {
   }
 
   async saveProduct() {
+     if (this.hasNegativeValues()) {
+        alert('Erreur: Les valeurs de prix ou de stock ne peuvent pas être négatives.');
+        return;
+     }
      this.saving.set(true);
      
      // Serialize specs

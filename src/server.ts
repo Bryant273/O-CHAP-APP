@@ -8,25 +8,44 @@ import express from 'express';
 import {join} from 'node:path';
 import { GoogleGenAI, Type } from '@google/genai';
 
-// Guard against early window/DOM access during Server-Side Rendering (SSR)
+// Guard against early window/DOM access during Server-Side Rendering (SSR) safely
+let globalWindowVal: unknown = undefined;
+let globalDocVal: unknown = undefined;
+
 if (typeof global !== 'undefined') {
   const safeGlobal = global as unknown as Record<string, unknown>;
   if (!safeGlobal['window']) {
     Object.defineProperty(safeGlobal, 'window', {
       get() {
-        console.error("[SSR Guard Error] CRITICAL: Attempted to access 'window' during server-side bootstrap/rendering! Ensure all browser APIs are guarded with 'typeof window !== \"undefined\"'.");
-        return undefined;
+        const stack = new Error().stack || '';
+        const lowerStack = stack.toLowerCase();
+        if (lowerStack.includes('src/app') || lowerStack.includes('applet/src')) {
+          console.error(`[SSR DOM SAFETY VIOLATION] CRITICAL: Component code in 'src/app' attempted to access 'window' during server-side rendering/bootstrap! Stack trace:\n${stack}`);
+        }
+        return globalWindowVal;
       },
-      configurable: true
+      set(val) {
+        globalWindowVal = val;
+      },
+      configurable: true,
+      enumerable: true
     });
   }
   if (!safeGlobal['document']) {
     Object.defineProperty(safeGlobal, 'document', {
       get() {
-        console.error("[SSR Guard Error] CRITICAL: Attempted to access 'document' during server-side bootstrap/rendering! DOM rendering is not supported on the server.");
-        return undefined;
+        const stack = new Error().stack || '';
+        const lowerStack = stack.toLowerCase();
+        if (lowerStack.includes('src/app') || lowerStack.includes('applet/src')) {
+          console.error(`[SSR DOM SAFETY VIOLATION] CRITICAL: Component code in 'src/app' attempted to access 'document' during server-side rendering/bootstrap! Stack trace:\n${stack}`);
+        }
+        return globalDocVal;
       },
-      configurable: true
+      set(val) {
+        globalDocVal = val;
+      },
+      configurable: true,
+      enumerable: true
     });
   }
 }
